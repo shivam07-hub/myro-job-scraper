@@ -63,6 +63,9 @@ from providers.virtusa_firecrawl import VirtusaFirecrawlProvider
 from providers.workline import WorklineProvider
 from providers.bdo_firecrawl import BDOFirecrawlProvider
 from providers.keka import KekaProvider
+from providers.jibe import JibeProvider
+from providers.workable import WorkableProvider
+from providers.yubi_careers import YubiCareersProvider
 
 _FIRECRAWL_PROVIDER = FirecrawlJSProvider()
 _GENERIC_PROVIDER = GenericJSONProvider()
@@ -124,6 +127,9 @@ _ATS_PROVIDERS: dict[str, Provider] = {
     "workline": WorklineProvider(),
     "bdo_firecrawl": BDOFirecrawlProvider(),
     "keka": KekaProvider(),
+    "jibe": JibeProvider(),
+    "workable": WorkableProvider(),
+    "yubi_careers": YubiCareersProvider(),
 }
 
 

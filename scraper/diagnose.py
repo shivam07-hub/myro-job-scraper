@@ -145,7 +145,12 @@ def propose_fixes(verdicts: list[Verdict], crack: bool = False, crack_limit: int
     return proposals
 
 
-def render_report(run_summary: dict, verdicts: list[Verdict], probes: list | None = None) -> str:
+def render_report(
+    run_summary: dict,
+    verdicts: list[Verdict],
+    probes: list | None = None,
+    scrapling_probes: list | None = None,
+) -> str:
     """Markdown handoff — the generated replacement for the manual file."""
     rid = run_summary.get("run_id", "?")
     counts = bucket_counts([v for v in verdicts if v.is_failure])
@@ -192,7 +197,50 @@ def render_report(run_summary: dict, verdicts: list[Verdict], probes: list | Non
             bl = "—" if p.baseline_count is None else str(p.baseline_count)
             lines.append(f"| {p.company} | {p.ats} | {p.verdict} | {p.this_count} | {bl} | {p.suggested_fix} |")
         lines.append("")
+    if scrapling_probes:
+        lines += [
+            "## Scrapling route probes (diagnostic only)",
+            "",
+            "A rendered page is not counted as a route. `ROUTE_FOUND` requires a matching XHR/fetch request or job-detail link.",
+            "",
+            "| Company | Verdict | HTTP | Job links | Candidate route |",
+            "|---|---|---|---|---|",
+        ]
+        for probe in scrapling_probes:
+            candidate = probe.candidate_urls[0] if probe.candidate_urls else "—"
+            lines.append(
+                f"| {probe.company} | {probe.verdict} | {probe.status or '—'} | "
+                f"{probe.job_link_count} | {candidate} |"
+            )
+        lines.append("")
     return "\n".join(lines)
+
+
+def run_scrapling_probes(
+    verdicts: list[Verdict],
+    *,
+    limit: int,
+    concurrency: int,
+    timeout_ms: int,
+    wait_ms: int,
+) -> list:
+    """Use Scrapling only as a discovery probe for NEEDS_CRACK portals."""
+    import asyncio
+
+    from heal.scrapling_probe import probe_companies_scrapling
+    from portal_reader import parse_portals
+
+    portals = {portal["company"]: portal for portal in parse_portals()}
+    selected = [portals[v.company] for v in verdicts if v.bucket == NEEDS_CRACK and v.company in portals]
+    return asyncio.run(
+        probe_companies_scrapling(
+            selected,
+            max_companies=limit,
+            concurrency=concurrency,
+            timeout_ms=timeout_ms,
+            wait_ms=wait_ms,
+        )
+    )
 
 
 def print_summary(run_summary: dict, verdicts: list[Verdict]) -> None:
@@ -217,9 +265,15 @@ def main() -> None:
                     help="emit reviewable fix diffs (free dedup analysis) -> logs/proposed_fixes_*.md")
     ap.add_argument("--probe-crack", action="store_true",
                     help="run Firecrawl-cloud discovery on NEEDS_CRACK companies (spends credits)")
+    ap.add_argument("--probe-scrapling", action="store_true",
+                    help="probe NEEDS_CRACK pages in a local stealth browser; diagnostic only, no writes/jobs")
     ap.add_argument("--crack-limit", type=int, default=5, help="max NEEDS_CRACK companies to probe")
     ap.add_argument("--crack-delay", type=float, default=0.0,
                     help="seconds between Firecrawl calls to respect the plan rate limit (free=6/min -> ~11)")
+    ap.add_argument("--scrapling-limit", type=int, default=5, help="max NEEDS_CRACK portals for Scrapling")
+    ap.add_argument("--scrapling-concurrency", type=int, default=2, help="browser tabs (clamped to 1..3)")
+    ap.add_argument("--scrapling-timeout-ms", type=int, default=45000, help="per-page timeout in milliseconds")
+    ap.add_argument("--scrapling-wait-ms", type=int, default=1500, help="post-load wait for late XHR")
     ap.add_argument("--no-write", action="store_true", help="don't write the markdown report")
     args = ap.parse_args()
 
@@ -230,13 +284,23 @@ def main() -> None:
     probes = None
     if args.probe:
         probes = run_probes(verdicts, load_ledger())
+    scrapling_probes = None
+    if args.probe_scrapling:
+        scrapling_probes = run_scrapling_probes(
+            verdicts,
+            limit=args.scrapling_limit,
+            concurrency=args.scrapling_concurrency,
+            timeout_ms=args.scrapling_timeout_ms,
+            wait_ms=args.scrapling_wait_ms,
+        )
 
     if args.json:
         payload: object = [v.__dict__ for v in verdicts]
-        if probes is not None:
+        if probes is not None or scrapling_probes is not None:
             payload = {
                 "verdicts": [v.__dict__ for v in verdicts],
-                "probes": [p.__dict__ for p in probes],
+                "probes": [p.__dict__ for p in probes or []],
+                "scrapling_probes": [p.__dict__ for p in scrapling_probes or []],
             }
         print(json.dumps(payload, indent=2, ensure_ascii=False))
         return
@@ -247,13 +311,22 @@ def main() -> None:
         print(f"\n  Probed {len(probes)} routes:")
         for p in probes:
             print(f"    {p.verdict:<12} {p.company:<22} now={p.this_count:<4} base={p.baseline_count}")
-    report = render_report(run_summary, verdicts, probes)
+    if scrapling_probes is not None:
+        print(f"\n  Scrapling-probed {len(scrapling_probes)} routes (diagnostic only):")
+        for probe in scrapling_probes:
+            print(f"    {probe.verdict:<18} {probe.company:<22} candidates={len(probe.candidate_urls)}")
+    report = render_report(run_summary, verdicts, probes, scrapling_probes)
     rid = run_summary.get("run_id", "latest")
     if not args.no_write:
         out = os.path.join(LOGS_DIR, f"diagnosis_{rid}.md")
         with open(out, "w", encoding="utf-8") as f:
             f.write(report + "\n")
         print(f"\n  report -> {os.path.relpath(out)}")
+        if scrapling_probes is not None:
+            probe_out = os.path.join(LOGS_DIR, f"scrapling_probe_{rid}.json")
+            with open(probe_out, "w", encoding="utf-8") as f:
+                json.dump([probe.__dict__ for probe in scrapling_probes], f, indent=2, ensure_ascii=False)
+            print(f"  Scrapling evidence -> {os.path.relpath(probe_out)}")
 
     if args.propose or args.probe_crack:
         from heal.propose import render_proposals

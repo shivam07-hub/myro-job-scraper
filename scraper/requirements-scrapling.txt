@@ -1,0 +1,2 @@
+# Optional local browser route-discovery lane. Not required for normal scraping.
+scrapling[fetchers]==0.4.14

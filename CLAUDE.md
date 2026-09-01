@@ -264,8 +264,15 @@ python diagnose.py --bucket REGRESSION      # one bucket only
 python diagnose.py --probe                  # live re-test REGRESSION + PARAM_SUSPECT routes (network, no Docker for direct routes)
 python diagnose.py --propose                # emit reviewable fix diffs (free dedup analysis) -> logs/proposed_fixes_*.md
 python diagnose.py --probe-crack            # Firecrawl-cloud discovery on NEEDS_CRACK companies (spends credits; cached)
+python diagnose.py --probe-scrapling        # local stealth-browser route evidence; diagnostic-only, never publishes jobs
 python diagnose.py --json                   # machine-readable verdicts
 ```
+
+**Optional Scrapling probe.** Install it separately from the production scraper dependencies with
+`pip install -r requirements-scrapling.txt && scrapling install`. The probe shares one browser with at most three tabs,
+redacts sensitive URL/body keys, and saves only bounded XHR/fetch metadata plus candidate job links. A successful page
+render alone is reported as `PAGE_ONLY`; it is never treated as job evidence. Promote every usable route to a normal
+direct provider before putting it in the recurring scrape.
 
 **Auto-propose (propose-only, never applies).** `--propose` runs `heal/propose.py`: it statically finds *generic-duplicate masking* (a company listed in both its real ATS section and a generic CUSTOM/industry section, so `portal_reader` emits a phantom `ats=custom/other` portal that returns 0 and tanks the company) and emits the deletion diff. This is the bug that silently broke HSBC/Mphasis/Persistent on 2026-06-04; fixed 2026-06-07 and guarded by `test_heal_propose.py`. `--probe-crack` adds the Firecrawl-cloud discovery adapter (`heal/probe.probe_company_firecrawl`): map → rank candidate listing/API URLs → propose a `KNOWN_PORTALS.md` row stub for a human to promote.
 

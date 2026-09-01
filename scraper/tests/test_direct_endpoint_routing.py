@@ -145,6 +145,11 @@ def test_direct_endpoint_routes() -> None:
         "H&M": "smartrecruiters",
         "Tekion": "ashby",
         "TVS Next": "keka",
+        "Coforge": "zwayam",
+        "Amdocs": "pcsx",
+        "S&P Global": "jibe",
+        "Elevation Capital": "workable",
+        "Yubi": "yubi_careers",
     }
     for company, ats in expected.items():
         portal = _portal(company)

@@ -422,6 +422,9 @@ def _custom(rows) -> list[Portal]:
         "SentiLink": "ashby",
         "Waaree Group": "waaree_static",
         "TVS Next": "keka",
+        "S&P Global": "jibe",
+        "Elevation Capital": "workable",
+        "Yubi": "yubi_careers",
     }
     endpoint_overrides: dict[str, str] = {
         "Confluent": "https://api.ashbyhq.com/posting-api/job-board/confluent",
@@ -444,9 +447,13 @@ def _custom(rows) -> list[Portal]:
         "Pebl": "https://api.ashbyhq.com/posting-api/job-board/pebl",
         "SentiLink": "https://api.ashbyhq.com/posting-api/job-board/sentilink",
         "TVS Next": "https://tvsnext.keka.com/careers/api/jobs/default/active",
+        "S&P Global": "https://careers.spglobal.com/api/jobs",
+        "Elevation Capital": "https://apply.workable.com/elevation-capital-3/",
+        "Yubi": "https://go-yubi.com/careers",
     }
     custom_extra: dict[str, dict] = {
         "NPCI": {"zoho_page_id": "190737000000336688"},
+        "Elevation Capital": {"workable_account": "elevation-capital-3"},
     }
     talent500_slugs: dict[str, str] = {
         "Costco Wholesale": "costco",
@@ -466,6 +473,7 @@ def _custom(rows) -> list[Portal]:
             'company':      company,
             'ats':          ats,
             'endpoint':     endpoint,
+            'careers_url':  careers,
             'india_filter': r.get('India Filter', '').strip(),
             'js_required':  False if ats != 'custom' else js_req,
             'status':       status,
