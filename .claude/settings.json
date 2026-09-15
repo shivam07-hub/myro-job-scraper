@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc *)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(ls -d venv .venv ../venv ../.venv)",
+      "Bash(ls requirements*.txt pyproject.toml)",
+      "Bash(../.venv/bin/python -m pytest tests/test_payments_router.py -q)",
+      "Bash(../.venv/bin/python -m pytest tests/ -q -k \"profile or user\")",
+      "Bash(cat frontend/app/auth/callback/route.ts)",
+      "Bash(cat frontend/app/auth/callback/*.ts*)",
+      "Bash(ls app/dashboard)",
+      "Bash(head -30 app/dashboard/page.tsx)",
+      "Bash(rg -l \"already cast\")",
+      "Bash(echo \"exit:$?\")",
+      "Bash(echo \"EXIT=$?\")",
+      "Bash(awk 'NR>=205 && NR<=240' frontend/app/myrology/page.tsx)",
+      "Bash(awk 'NR>=205 && NR<=240{print NR\": \"$0}' frontend/app/myrology/page.tsx)",
+      "Bash(cat store/recomputeStore.ts)",
+      "Bash(cat store/xpGateStore.ts)",
+      "Bash(ls -la app/services/job_refresh/)",
+      "Bash(grep -rln \"refresh\" app/routers/jobs/)",
+      "Bash(grep -iE \"celery|arq|rq|dramatiq|background_tasks|BackgroundTasks|huey|taskiq|apscheduler\" requirements*.txt pyproject.toml)",
+      "Bash(cat app/services/xp_policy.py)",
+      "Bash(sort -t: -k1 -n)",
+      "Bash(perl -i -pe 's/font-size: \\(\\\\d+\\)px/\"font-size: \".\\($1+2\\).\"px\"/ge' myrology.css)"
+    ],
+    "additionalDirectories": [
+      "/Users/incognito/True_Yodha/backend/app/schemas",
+      "/Users/incognito/True_Yodha/backend/app/routers",
+      "/Users/incognito/True_Yodha/frontend/mobile",
+      "/Users/incognito/True_Yodha/frontend/app/myrology"
+    ]
+  }
+}

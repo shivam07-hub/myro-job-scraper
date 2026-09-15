@@ -1,0 +1,86 @@
+# Candidate ATS board tokens for harvest_boards.py
+# Collected FREE via site: searches (site:boards.greenhouse.io / jobs.lever.co / etc.) 2026-06-13.
+# Format: `ats:token` (precise) or bare `token` (probe all 4). Harvester dedups vs KNOWN_PORTALS.
+
+# ── greenhouse ──
+greenhouse:truecaller
+greenhouse:meltplan
+greenhouse:atomicwork
+greenhouse:interfaceai
+greenhouse:razorpaysoftwareprivatelimited
+greenhouse:currenciesdirect
+greenhouse:6sense
+
+# ── lever ──
+lever:brillio-2
+lever:resilinc
+lever:binance
+lever:weekdayworks
+lever:weloglobal
+lever:thinkahead
+lever:beghouconsulting
+lever:smart-working-solutions
+
+# ── ashby ──
+ashby:netgear
+ashby:pebl
+ashby:sentilink
+ashby:zzazz
+
+# ── smartrecruiters ──
+smartrecruiters:TechnicolorCreativeStudios1
+smartrecruiters:firstabudhabibank
+smartrecruiters:InfowayGroup
+smartrecruiters:MicroPyramidInformaticsPvtLtd
+smartrecruiters:SQUIRCLEITCONSULTINGSERVICESPVTLTD
+smartrecruiters:CapitalAimFinancialAdvisoryPvtLtd
+smartrecruiters:tminetwork2
+smartrecruiters:PublicisGroupe
+smartrecruiters:LinkedIn3
+
+# ── uncertain ATS (probe all) ──
+coupa
+
+# ═══════════════════════════════════════════════════════════════════
+# FRESH SEED 2026-07-26 — P2/2a token refill.
+# Collected FREE via site: searches (ATS × sector × city), deduped vs
+# KNOWN_PORTALS.md by name (dropped: Databricks/Glean/AlphaSense/Groww/
+# InMobi/Rubrik/Druva/Paytm/JumpCloud/Zimperium/Hevo/FamPay/Flagright/
+# Cartesia/Notion/Freshworks/Syngenta — already tracked; Jobgether/
+# Welocalize/Weloglobal — aggregator/localization, excluded upstream).
+# Harvester India-filters + quality-gates + dedups again on run.
+
+# ── greenhouse (fresh) ──
+greenhouse:earnin
+greenhouse:instawork
+greenhouse:degreed
+greenhouse:samsara
+greenhouse:jumio
+greenhouse:pay2dc
+greenhouse:codeandtheory
+greenhouse:emergentlabsinc
+greenhouse:alphasenseindia
+
+# ── lever (fresh) ──
+lever:gohighlevel
+lever:Sprinto
+lever:nium
+lever:ion
+
+# ── ashby (fresh) ──
+ashby:Aspora
+ashby:ema
+ashby:articul8
+ashby:broccoli
+ashby:g2
+ashby:hackerone
+ashby:blitzy
+ashby:certifyos
+ashby:SiteMinder
+
+# ── smartrecruiters (fresh) ──
+smartrecruiters:Entain
+smartrecruiters:ph7
+smartrecruiters:VVents
+smartrecruiters:ApplusIDIADA1
+smartrecruiters:Custom-Soft

@@ -1,0 +1,254 @@
+{
+  "_comment": "Workday tenant overrides — edit here, no Python change needed. See portal_reader.py:_load_workday_registry(). Keys must match Company column in KNOWN_PORTALS.md exactly.",
+  "_blocked_comment": "blocked=true: Cloudflare rejects ALL POSTs even with valid India UUID. Scraper skips API immediately, falls straight to Firecrawl on careers_url. Verified 2026-04-29.",
+  "Coca-Cola": {
+    "search_text": "india"
+  },
+  "Nike": {
+    "search_text": "india"
+  },
+  "AB InBev": {
+    "search_text": "India"
+  },
+  "Mondelez": {
+    "search_text": "India"
+  },
+  "Kraft Heinz": {
+    "search_text": "India"
+  },
+  "Genpact": {
+    "search_text": "india"
+  },
+  "Intel": {
+    "search_text": "india"
+  },
+  "Target": {
+    "search_text": "india"
+  },
+  "Dell": {
+    "search_text": "india"
+  },
+  "3M": {
+    "india_facet_param": "Location_Country",
+    "india_uuid": "c4f78be1a8f14da0ab49ce1162348a5e"
+  },
+  "NXP Semiconductors": {
+    "india_facet_param": "Location_Country",
+    "india_uuid": "c4f78be1a8f14da0ab49ce1162348a5e"
+  },
+  "Autodesk": {
+    "india_facet_param": "locationCountry",
+    "india_uuid": "c4f78be1a8f14da0ab49ce1162348a5e"
+  },
+  "DXC Technology": {
+    "india_facet_param": "locationCountry",
+    "india_uuid": "c4f78be1a8f14da0ab49ce1162348a5e"
+  },
+  "Airbus": {
+    "india_facet_param": "locationCountry",
+    "india_uuid": "c4f78be1a8f14da0ab49ce1162348a5e",
+    "it_facet_param": "jobFamilyGroup",
+    "it_uuids": [
+      "f5811cef9cb5015323ad7f3f550a1df2"
+    ]
+  },
+  "Shell": {
+    "india_facet_param": "locationCountry",
+    "india_uuid": "c4f78be1a8f14da0ab49ce1162348a5e",
+    "it_facet_param": "jobFamilyGroup",
+    "it_uuids": [
+      "a87fe1bd64b8016d9c737d3fa72c300c"
+    ]
+  },
+  "Roche": {
+    "india_facet_param": "locations",
+    "india_uuid": "54c59631019f01c479dfb787a377c235"
+  },
+  "Philips": {
+    "india_facet_param": "locationHierarchy1",
+    "india_uuid": "6e1b2a934716103c2adde1d57e7700ea",
+    "it_facet_param": "jobFamilyGroup",
+    "it_uuids": [
+      "94eec23a3cab01216af07777df6a8d29",
+      "169c3da8f7270169c0ee692fbd324709",
+      "40b79030b3e0100163f33cd03cff0000",
+      "58aeacb31cc0011e54561931bd325829",
+      "358cbd5a2fcc01e0783eb441a1012864",
+      "a05309e84f810165f53b47218532188d"
+    ]
+  },
+  "BrowserStack": {
+    "search_text": "India"
+  },
+  "Barclays": {
+    "india_facet_param": "locations",
+    "india_uuids": [
+      "1110a9ca6540100196e1f0c315e90000",
+      "112c0542820110016378a0a3e68d0000",
+      "112c05428201100163788a5627320000",
+      "253dfca5ccfc10016b1361f46cfe0000",
+      "c58206e6ec7510011bb86a010cff0000",
+      "1ab48a98eb7c1001634cf23b210c0000",
+      "b8f75d1cb9781000cd91027a85e30000",
+      "1ab48a98eb7c100163423aff71b80000",
+      "112c0542820110016377af553b050000",
+      "112c0542820110016377c02c6ef00000",
+      "1ab48a98eb7c100163465bf6c3310000",
+      "112c05428201100163763bd6ad400000"
+    ]
+  },
+  "Deutsche Bank": {
+    "india_facet_param": "Country",
+    "india_uuid": "c4f78be1a8f14da0ab49ce1162348a5e"
+  },
+  "Thomson Reuters": {
+    "india_facet_param": "Location_Country",
+    "india_uuid": "c4f78be1a8f14da0ab49ce1162348a5e"
+  },
+  "Maersk": {
+    "india_facet_param": "locations",
+    "india_uuids": [
+      "4e4d26638c45010787a24d3a78f50000",
+      "8df45049b43810013bfc511ded230000",
+      "4e4d26638c45010787a25209b00e0000",
+      "26c4d72049dc10009e0daf1507aa0000",
+      "853120f5cc8a10009e388f5d2aec0000",
+      "15350d48499210009e07c02b134d0000",
+      "ddba4775944910009e1b192970560000",
+      "d8801e5af43d10009dfa3a8079340000",
+      "5fb6db3471ab10009df11e5466840000",
+      "d8801e5af43d10009e0f6cca3a670000",
+      "ddba4775944910009e424afe3f850000",
+      "7a38998ecd771001354b00da72100000",
+      "e27b2cd8aca310009e0d527ac7650000",
+      "d8801e5af43d10009e04f442bf430000",
+      "f37d2115b2fa1001e2ef05dbcdc00000",
+      "614482d9d2ed1000c19c822fe2b50000",
+      "e78dddcb583810009e1299afb33f0000",
+      "5fb6db3471ab10009e1c4676598a0000",
+      "d8801e5af43d10009e1bfb079d6e0000",
+      "4140682c689310014db3b323f82e0000",
+      "4e4d26638c450107879f5562654c0000",
+      "4e4d26638c45010787a37d5e5ad00000",
+      "0829310dd78f100197add0dc5cc90000",
+      "4e4d26638c45010787a25b0edea60000",
+      "4e4d26638c45010787a25f43fa5f0000",
+      "4e4d26638c45010787a265e08d260000"
+    ]
+  },
+  "_blocked_workday_verified_2026_04_29": {
+    "note": "All below: Cloudflare blocks POST (422) even with valid India UUID AND full browser headers. Verified by adding CF-Ray header check. Fall straight to careers_url Firecrawl."
+  },
+  "Engie": {
+    "blocked": true
+  },
+  "GE Aerospace": {
+    "blocked": true
+  },
+  "Bank of America": {
+    "blocked": true
+  },
+  "Ford": {
+    "blocked": true
+  },
+  "Medtronic": {
+    "blocked": true
+  },
+  "Inspire Brands": {
+    "blocked": true
+  },
+  "Hitachi Vantara": {
+    "blocked": true
+  },
+  "Intuit": {
+    "blocked": true
+  },
+  "blackberry": {
+    "india_facet_param": "Country",
+    "india_uuid": "c4f78be1a8f14da0ab49ce1162348a5e"
+  },
+  "BlackBerry": {
+    "india_facet_param": "Country",
+    "india_uuid": "c4f78be1a8f14da0ab49ce1162348a5e"
+  },
+  "Accenture": {
+    "india_facet_param": "locationCountry",
+    "india_uuid": "c4f78be1a8f14da0ab49ce1162348a5e"
+  },
+  "Chanel": {
+    "india_facet_param": "locationCountry",
+    "india_uuid": "c4f78be1a8f14da0ab49ce1162348a5e"
+  },
+  "Fidelity Investments": {
+    "india_facet_param": "locationCountry",
+    "india_uuid": "c4f78be1a8f14da0ab49ce1162348a5e"
+  },
+  "Novartis": {
+    "india_facet_param": "locationCountry",
+    "india_uuid": "c4f78be1a8f14da0ab49ce1162348a5e"
+  },
+  "Salesforce": {
+    "india_facet_param": "CF_-_REC_-_LRV_-_Job_Posting_Anchor_-_Country_from_Job_Posting_Location_Extended",
+    "india_uuid": "c4f78be1a8f14da0ab49ce1162348a5e"
+  },
+  "Sanofi": {
+    "india_facet_param": "locationCountry",
+    "india_uuid": "c4f78be1a8f14da0ab49ce1162348a5e"
+  },
+  "Wells Fargo": {
+    "india_facet_param": "locationCountry",
+    "india_uuid": "c4f78be1a8f14da0ab49ce1162348a5e"
+  },
+  "State Street": {
+    "india_facet_param": "Location_Country",
+    "india_uuid": "c4f78be1a8f14da0ab49ce1162348a5e"
+  },
+  "DBS Bank": {
+    "india_facet_param": "locationCountry",
+    "india_uuid": "c4f78be1a8f14da0ab49ce1162348a5e"
+  },
+  "PwC India": {
+    "search_text": "india"
+  },
+  "Samsung": {
+    "india_facet_param": "locations",
+    "india_uuid": "0c974e8c1228010867596ab21b3c3469"
+  },
+  "IBM": {
+    "blocked": true
+  },
+  "CrowdStrike": {
+    "india_facet_param": "locationCountry",
+    "india_uuid": "c4f78be1a8f14da0ab49ce1162348a5e"
+  },
+  "Workday": {
+    "india_facet_param": "Location_Country",
+    "india_uuid": "c4f78be1a8f14da0ab49ce1162348a5e"
+  },
+  "Sprinklr": {
+    "india_facet_param": "locationCountry",
+    "india_uuid": "c4f78be1a8f14da0ab49ce1162348a5e"
+  },
+  "Automation Anywhere": {
+    "india_facet_param": "locationCountry",
+    "india_uuid": "c4f78be1a8f14da0ab49ce1162348a5e"
+  },
+  "Vanguard Group": {
+    "search_text": "India"
+  },
+  "KLA Corporation": {
+    "india_facet_param": "Country",
+    "india_uuid": "c4f78be1a8f14da0ab49ce1162348a5e"
+  },
+  "Carrier Global": {
+    "india_facet_param": "location_Country",
+    "india_uuid": "c4f78be1a8f14da0ab49ce1162348a5e"
+  },
+  "Cohesity": {
+    "india_facet_param": "locationCountry",
+    "india_uuid": "c4f78be1a8f14da0ab49ce1162348a5e"
+  },
+  "ThoughtSpot": {
+    "search_text": "India"
+  }
+}

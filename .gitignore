@@ -1,0 +1,37 @@
+# ── OS / editor ───────────────────────────────────────────────────────────────
+.DS_Store
+.vscode/
+.idea/
+.cursor/
+
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.egg-info/
+/.venv
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ── Secrets — never commit ────────────────────────────────────────────────────
+.env
+.env.bak
+.env.local
+CLAUDE.local.md
+*key.json
+
+# ── Scrape artifacts (generated; job dumps never get committed) ───────────────
+/All_CSV_Outputs/
+/logs/
+/validation_outputs/
+/outputs/
+*.csv
+scraper/firecrawl_cache.json
+scraper/question_bank_inputs/
+
+# ── Local scratch ─────────────────────────────────────────────────────────────
+/_local/
+/tmp/
+/graphify-out/
+*.pdf
+*.xlsx

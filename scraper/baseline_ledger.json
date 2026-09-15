@@ -1,0 +1,2291 @@
+{
+  "_comment": "Last-known-good India job counts per company. Forward-only: synced from Supabase scrape_diagnostics after each successful csv_importer load. Never edit counts down by hand. See heal/baseline.py.",
+  "3M": {
+    "company": "3M",
+    "ats": "",
+    "last_good_count": 107,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "6sense": {
+    "company": "6sense",
+    "ats": "",
+    "last_good_count": 6,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "AB InBev": {
+    "company": "AB InBev",
+    "ats": "",
+    "last_good_count": 40,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "ABB": {
+    "company": "ABB",
+    "ats": "",
+    "last_good_count": 214,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "ADP": {
+    "company": "ADP",
+    "ats": "",
+    "last_good_count": 20,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "AHEAD": {
+    "company": "AHEAD",
+    "ats": "",
+    "last_good_count": 57,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "AMD": {
+    "company": "AMD",
+    "ats": "",
+    "last_good_count": 189,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "ANZ Bank": {
+    "company": "ANZ Bank",
+    "ats": "",
+    "last_good_count": 18,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "ARM Holdings": {
+    "company": "ARM Holdings",
+    "ats": "",
+    "last_good_count": 102,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Abacus Insights": {
+    "company": "Abacus Insights",
+    "ats": "",
+    "last_good_count": 6,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Acceldata": {
+    "company": "Acceldata",
+    "ats": "",
+    "last_good_count": 19,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Accenture": {
+    "company": "Accenture",
+    "ats": "",
+    "last_good_count": 2000,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Adani Gas": {
+    "company": "Adani Gas",
+    "ats": "",
+    "last_good_count": 59,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Adani Group": {
+    "company": "Adani Group",
+    "ats": "",
+    "last_good_count": 10,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Adani Power Transmission": {
+    "company": "Adani Power Transmission",
+    "ats": "",
+    "last_good_count": 11,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Adani Solar": {
+    "company": "Adani Solar",
+    "ats": "",
+    "last_good_count": 54,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Adani Thermal Power": {
+    "company": "Adani Thermal Power",
+    "ats": "",
+    "last_good_count": 207,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "AdaptNXT Technology Solutions": {
+    "company": "AdaptNXT Technology Solutions",
+    "ats": "",
+    "last_good_count": 2,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Adidas": {
+    "company": "Adidas",
+    "ats": "",
+    "last_good_count": 11,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Aditya Birla Group": {
+    "company": "Aditya Birla Group",
+    "ats": "",
+    "last_good_count": 100,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Adobe": {
+    "company": "Adobe",
+    "ats": "",
+    "last_good_count": 73,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Airbnb": {
+    "company": "Airbnb",
+    "ats": "",
+    "last_good_count": 11,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Airbus": {
+    "company": "Airbus",
+    "ats": "",
+    "last_good_count": 81,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Airwallex": {
+    "company": "Airwallex",
+    "ats": "",
+    "last_good_count": 9,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Align Technology": {
+    "company": "Align Technology",
+    "ats": "",
+    "last_good_count": 14,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "AlphaSense India": {
+    "company": "AlphaSense India",
+    "ats": "",
+    "last_good_count": 43,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Alstom": {
+    "company": "Alstom",
+    "ats": "",
+    "last_good_count": 255,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Amazon": {
+    "company": "Amazon",
+    "ats": "",
+    "last_good_count": 95,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "American Express": {
+    "company": "American Express",
+    "ats": "",
+    "last_good_count": 39,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Anthropic": {
+    "company": "Anthropic",
+    "ats": "",
+    "last_good_count": 3,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Aon": {
+    "company": "Aon",
+    "ats": "",
+    "last_good_count": 47,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Apple": {
+    "company": "Apple",
+    "ats": "",
+    "last_good_count": 49,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Arista Networks": {
+    "company": "Arista Networks",
+    "ats": "",
+    "last_good_count": 26,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Asian Paints": {
+    "company": "Asian Paints",
+    "ats": "",
+    "last_good_count": 433,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "AstraZeneca": {
+    "company": "AstraZeneca",
+    "ats": "",
+    "last_good_count": 14,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Atlan": {
+    "company": "Atlan",
+    "ats": "",
+    "last_good_count": 6,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Atlassian": {
+    "company": "Atlassian",
+    "ats": "",
+    "last_good_count": 26,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Atomicwork": {
+    "company": "Atomicwork",
+    "ats": "",
+    "last_good_count": 21,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Autodesk": {
+    "company": "Autodesk",
+    "ats": "",
+    "last_good_count": 46,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Automation Anywhere": {
+    "company": "Automation Anywhere",
+    "ats": "",
+    "last_good_count": 14,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Auxia": {
+    "company": "Auxia",
+    "ats": "",
+    "last_good_count": 2,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Axis Bank": {
+    "company": "Axis Bank",
+    "ats": "",
+    "last_good_count": 9893,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "BCG": {
+    "company": "BCG",
+    "ats": "",
+    "last_good_count": 64,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "BDO India": {
+    "company": "BDO India",
+    "ats": "",
+    "last_good_count": 32,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "BNY Mellon": {
+    "company": "BNY Mellon",
+    "ats": "",
+    "last_good_count": 166,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Bain & Company": {
+    "company": "Bain & Company",
+    "ats": "",
+    "last_good_count": 11,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": "SilkRoad ExternalJobs",
+    "updated": "2026-09-09"
+  },
+  "Bajaj Auto": {
+    "company": "Bajaj Auto",
+    "ats": "",
+    "last_good_count": 173,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Barclays": {
+    "company": "Barclays",
+    "ats": "",
+    "last_good_count": 533,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Beghou Consulting": {
+    "company": "Beghou Consulting",
+    "ats": "",
+    "last_good_count": 46,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Binance": {
+    "company": "Binance",
+    "ats": "lever",
+    "last_good_count": 1,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "BlackBerry": {
+    "company": "BlackBerry",
+    "ats": "",
+    "last_good_count": 1,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Bluevine India": {
+    "company": "Bluevine India",
+    "ats": "",
+    "last_good_count": 8,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Boeing": {
+    "company": "Boeing",
+    "ats": "",
+    "last_good_count": 3,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Boomi": {
+    "company": "Boomi",
+    "ats": "",
+    "last_good_count": 2,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Bosch": {
+    "company": "Bosch",
+    "ats": "",
+    "last_good_count": 73,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Brillio": {
+    "company": "Brillio",
+    "ats": "",
+    "last_good_count": 117,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "BrowserStack": {
+    "company": "BrowserStack",
+    "ats": "",
+    "last_good_count": 29,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "CMA CGM": {
+    "company": "CMA CGM",
+    "ats": "",
+    "last_good_count": 9,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "CRED": {
+    "company": "CRED",
+    "ats": "",
+    "last_good_count": 10,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "CRISIL": {
+    "company": "CRISIL",
+    "ats": "",
+    "last_good_count": 590,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Capgemini": {
+    "company": "Capgemini",
+    "ats": "",
+    "last_good_count": 100,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Carbynetech": {
+    "company": "Carbynetech",
+    "ats": "",
+    "last_good_count": 1,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Cargill": {
+    "company": "Cargill",
+    "ats": "",
+    "last_good_count": 67,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Carrier Global": {
+    "company": "Carrier Global",
+    "ats": "",
+    "last_good_count": 67,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Cars24": {
+    "company": "Cars24",
+    "ats": "",
+    "last_good_count": 1,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Cartesia": {
+    "company": "Cartesia",
+    "ats": "",
+    "last_good_count": 3,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Celonis": {
+    "company": "Celonis",
+    "ats": "",
+    "last_good_count": 35,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Chanel": {
+    "company": "Chanel",
+    "ats": "",
+    "last_good_count": 1,
+    "last_good_run": "ea37379e-5f3c-46d0-9c36-6ddaaac6e8fd",
+    "route": null,
+    "updated": "2026-06-13"
+  },
+  "Cisco": {
+    "company": "Cisco",
+    "ats": "",
+    "last_good_count": 260,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Citibank": {
+    "company": "Citibank",
+    "ats": "",
+    "last_good_count": 159,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "ClickHouse": {
+    "company": "ClickHouse",
+    "ats": "",
+    "last_good_count": 10,
+    "last_good_run": "5f35eed2-8165-4734-9afd-32ef22d5285c",
+    "route": null,
+    "updated": "2026-09-01"
+  },
+  "Cloudflare": {
+    "company": "Cloudflare",
+    "ats": "",
+    "last_good_count": 15,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Coca-Cola": {
+    "company": "Coca-Cola",
+    "ats": "",
+    "last_good_count": 6,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Cognition": {
+    "company": "Cognition",
+    "ats": "",
+    "last_good_count": 3,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Cognizant": {
+    "company": "Cognizant",
+    "ats": "",
+    "last_good_count": 517,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Cohesity": {
+    "company": "Cohesity",
+    "ats": "",
+    "last_good_count": 10,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Confluent": {
+    "company": "Confluent",
+    "ats": "",
+    "last_good_count": 1,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Continental": {
+    "company": "Continental",
+    "ats": "",
+    "last_good_count": 66,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Costco Wholesale": {
+    "company": "Costco Wholesale",
+    "ats": "",
+    "last_good_count": 15,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Coupa": {
+    "company": "Coupa",
+    "ats": "",
+    "last_good_count": 3,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "CrowdStrike": {
+    "company": "CrowdStrike",
+    "ats": "",
+    "last_good_count": 56,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "DAT Freight & Analytics": {
+    "company": "DAT Freight & Analytics",
+    "ats": "",
+    "last_good_count": 3,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "DBS Bank": {
+    "company": "DBS Bank",
+    "ats": "",
+    "last_good_count": 453,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "DE Shaw": {
+    "company": "DE Shaw",
+    "ats": "",
+    "last_good_count": 84,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "DXC Technology": {
+    "company": "DXC Technology",
+    "ats": "",
+    "last_good_count": 100,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Da Vinci Derivatives": {
+    "company": "Da Vinci Derivatives",
+    "ats": "",
+    "last_good_count": 1,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Databricks": {
+    "company": "Databricks",
+    "ats": "",
+    "last_good_count": 97,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Datadog": {
+    "company": "Datadog",
+    "ats": "",
+    "last_good_count": 7,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Deepgram": {
+    "company": "Deepgram",
+    "ats": "",
+    "last_good_count": 2,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Dell": {
+    "company": "Dell",
+    "ats": "",
+    "last_good_count": 77,
+    "last_good_run": "ff6e9718-027c-4eca-ae88-9a5b73bd1269",
+    "route": null,
+    "updated": "2026-07-07"
+  },
+  "Deloitte India": {
+    "company": "Deloitte India",
+    "ats": "",
+    "last_good_count": 645,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Deloitte India (BrassRing)": {
+    "company": "Deloitte India (BrassRing)",
+    "ats": "",
+    "last_good_count": 642,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Deutsche Bank": {
+    "company": "Deutsche Bank",
+    "ats": "",
+    "last_good_count": 276,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Dr. Reddy's": {
+    "company": "Dr. Reddy's",
+    "ats": "",
+    "last_good_count": 95,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Dream Sports (Dream11)": {
+    "company": "Dream Sports (Dream11)",
+    "ats": "",
+    "last_good_count": 22,
+    "last_good_run": "320df930-2975-44a4-aab1-467704726e66",
+    "route": null,
+    "updated": "2026-07-13"
+  },
+  "Druva": {
+    "company": "Druva",
+    "ats": "",
+    "last_good_count": 14,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "EY India": {
+    "company": "EY India",
+    "ats": "",
+    "last_good_count": 76,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "EY India Experienced": {
+    "company": "EY India Experienced",
+    "ats": "",
+    "last_good_count": 2524,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Elastic": {
+    "company": "Elastic",
+    "ats": "",
+    "last_good_count": 16,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Eli Lilly": {
+    "company": "Eli Lilly",
+    "ats": "",
+    "last_good_count": 39,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Energy Exemplar": {
+    "company": "Energy Exemplar",
+    "ats": "",
+    "last_good_count": 21,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Exotel": {
+    "company": "Exotel",
+    "ats": "",
+    "last_good_count": 25,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "FamPay": {
+    "company": "FamPay",
+    "ats": "",
+    "last_good_count": 13,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Fermi AI": {
+    "company": "Fermi AI",
+    "ats": "",
+    "last_good_count": 14,
+    "last_good_run": "5f35eed2-8165-4734-9afd-32ef22d5285c",
+    "route": null,
+    "updated": "2026-09-01"
+  },
+  "Fi Money (Epifi)": {
+    "company": "Fi Money (Epifi)",
+    "ats": "",
+    "last_good_count": 11,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Fidelity Investments": {
+    "company": "Fidelity Investments",
+    "ats": "",
+    "last_good_count": 8,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Figma": {
+    "company": "Figma",
+    "ats": "",
+    "last_good_count": 2,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Flagright": {
+    "company": "Flagright",
+    "ats": "",
+    "last_good_count": 2,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Ford": {
+    "company": "Ford",
+    "ats": "",
+    "last_good_count": 4,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Freshworks": {
+    "company": "Freshworks",
+    "ats": "",
+    "last_good_count": 48,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "GMR Group": {
+    "company": "GMR Group",
+    "ats": "",
+    "last_good_count": 9,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Genpact": {
+    "company": "Genpact",
+    "ats": "",
+    "last_good_count": 1810,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "GitLab": {
+    "company": "GitLab",
+    "ats": "",
+    "last_good_count": 40,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Glean": {
+    "company": "Glean",
+    "ats": "",
+    "last_good_count": 21,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Godrej Consumer Products": {
+    "company": "Godrej Consumer Products",
+    "ats": "",
+    "last_good_count": 330,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Goldman Sachs": {
+    "company": "Goldman Sachs",
+    "ats": "",
+    "last_good_count": 133,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Google": {
+    "company": "Google",
+    "ats": "",
+    "last_good_count": 294,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "GreyCampus (Odin School)": {
+    "company": "GreyCampus (Odin School)",
+    "ats": "",
+    "last_good_count": 1,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Groww": {
+    "company": "Groww",
+    "ats": "",
+    "last_good_count": 7,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "H&M": {
+    "company": "H&M",
+    "ats": "smartrecruiters",
+    "last_good_count": 66,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "HCL Technologies": {
+    "company": "HCL Technologies",
+    "ats": "",
+    "last_good_count": 149,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "HP (HPE)": {
+    "company": "HP (HPE)",
+    "ats": "",
+    "last_good_count": 247,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "HSBC": {
+    "company": "HSBC",
+    "ats": "",
+    "last_good_count": 80,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": "Eightfold direct API domain=hsbc.com",
+    "updated": "2026-09-09"
+  },
+  "HackerRank": {
+    "company": "HackerRank",
+    "ats": "",
+    "last_good_count": 17,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Haleon": {
+    "company": "Haleon",
+    "ats": "",
+    "last_good_count": 45,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Hevo Data": {
+    "company": "Hevo Data",
+    "ats": "",
+    "last_good_count": 43,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "HiLabs": {
+    "company": "HiLabs",
+    "ats": "",
+    "last_good_count": 10,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "HighRadius": {
+    "company": "HighRadius",
+    "ats": "",
+    "last_good_count": 64,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Hightouch": {
+    "company": "Hightouch",
+    "ats": "",
+    "last_good_count": 1,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Hitachi Vantara": {
+    "company": "Hitachi Vantara",
+    "ats": "",
+    "last_good_count": 1,
+    "last_good_run": "ff6e9718-027c-4eca-ae88-9a5b73bd1269",
+    "route": null,
+    "updated": "2026-07-07"
+  },
+  "Honeywell": {
+    "company": "Honeywell",
+    "ats": "",
+    "last_good_count": 307,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Hootsuite": {
+    "company": "Hootsuite",
+    "ats": "",
+    "last_good_count": 2,
+    "last_good_run": "5f35eed2-8165-4734-9afd-32ef22d5285c",
+    "route": null,
+    "updated": "2026-09-01"
+  },
+  "IIFL Finance": {
+    "company": "IIFL Finance",
+    "ats": "",
+    "last_good_count": 1,
+    "last_good_run": "ff6e9718-027c-4eca-ae88-9a5b73bd1269",
+    "route": null,
+    "updated": "2026-07-07"
+  },
+  "ITC Limited": {
+    "company": "ITC Limited",
+    "ats": "",
+    "last_good_count": 51,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Icertis": {
+    "company": "Icertis",
+    "ats": "",
+    "last_good_count": 20,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "InMobi": {
+    "company": "InMobi",
+    "ats": "",
+    "last_good_count": 32,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Infineon Technologies": {
+    "company": "Infineon Technologies",
+    "ats": "pcsx",
+    "last_good_count": 156,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Infosys": {
+    "company": "Infosys",
+    "ats": "",
+    "last_good_count": 1607,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Intel": {
+    "company": "Intel",
+    "ats": "",
+    "last_good_count": 43,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "IntouchCX": {
+    "company": "IntouchCX",
+    "ats": "",
+    "last_good_count": 93,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Intuit": {
+    "company": "Intuit",
+    "ats": "",
+    "last_good_count": 29,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Ivalua": {
+    "company": "Ivalua",
+    "ats": "",
+    "last_good_count": 1,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "JAGGAER": {
+    "company": "JAGGAER",
+    "ats": "",
+    "last_good_count": 9,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "JP Morgan Chase": {
+    "company": "JP Morgan Chase",
+    "ats": "",
+    "last_good_count": 367,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "JumpCloud": {
+    "company": "JumpCloud",
+    "ats": "",
+    "last_good_count": 9,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Juspay": {
+    "company": "Juspay",
+    "ats": "",
+    "last_good_count": 2,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "KLA Corporation": {
+    "company": "KLA Corporation",
+    "ats": "",
+    "last_good_count": 63,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "KPMG India": {
+    "company": "KPMG India",
+    "ats": "",
+    "last_good_count": 482,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Kaseya": {
+    "company": "Kaseya",
+    "ats": "",
+    "last_good_count": 18,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Keysight Technologies": {
+    "company": "Keysight Technologies",
+    "ats": "",
+    "last_good_count": 53,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Kotak Mahindra Bank": {
+    "company": "Kotak Mahindra Bank",
+    "ats": "",
+    "last_good_count": 800,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Kraft Heinz": {
+    "company": "Kraft Heinz",
+    "ats": "",
+    "last_good_count": 76,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "LDC (Louis Dreyfus)": {
+    "company": "LDC (Louis Dreyfus)",
+    "ats": "",
+    "last_good_count": 13,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "LTIMindtree": {
+    "company": "LTIMindtree",
+    "ats": "",
+    "last_good_count": 2,
+    "last_good_run": "e2328742-2012-47cc-aff9-e62a99fe2fa4",
+    "route": null,
+    "updated": "2026-07-13"
+  },
+  "Lam Research": {
+    "company": "Lam Research",
+    "ats": "pcsx",
+    "last_good_count": 112,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Lendingkart": {
+    "company": "Lendingkart",
+    "ats": "",
+    "last_good_count": 1,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Leucine": {
+    "company": "Leucine",
+    "ats": "",
+    "last_good_count": 1,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "LinkedIn": {
+    "company": "LinkedIn",
+    "ats": "",
+    "last_good_count": 57,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Lodha Group": {
+    "company": "Lodha Group",
+    "ats": "",
+    "last_good_count": 72,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Lyric": {
+    "company": "Lyric",
+    "ats": "",
+    "last_good_count": 8,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Maersk": {
+    "company": "Maersk",
+    "ats": "",
+    "last_good_count": 170,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "McDonald's GCC": {
+    "company": "McDonald's GCC",
+    "ats": "",
+    "last_good_count": 10,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "McKinsey & Company": {
+    "company": "McKinsey & Company",
+    "ats": "",
+    "last_good_count": 45,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Meesho": {
+    "company": "Meesho",
+    "ats": "",
+    "last_good_count": 47,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Meltplan": {
+    "company": "Meltplan",
+    "ats": "",
+    "last_good_count": 5,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Meta": {
+    "company": "Meta",
+    "ats": "",
+    "last_good_count": 22,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Michelin": {
+    "company": "Michelin",
+    "ats": "",
+    "last_good_count": 12,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Micron Technology": {
+    "company": "Micron Technology",
+    "ats": "pcsx",
+    "last_good_count": 282,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": "micron.eightfold.ai/api/pcsx/search?domain=micron.com&location=India",
+    "updated": "2026-09-09"
+  },
+  "Microsoft": {
+    "company": "Microsoft",
+    "ats": "",
+    "last_good_count": 240,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Mindtickle": {
+    "company": "Mindtickle",
+    "ats": "",
+    "last_good_count": 17,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "MoEngage": {
+    "company": "MoEngage",
+    "ats": "",
+    "last_good_count": 16,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Mondelez": {
+    "company": "Mondelez",
+    "ats": "",
+    "last_good_count": 37,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "MongoDB": {
+    "company": "MongoDB",
+    "ats": "",
+    "last_good_count": 63,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Monitor Deloitte": {
+    "company": "Monitor Deloitte",
+    "ats": "",
+    "last_good_count": 1696,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Moody's": {
+    "company": "Moody's",
+    "ats": "",
+    "last_good_count": 52,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Morgan Stanley": {
+    "company": "Morgan Stanley",
+    "ats": "",
+    "last_good_count": 109,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": "PCSX on Eightfold host",
+    "updated": "2026-09-09"
+  },
+  "Mphasis": {
+    "company": "Mphasis",
+    "ats": "",
+    "last_good_count": 195,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": "mphasis.ripplehire.com",
+    "updated": "2026-09-09"
+  },
+  "Myntra": {
+    "company": "Myntra",
+    "ats": "",
+    "last_good_count": 60,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "NETGEAR": {
+    "company": "NETGEAR",
+    "ats": "",
+    "last_good_count": 27,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "NICE": {
+    "company": "NICE",
+    "ats": "",
+    "last_good_count": 21,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "NPCI": {
+    "company": "NPCI",
+    "ats": "",
+    "last_good_count": 134,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "NVIDIA": {
+    "company": "NVIDIA",
+    "ats": "pcsx",
+    "last_good_count": 242,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": "jobs.nvidia.com/api/pcsx/search?domain=nvidia.com&location=india",
+    "updated": "2026-09-09"
+  },
+  "NXP Semiconductors": {
+    "company": "NXP Semiconductors",
+    "ats": "",
+    "last_good_count": 206,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Nestlé": {
+    "company": "Nestlé",
+    "ats": "",
+    "last_good_count": 10,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Netflix": {
+    "company": "Netflix",
+    "ats": "",
+    "last_good_count": 7,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Netskope": {
+    "company": "Netskope",
+    "ats": "",
+    "last_good_count": 19,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Newton School": {
+    "company": "Newton School",
+    "ats": "",
+    "last_good_count": 1,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Nike": {
+    "company": "Nike",
+    "ats": "",
+    "last_good_count": 72,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Nokia": {
+    "company": "Nokia",
+    "ats": "",
+    "last_good_count": 144,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Notion": {
+    "company": "Notion",
+    "ats": "",
+    "last_good_count": 4,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Novartis": {
+    "company": "Novartis",
+    "ats": "",
+    "last_good_count": 138,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Nutanix": {
+    "company": "Nutanix",
+    "ats": "",
+    "last_good_count": 39,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Nykaa": {
+    "company": "Nykaa",
+    "ats": "",
+    "last_good_count": 22,
+    "last_good_run": "5f35eed2-8165-4734-9afd-32ef22d5285c",
+    "route": null,
+    "updated": "2026-09-01"
+  },
+  "Observe.ai": {
+    "company": "Observe.ai",
+    "ats": "",
+    "last_good_count": 9,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Okta": {
+    "company": "Okta",
+    "ats": "",
+    "last_good_count": 99,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Oliver Wyman": {
+    "company": "Oliver Wyman",
+    "ats": "",
+    "last_good_count": 31,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Onehouse": {
+    "company": "Onehouse",
+    "ats": "",
+    "last_good_count": 5,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Oracle": {
+    "company": "Oracle",
+    "ats": "",
+    "last_good_count": 155,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Palo Alto Networks": {
+    "company": "Palo Alto Networks",
+    "ats": "",
+    "last_good_count": 136,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "PayPal": {
+    "company": "PayPal",
+    "ats": "pcsx",
+    "last_good_count": 5,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Paytm": {
+    "company": "Paytm",
+    "ats": "",
+    "last_good_count": 179,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Pebl": {
+    "company": "Pebl",
+    "ats": "",
+    "last_good_count": 8,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "PepsiCo": {
+    "company": "PepsiCo",
+    "ats": "",
+    "last_good_count": 232,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Persistent Systems": {
+    "company": "Persistent Systems",
+    "ats": "",
+    "last_good_count": 2,
+    "last_good_run": "c8917f0f-e64c-4a6c-81e3-9aa1dac822bf",
+    "route": "apipersistent.zwayam.com",
+    "updated": "2026-06-13"
+  },
+  "Philip Morris International": {
+    "company": "Philip Morris International",
+    "ats": "",
+    "last_good_count": 1,
+    "last_good_run": "e2328742-2012-47cc-aff9-e62a99fe2fa4",
+    "route": null,
+    "updated": "2026-07-13"
+  },
+  "Philips": {
+    "company": "Philips",
+    "ats": "",
+    "last_good_count": 34,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "PhonePe": {
+    "company": "PhonePe",
+    "ats": "",
+    "last_good_count": 55,
+    "last_good_run": "5f35eed2-8165-4734-9afd-32ef22d5285c",
+    "route": null,
+    "updated": "2026-09-01"
+  },
+  "Point72": {
+    "company": "Point72",
+    "ats": "",
+    "last_good_count": 39,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Postman": {
+    "company": "Postman",
+    "ats": "",
+    "last_good_count": 5,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Premji Invest": {
+    "company": "Premji Invest",
+    "ats": "",
+    "last_good_count": 3,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Procter & Gamble": {
+    "company": "Procter & Gamble",
+    "ats": "",
+    "last_good_count": 30,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Publicis Sapient": {
+    "company": "Publicis Sapient",
+    "ats": "",
+    "last_good_count": 21,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Pure Storage": {
+    "company": "Pure Storage",
+    "ats": "",
+    "last_good_count": 77,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "PwC India": {
+    "company": "PwC India",
+    "ats": "workday",
+    "last_good_count": 221,
+    "last_good_run": "20260514",
+    "route": "Workday searchText=india",
+    "updated": "2026-05-15"
+  },
+  "Qualcomm": {
+    "company": "Qualcomm",
+    "ats": "",
+    "last_good_count": 526,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": "PCSX; JD via JSON-LD",
+    "updated": "2026-09-09"
+  },
+  "Rakuten India": {
+    "company": "Rakuten India",
+    "ats": "",
+    "last_good_count": 4,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Razorpay": {
+    "company": "Razorpay",
+    "ats": "",
+    "last_good_count": 17,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Redpin (Currencies Direct)": {
+    "company": "Redpin (Currencies Direct)",
+    "ats": "",
+    "last_good_count": 5,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Refyne": {
+    "company": "Refyne",
+    "ats": "",
+    "last_good_count": 9,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Resilinc": {
+    "company": "Resilinc",
+    "ats": "",
+    "last_good_count": 5,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Rippling": {
+    "company": "Rippling",
+    "ats": "",
+    "last_good_count": 90,
+    "last_good_run": "c8917f0f-e64c-4a6c-81e3-9aa1dac822bf",
+    "route": null,
+    "updated": "2026-06-13"
+  },
+  "Rubrik": {
+    "company": "Rubrik",
+    "ats": "",
+    "last_good_count": 36,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "SBI Mutual Fund": {
+    "company": "SBI Mutual Fund",
+    "ats": "",
+    "last_good_count": 12,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "STMicroelectronics": {
+    "company": "STMicroelectronics",
+    "ats": "",
+    "last_good_count": 9,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Safe Security": {
+    "company": "Safe Security",
+    "ats": "",
+    "last_good_count": 10,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Salesforce": {
+    "company": "Salesforce",
+    "ats": "",
+    "last_good_count": 131,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Samsung": {
+    "company": "Samsung",
+    "ats": "",
+    "last_good_count": 28,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Sanas": {
+    "company": "Sanas",
+    "ats": "",
+    "last_good_count": 2,
+    "last_good_run": "5f35eed2-8165-4734-9afd-32ef22d5285c",
+    "route": null,
+    "updated": "2026-09-01"
+  },
+  "Sanofi": {
+    "company": "Sanofi",
+    "ats": "",
+    "last_good_count": 59,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Sarvam AI": {
+    "company": "Sarvam AI",
+    "ats": "",
+    "last_good_count": 63,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "SentiLink": {
+    "company": "SentiLink",
+    "ats": "",
+    "last_good_count": 1,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "ServiceNow": {
+    "company": "ServiceNow",
+    "ats": "",
+    "last_good_count": 41,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Shell": {
+    "company": "Shell",
+    "ats": "",
+    "last_good_count": 9,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Siemens": {
+    "company": "Siemens",
+    "ats": "",
+    "last_good_count": 887,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Skyflow": {
+    "company": "Skyflow",
+    "ats": "",
+    "last_good_count": 5,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Skylo Technologies": {
+    "company": "Skylo Technologies",
+    "ats": "",
+    "last_good_count": 14,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Snowflake": {
+    "company": "Snowflake",
+    "ats": "",
+    "last_good_count": 16,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Spotify": {
+    "company": "Spotify",
+    "ats": "",
+    "last_good_count": 1,
+    "last_good_run": "5f35eed2-8165-4734-9afd-32ef22d5285c",
+    "route": null,
+    "updated": "2026-09-01"
+  },
+  "Sprinklr": {
+    "company": "Sprinklr",
+    "ats": "",
+    "last_good_count": 33,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "State Street": {
+    "company": "State Street",
+    "ats": "",
+    "last_good_count": 238,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Storable": {
+    "company": "Storable",
+    "ats": "",
+    "last_good_count": 2,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Stripe": {
+    "company": "Stripe",
+    "ats": "",
+    "last_good_count": 41,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Sumo Logic": {
+    "company": "Sumo Logic",
+    "ats": "",
+    "last_good_count": 6,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Sun Pharma": {
+    "company": "Sun Pharma",
+    "ats": "",
+    "last_good_count": 174,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Swiggy": {
+    "company": "Swiggy",
+    "ats": "",
+    "last_good_count": 38,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Syngene": {
+    "company": "Syngene",
+    "ats": "",
+    "last_good_count": 31,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Syngenta": {
+    "company": "Syngenta",
+    "ats": "",
+    "last_good_count": 22,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Synopsys": {
+    "company": "Synopsys",
+    "ats": "",
+    "last_good_count": 1,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "TVS Next": {
+    "company": "TVS Next",
+    "ats": "keka",
+    "last_good_count": 31,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Target": {
+    "company": "Target",
+    "ats": "",
+    "last_good_count": 114,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Tata Consumer Products": {
+    "company": "Tata Consumer Products",
+    "ats": "",
+    "last_good_count": 84,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Tata Elxsi": {
+    "company": "Tata Elxsi",
+    "ats": "",
+    "last_good_count": 135,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Tata Steel": {
+    "company": "Tata Steel",
+    "ats": "",
+    "last_good_count": 50,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Technip Energies": {
+    "company": "Technip Energies",
+    "ats": "",
+    "last_good_count": 8,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Tekion": {
+    "company": "Tekion",
+    "ats": "ashby",
+    "last_good_count": 85,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Teradyne": {
+    "company": "Teradyne",
+    "ats": "",
+    "last_good_count": 14,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Texas Instruments": {
+    "company": "Texas Instruments",
+    "ats": "",
+    "last_good_count": 128,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Thomson Reuters": {
+    "company": "Thomson Reuters",
+    "ats": "",
+    "last_good_count": 6,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "ThoughtSpot": {
+    "company": "ThoughtSpot",
+    "ats": "",
+    "last_good_count": 10,
+    "last_good_run": "c8917f0f-e64c-4a6c-81e3-9aa1dac822bf",
+    "route": null,
+    "updated": "2026-06-13"
+  },
+  "Thoughtworks": {
+    "company": "Thoughtworks",
+    "ats": "",
+    "last_good_count": 1,
+    "last_good_run": "5f35eed2-8165-4734-9afd-32ef22d5285c",
+    "route": null,
+    "updated": "2026-09-01"
+  },
+  "Truecaller": {
+    "company": "Truecaller",
+    "ats": "",
+    "last_good_count": 12,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Twilio": {
+    "company": "Twilio",
+    "ats": "",
+    "last_good_count": 19,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "UBS": {
+    "company": "UBS",
+    "ats": "",
+    "last_good_count": 23,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "UiPath": {
+    "company": "UiPath",
+    "ats": "",
+    "last_good_count": 7,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Unilever": {
+    "company": "Unilever",
+    "ats": "",
+    "last_good_count": 16,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Vanguard Group": {
+    "company": "Vanguard Group",
+    "ats": "",
+    "last_good_count": 71,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Vector Consulting Group": {
+    "company": "Vector Consulting Group",
+    "ats": "",
+    "last_good_count": 6,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Vertiv": {
+    "company": "Vertiv",
+    "ats": "",
+    "last_good_count": 319,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Virtusa": {
+    "company": "Virtusa",
+    "ats": "",
+    "last_good_count": 1,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Visa": {
+    "company": "Visa",
+    "ats": "",
+    "last_good_count": 1,
+    "last_good_run": "5f35eed2-8165-4734-9afd-32ef22d5285c",
+    "route": null,
+    "updated": "2026-09-01"
+  },
+  "Volvo Group": {
+    "company": "Volvo Group",
+    "ats": "",
+    "last_good_count": 29,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "WESCO": {
+    "company": "WESCO",
+    "ats": "",
+    "last_good_count": 22,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Waaree Group": {
+    "company": "Waaree Group",
+    "ats": "",
+    "last_good_count": 3,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Wells Fargo": {
+    "company": "Wells Fargo",
+    "ats": "",
+    "last_good_count": 140,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Western Digital": {
+    "company": "Western Digital",
+    "ats": "",
+    "last_good_count": 1,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Whatfix": {
+    "company": "Whatfix",
+    "ats": "",
+    "last_good_count": 22,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Wipro": {
+    "company": "Wipro",
+    "ats": "",
+    "last_good_count": 2770,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Workday": {
+    "company": "Workday",
+    "ats": "",
+    "last_good_count": 25,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "WorldQuant": {
+    "company": "WorldQuant",
+    "ats": "",
+    "last_good_count": 5,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "ZS Associates": {
+    "company": "ZS Associates",
+    "ats": "",
+    "last_good_count": 10,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Zapier": {
+    "company": "Zapier",
+    "ats": "",
+    "last_good_count": 1,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Zeta": {
+    "company": "Zeta",
+    "ats": "",
+    "last_good_count": 17,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Zimperium": {
+    "company": "Zimperium",
+    "ats": "",
+    "last_good_count": 8,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Zinnov": {
+    "company": "Zinnov",
+    "ats": "",
+    "last_good_count": 29,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Zscaler": {
+    "company": "Zscaler",
+    "ats": "",
+    "last_good_count": 60,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  },
+  "Zuora": {
+    "company": "Zuora",
+    "ats": "",
+    "last_good_count": 7,
+    "last_good_run": "003419ac-e0de-4481-9197-db26e73190d7",
+    "route": null,
+    "updated": "2026-09-09"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "skills": [
+    {
+      "skill_key": "Machine Learning",
+      "target_per_level": 10
+    },
+    {
+      "skill_key": "Product Strategy",
+      "target_per_level": 10
+    },
+    {
+      "skill_key": "Management Consulting",
+      "target_per_level": 10
+    },
+    {
+      "skill_key": "Financial Accounting",
+      "target_per_level": 10
+    }
+  ],
+  "input_files": []
+}

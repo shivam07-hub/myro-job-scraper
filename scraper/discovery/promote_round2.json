@@ -1,0 +1,122 @@
+[
+ {
+  "company": "Tekion Corp",
+  "ats": "ashby",
+  "slug": "tekion",
+  "endpoint": "https://api.ashbyhq.com/posting-api/job-board/tekion",
+  "total": "54",
+  "india": "41",
+  "board_name": "tekion",
+  "sample": "Staff Product Manager",
+  "confidence": "high",
+  "colleges": "IIT Madras"
+ },
+ {
+  "company": "WorldQuant",
+  "ats": "greenhouse",
+  "slug": "worldquant",
+  "endpoint": "https://boards-api.greenhouse.io/v1/boards/worldquant/jobs?content=true",
+  "total": "102",
+  "india": "6",
+  "board_name": "WorldQuant",
+  "sample": "AI Scientist",
+  "confidence": "high",
+  "colleges": "NIT Trichy (collegedekho)"
+ },
+ {
+  "company": "Verve Consulting",
+  "ats": "greenhouse",
+  "slug": "verve",
+  "endpoint": "https://boards-api.greenhouse.io/v1/boards/verve/jobs?content=true",
+  "total": "52",
+  "india": "3",
+  "board_name": "Verve",
+  "sample": "Account Manager",
+  "confidence": "high",
+  "colleges": "IIM Calcutta (full)"
+ },
+ {
+  "company": "LinkedIn",
+  "ats": "greenhouse",
+  "slug": "linkedin",
+  "endpoint": "https://boards-api.greenhouse.io/v1/boards/linkedin/jobs?content=true",
+  "total": "53",
+  "india": "2",
+  "board_name": "LI Test Company",
+  "sample": "123123",
+  "confidence": "high",
+  "colleges": "RVCE Bangalore"
+ },
+ {
+  "company": "Da Vinci Derivatives",
+  "ats": "greenhouse",
+  "slug": "davinciderivatives",
+  "endpoint": "https://boards-api.greenhouse.io/v1/boards/davinciderivatives/jobs?content=true",
+  "total": "11",
+  "india": "1",
+  "board_name": "Da Vinci",
+  "sample": "Experienced Quant",
+  "confidence": "high",
+  "colleges": "NIT Trichy (collegedekho)"
+ },
+ {
+  "company": "LinkedIn",
+  "ats": "lever",
+  "slug": "linkedin",
+  "endpoint": "https://api.lever.co/v0/postings/linkedin?mode=json",
+  "total": "20",
+  "india": "13",
+  "board_name": "",
+  "sample": "BO Prim",
+  "confidence": "high",
+  "colleges": "RVCE Bangalore"
+ },
+ {
+  "company": "TSMG",
+  "ats": "lever",
+  "slug": "tsmg",
+  "endpoint": "https://api.lever.co/v0/postings/tsmg?mode=json",
+  "total": "3326",
+  "india": "12",
+  "board_name": "",
+  "sample": "Ad-hoc Logistics Specialist (junior)",
+  "confidence": "review",
+  "colleges": "IIM Ahmedabad"
+ },
+ {
+  "company": "Genesis Colors",
+  "ats": "lever",
+  "slug": "genesis",
+  "endpoint": "https://api.lever.co/v0/postings/genesis?mode=json",
+  "total": "4",
+  "india": "3",
+  "board_name": "",
+  "sample": "Delivery Manager",
+  "confidence": "high",
+  "colleges": "IIM Indore"
+ },
+ {
+  "company": "Arista Networks",
+  "ats": "smartrecruiters",
+  "slug": "aristanetworks",
+  "endpoint": "https://api.smartrecruiters.com/v1/companies/aristanetworks/postings?country=in&limit=100&offset=0",
+  "total": "252",
+  "india": "8",
+  "board_name": "",
+  "sample": "Territory Account Manager",
+  "confidence": "high",
+  "colleges": "IIIT Hyderabad (collegedunia)"
+ },
+ {
+  "company": "Robert Bosch",
+  "ats": "smartrecruiters",
+  "slug": "robertbosch",
+  "endpoint": "https://api.smartrecruiters.com/v1/companies/robertbosch/postings?country=in&limit=100&offset=0",
+  "total": "4",
+  "india": "1",
+  "board_name": "",
+  "sample": "Copy of 20260330_BA_Test_2",
+  "confidence": "high",
+  "colleges": "IIM Indore"
+ }
+]
