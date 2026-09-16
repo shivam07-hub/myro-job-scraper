@@ -35,3 +35,6 @@ scraper/question_bank_inputs/
 /graphify-out/
 *.pdf
 *.xlsx
+
+# Claude Code per-machine permissions — never commit
+.claude/settings.local.json
