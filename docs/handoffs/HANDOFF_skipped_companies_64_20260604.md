@@ -14,7 +14,7 @@
 **Goal of this handoff:** investigate *why* each skipped, fix the regressions, and re-crack the JS-opaque ones using the now-saved Firecrawl Cloud key.
 
 ## Firecrawl Cloud key (saved for discovery)
-- Stored in `scraper/.env` as `FIRECRAWL_CLOUD_API_KEY=fc-ab7c695e61eb4b079d77b7ef03bb3585` (gitignored).
+- Stored in `scraper/.env` as `FIRECRAWL_CLOUD_API_KEY=fc-REDACTED-rotated-2026-09-16` (gitignored).
 - Current scrape config is **local Docker** (`FIRECRAWL_URL=http://localhost:3002`, `FIRECRAWL_API_KEY=local`) — unchanged.
 - To run cloud discovery: blank `FIRECRAWL_URL`, set `FIRECRAWL_API_KEY=${FIRECRAWL_CLOUD_API_KEY}` (see comment block in `.env`).
 - Discipline reminder (CLAUDE.md): map → selective scrape → **capture the durable direct endpoint into KNOWN_PORTALS.md**. Don't leave Firecrawl as the final route.
