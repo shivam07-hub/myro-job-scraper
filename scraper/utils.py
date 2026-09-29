@@ -11,6 +11,16 @@ _INDIA_KEYWORDS = {
     'chennai', 'delhi', 'new delhi', 'gurugram', 'gurgaon', 'noida',
     'kolkata', 'ahmedabad',
 }
+# Letter boundaries, not substrings: "india" is a prefix of Indiana,
+# Indianapolis, Indian Land (SC) and EEO "American Indian", all of which leaked
+# US jobs into the India feed. City names only need a leading boundary — none
+# is a prefix of a foreign place, and it keeps source typos like "Bengalurur".
+# Lookarounds rather than \b so "IN_Bangalore" still matches.
+_INDIA_RE = re.compile(
+    r'(?<![a-z])india(?![a-z])|(?<![a-z])(?:'
+    + '|'.join(sorted((re.escape(k) for k in _INDIA_KEYWORDS - {'india'}), key=len, reverse=True))
+    + ')'
+)
 # US state codes / patterns that produce false positives
 _EXCLUDE_PATTERNS = [
     r'indiana[,\s]+(?:usa|united states|us\b|in\b)',
@@ -24,7 +34,7 @@ def is_india(location: str) -> bool:
     for pat in _EXCLUDE_PATTERNS:
         if re.search(pat, loc):
             return False
-    return any(k in loc for k in _INDIA_KEYWORDS)
+    return bool(_INDIA_RE.search(loc))
 
 
 # ── HTML stripping ────────────────────────────────────────────────────────────
