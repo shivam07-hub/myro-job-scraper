@@ -38,6 +38,7 @@ from writer import _skills_to_csv
 
 
 log = logging.getLogger("source_matching_facts")
+LOG_DIR = Path(__file__).resolve().parent.parent / "logs"
 
 _GENERIC_EVIDENCE = re.compile(
     r"^(?:senior|junior|lead|principal|staff|associate|analyst|specialist|"
@@ -416,9 +417,8 @@ def resolve_run(
         "accepted_classifications": audit,
     }
     if not dry_run:
-        logs_dir = Path(__file__).resolve().parent.parent / "logs"
-        logs_dir.mkdir(exist_ok=True)
-        report_path = logs_dir / (
+        LOG_DIR.mkdir(exist_ok=True)
+        report_path = LOG_DIR / (
             "source_matching_facts_"
             + datetime.now().strftime("%Y%m%d_%H%M%S")
             + ".json"

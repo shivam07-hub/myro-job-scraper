@@ -685,6 +685,9 @@ def main():
         log.info(f"  {flag}  {p['company']:<30} [{p['ats']}]")
 
     if args.dry_run:
+        # Say so: a plan-only log otherwise reads like a run that died after
+        # planning (the 2026-09 ingestion incident was misread this way).
+        log.info(f"DRY RUN — planned {len(portals)} portals; nothing scraped or saved.")
         return
 
     # Create checkpoint for this run (always — not only on --resume)
