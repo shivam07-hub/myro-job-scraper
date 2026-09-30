@@ -117,7 +117,64 @@ def test_run_worker_drains_claimed_batches() -> None:
         max_attempts=5,
     )
 
-    assert counts == {"claimed": 2, "applied": 2, "rejected": 0, "retryable": 0}
+    assert counts == {"claimed": 2, "applied": 2, "rejected": 0, "retryable": 0, "aborted": 0}
+
+
+class FlakyStore(FakeStore):
+    """apply() raises the queued errors first, then succeeds."""
+
+    def __init__(self, batches: list[list[EmbeddingJob]], errors: list[Exception]) -> None:
+        super().__init__(batches)
+        self.errors = list(errors)
+
+    def apply(self, items: list[dict]) -> tuple[int, int]:
+        if self.errors:
+            raise self.errors.pop(0)
+        return super().apply(items)
+
+
+def test_run_worker_rides_out_a_transient_failure() -> None:
+    # 2026-09-30: one statement timeout while the post-publish analytics
+    # refresh ran aborted the whole stage, and enrichment never started.
+    timeout = RuntimeError("canceling statement due to statement timeout")
+    store = FlakyStore([[_job("a")], [_job("a")], [_job("b")]], [timeout])
+    sleeps: list[float] = []
+
+    counts = run_worker(
+        store,
+        FakeClient(),  # type: ignore[arg-type]
+        batch_size=1,
+        max_jobs=10,
+        max_attempts=5,
+        sleep=sleeps.append,
+    )
+
+    assert counts["applied"] == 2
+    assert counts["retryable"] == 1
+    assert counts["aborted"] == 0
+    assert len(store.retried) == 1
+    assert len(sleeps) == 1
+
+
+def test_run_worker_stops_after_repeated_failures() -> None:
+    down = RuntimeError("database unavailable")
+    store = FlakyStore([[_job(str(i))] for i in range(10)], [down] * 10)
+    sleeps: list[float] = []
+
+    counts = run_worker(
+        store,
+        FakeClient(),  # type: ignore[arg-type]
+        batch_size=1,
+        max_jobs=10,
+        max_attempts=5,
+        sleep=sleeps.append,
+    )
+
+    assert counts["aborted"] == 1
+    assert counts["applied"] == 0
+    assert counts["claimed"] == 3
+    assert len(store.retried) == 3
+    assert sleeps == sorted(sleeps) and len(sleeps) == 2
 
 
 class FakeResponse:
