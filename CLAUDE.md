@@ -37,6 +37,7 @@ Weekly global scrape of 100+ company portals → full JDs → LM Studio skill ex
 
 ## CURRENT STATE (as of 2026-09-07)
 
+- **🟡 INCIDENT 2026-09-18 — no source publication 2026-09-09 → 09-30.** Root cause found 2026-09-30: the automation targets the pre-split repo path, and the "stalled runs" were dry-run/test log noise. Recovery run in progress. See `PENDING WORK → 00`.
 - **Session 2026-09-07 — source snapshot writer landed; Stripe canary found two publication bugs, now fixed.** `source_snapshot.py` owns homogeneous PostgREST upserts (omit-to-preserve cannot NULL sibling `job_summary` cells) and feed close (presence + 30-day age delist on full scope only). Physical unload is True_Yodha after a one-hour quarantine — this writer does not delete rows. Stripe `--company` upserted 40 rows then crashed on `p_limit=10000`; mixed fill/preserve also wiped 11 LLM summaries. Repair those 11 with extractive fill, re-run the Stripe canary, then a full-scope publish is safe to close `last_seen` older than 30 days. Clock stays on this laptop; uncommitted on `main` after `223578206`.
 - **Job-feed contract (2026-09-07):** `--company-cap` default is **0 (unlimited)** on `main.py`, `daily_poll.py`, and `daily_cycle.py`. Provider listing loops no longer substitute a silent 2000. Workday lists up to `WORKDAY_MAX_JOBS` (runaway 100000) and fetches JDs for the full selected set when uncapped. Quality `select_for_cap` still runs only when a positive cap is passed. Every imported row gets an **extractive `job_summary`** at scrape/import if the DB cell is empty; the LLM summary remains an upgrade and is never overwritten by a re-scrape. After a full-scope publish, jobs with `last_seen` older than **30 days** are closed (`AGE_STALE_DAYS`); `--company` canaries skip that backstop. NULL `last_seen` (extension saves) is left alone. Clock stays on this laptop this version; cloud move is next. Opaque HTML boards try [Scrapling](https://github.com/D4Vinci/Scrapling) HTTP fetch before Firecrawl (`scrapling_client.py`). Direct ATS APIs stay the default.
 - **Data:** 53,046 jobs in Supabase (`jobs`, project `gipvxuugajkugntwkeiz`), 46,206 currently active, and 413,836 `job_skills` rows (read-only snapshot 2026-07-12; active count moves as the delisting loop runs).
@@ -482,6 +483,65 @@ Confirmed blocked: Engie, GE Aerospace, Bank of America, Ford, Medtronic, Inspir
 ## PENDING WORK
 
 > Agile/forward-only doc: completed work is pruned from here once shipped. History lives in git + `RUN_HISTORY.md`; portal status lives in `KNOWN_PORTALS.md`.
+
+### 00 — INCIDENT: ingestion stopped 2026-09-09 (filed 2026-09-19 from a True_Yodha session)
+
+Found while auditing one user's matches in True_Yodha. Nobody noticed for 9 days. Not investigated in this repo yet; everything below was measured, not guessed, unless marked as a hypothesis.
+
+**What production shows (Supabase, measured 2026-09-18):**
+
+| Signal | Value |
+|---|---|
+| Last `job_source_runs` row | `2026-09-09 07:29 UTC`, status `complete` (784 complete + 11 partial ever) |
+| `max(jobs.ingested_at)` | `2026-09-17 17:35` — **1 job** ingested in the 9 days since (extension/saved-job path, not the scraper) |
+| Jobs retired 2026-09-13 → 09-18 | **2,715** (760 · 16 · 74 · 1,353 · 501 · 31) |
+| True_Yodha listing verifier | healthy: 31,380 checks on 09-16, 10,960 on 09-17 |
+
+So the verifier is working as designed on inventory that nothing is refilling. Every day it retires dead listings and nothing replaces them.
+
+**What the local logs show (`logs/`):**
+
+- Last complete run: `20260909_014305_807194` — processed 266 · skipped 49 · saved **32,454** (`logs/diagnosis_20260909_014305_807194.md`).
+- Since then, four runs started: `run_2026_09_16_144854_*`, `run_2026_09_16_145000_*`, `run_2026_09_17_115832_*`, `run_2026_09_17_115931_*`.
+- **Each is exactly 322 lines.** Each logs `Scope: india`, `Portals to process: 319`, lists every portal, then stops. There is no error, no traceback, no `saved N`, and no summary. Each pair started ~1 minute apart, so the automation looks like it retried once.
+- A `source_matching_facts_*.json` was written next to each run.
+
+**Root cause (investigated 2026-09-30) — the "stalled runs" were never polls:**
+
+- Those logs end exactly at `main.py`'s `if args.dry_run: return`. None wrote a `checkpoint_*.json` (a real run always does), and every `source_matching_facts_*.json` beside them is a test fixture (`run_date 2026_08_07`, 1 file, 1 job). They are dry-run/test output leaking into the real `logs/` folder — which is what made this look like a crash.
+- The last real poll (09-09) scraped 32,454 and then died on `LM Studio is not running`. Its logs point at `/Users/incognito/firecrawl_Supabase`, which was removed in the 09-15 repo split. The Codex automation `daily-trusted-career-poll` (`~/.codex/automations/`) has been **`PAUSED` since 2026-07-14**; later polls were started by hand. Its prompt is also stale: dead `firecrawl_Supabase` path, `--company-cap 2000`, "exactly two enrichment workers" (the one-worker lock rejects the second), and a hard gate that refuses to scrape while any enrichment row is pending. That gate starves publication, because local enrichment rarely empties the queue. A corrected config (new path, launches `daily_cycle.py` detached, reports a freshness ALERT after 36h of silence, no enrichment gate) was prepared 2026-09-30; applying it needs the owner, since Codex config is outside this repo. It fires only while the Codex app is open.
+- Recovery 2026-09-30: Stripe canary green from the new path (42 published, Stage A accepted), then a full `daily_cycle.py` launched from this repo under `caffeinate -i`. Docker is not needed: only 6 JS-only portals route to Firecrawl, and they skip.
+- Fixed 2026-09-30 so the next incident can't hide the same way: `main.py --dry-run` now ends its log with `DRY RUN — planned N portals; nothing scraped or saved.`, and `tests/conftest.py` redirects `source_matching_facts.LOG_DIR` to a temp dir for every test.
+
+**Decisions this unblocks (for Shivam):**
+
+- "Clock stays on this laptop" is now a proven single point of failure: 9 days of silence. Moving the schedule to Railway (already listed as the "optional always-on upgrade") should be decided after step 1 says whether the laptop is the cause.
+- The detection side lives in True_Yodha: an alert when `max(ingested_at)` or the last `job_source_runs.started_at` goes stale. True_Yodha owns that. This repo only needs to keep writing `job_source_runs` at the start and end of every run.
+
+**Second finding for this repo — blank `seniority_level` is per adapter (measured over the live corpus, 2026-09-18):**
+
+12,885 of 49,310 active jobs (26%) have no `seniority_level`; 11,256 of those are `enrichment_status='complete'`. The gaps are concentrated in a few adapters:
+
+| Platform | Active | Blank | % |
+|---|---|---|---|
+| RippleHire | 12,815 | 5,238 | 40.9 |
+| TaleoV1 | 2,961 | 1,309 | 44.2 |
+| Custom | 1,842 | 758 | 41.2 |
+| CognizantXML | 913 | 513 | 56.2 |
+| SmartRecruiters | 756 | 385 | 50.9 |
+| Oracle | 6,002 | 1,428 | 23.8 |
+| Workday | 7,557 | 1,132 | 15.0 |
+| DeloitteUSI | 1,443 | 14 | 1.0 |
+
+The data can't recover the gap downstream: 77% of the blank rows have no level word in the title, and only 20 have `min_years_experience`. **Checked 2026-09-30: the forward normalizer does not close it.** Rows published on 09-09 are still blank at RippleHire 31%, TaleoV1 44%, Custom 41%, SmartRecruiters 46%, CognizantXML 43%. Most blank titles carry no level evidence (`Branch:Teller - Rural`, `Laravel Developer`), so NULL is truthful there. HCL `L1/L3` title suffixes were deliberately **not** mapped: in IT services they usually mean support tier, not seniority.
+
+**Fixed in `job_seniority.py` 2026-09-30 (forward-only, tested against the whole 09-09 corpus, 42,703 jobs):**
+- Labelled experience (`Experience: 8-10 Years`, `Exp - 10 - 15 years`, `Experience Tenure : 3-5 Yrs`, `Work Experience (Range of years): 10-12 Years`), `year(s)`, and `6 years to 10 years` now parse. That fills 499 blank levels. Each of the 19 level-change types was checked against its source sentence.
+- The old parser misread `Minimum 10to 12 years` as a 12-year minimum and `7 Years to 10 Years` as a 10-year minimum; both now parse correctly.
+- Normalization is now idempotent. `source_matching_facts` re-runs it on writer-stamped rows, and the canonical `mid`/`executive` matched no signal, so provider-only levels were erased on that second pass.
+- When bounds from different sentences conflict (min 5, max 2), the maximum is dropped. True_Yodha shipped a read-side mitigation (`63f86108`): the Career Ops ranking pool now admits unreadable-level jobs for the brain to judge. Browse still excludes them, so this gap still hides about a quarter of the corpus from browse.
+
+**Also seen in the same audit (True_Yodha side, for context only):** Oracle "Financial Analyst **4** Corp FP&A" is tagged `entry`, and Accenture "Record to Report Ops Associate" is tagged `entry` while its own JD says "1-3 years". Worth a sample check of `job_seniority.py` against Oracle and Workday titles that carry a numeric grade.
 
 ### 0 — Next: full-scope source publish
 
