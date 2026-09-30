@@ -98,3 +98,87 @@ def test_canonical_writer_publishes_normalized_source_fields() -> None:
 
     assert row["seniority_level"] == "executive"
     assert row["min_years_experience"] == 12
+
+
+# Real JD phrasings from the 2026-09-09 publication that the parser missed:
+# the label comes first, then a separator, then the years.
+import pytest
+
+
+@pytest.mark.parametrize(
+    ("description", "level", "minimum", "maximum"),
+    [
+        ("Experience: 8-10 Years", "lead", 8, 10),
+        ("Qualifications: BCom Years of Experience: 7 to 11 years About Accenture", "senior", 7, 11),
+        ("Title: SCCM Total Years of Experience: 6 years to 10 years Location: Bengaluru", "senior", 6, 10),
+        ("Aruba, cisco routing, Architect, SDVAN Exp - 10 - 15 years C1 Immediate only", "lead", 10, 15),
+        ("Location: Bangalore Experience:- 7-12yrs", "senior", 7, 12),
+        ("Work Experience (Range of years): 10-12 Years Preferred Industry", "lead", 10, 12),
+        ("Pharma Experience Tenure : 3-5 Yrs Your Success Matters to Us", "mid", 3, 5),
+        ("Location: Hyderabad Experience Range: 3–15 Years Qualification: B.Tech", "mid", 3, 15),
+        ("Industry Background: Banking • Overall experience: More than 1 year", "entry", 1, None),
+    ],
+)
+def test_normalize_job_seniority_reads_labelled_experience(description, level, minimum, maximum) -> None:
+    normalized = normalize_job_seniority({
+        "job_title": "Delivery Operations Specialist",
+        "job_description": description,
+    })
+
+    assert normalized.seniority_level == level
+    assert normalized.min_years_experience == minimum
+    assert normalized.max_years_experience == maximum
+
+
+def test_normalize_job_seniority_reads_year_s_unit() -> None:
+    normalized = normalize_job_seniority({
+        "job_title": "Automotive ECU Software",
+        "job_description": "Minimum 2 year(s) of experience is required.",
+    })
+
+    assert normalized.seniority_level == "mid"
+    assert normalized.min_years_experience == 2
+
+
+@pytest.mark.parametrize(
+    "description",
+    [
+        "Experience matters. 35 years of legacy in retail.",
+        "Experience with 3D modelling tools.",
+        "Experience: see the list below.\nFounded 40 years ago.",
+    ],
+)
+def test_normalize_job_seniority_labelled_experience_stays_in_its_clause(description) -> None:
+    normalized = normalize_job_seniority({
+        "job_title": "Specialist",
+        "job_description": description,
+    })
+
+    assert normalized.seniority_level == ""
+    assert normalized.min_years_experience is None
+
+
+@pytest.mark.parametrize("level", ["intern", "entry", "mid", "senior", "lead", "executive"])
+def test_normalize_job_seniority_is_idempotent_on_canonical_levels(level) -> None:
+    # source_matching_facts re-normalizes rows the writer already stamped; a
+    # provider-only level must survive that second pass.
+    normalized = normalize_job_seniority({
+        "job_title": "Researcher",
+        "seniority_level": level,
+    })
+
+    assert normalized.seniority_level == level
+
+
+def test_normalize_job_seniority_drops_a_maximum_below_the_minimum() -> None:
+    normalized = normalize_job_seniority({
+        "job_title": "Application Support Engineer",
+        "job_description": (
+            "Minimum 5 year(s) of experience is required. "
+            "1-2 years of relevant experience in enterprise support will be considered."
+        ),
+    })
+
+    assert normalized.seniority_level == "senior"
+    assert normalized.min_years_experience == 5
+    assert normalized.max_years_experience is None
