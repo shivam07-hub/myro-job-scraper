@@ -353,6 +353,7 @@ Each entry: Company | Human Careers URL | ATS Platform | Scraping API / Endpoint
 | Mphasis | https://careers.mphasis.com | mphasis.ripplehire.com | ty4DfyWddnOrtpclQeia | 500+ | ✅ CRACKED 2026-05-14 — POST /candidatejobsearch; JSESSIONID acquired via GET; India filtered client-side; ats=ripplehire |
 | Axis Bank | https://www.axis.bank.in/careers | axisbank.ripplehire.com | WIXhCuz0XRZ7H0GZCwjJ | 10570 | ✅ CRACKED 2026-05-21 — discovery promoted; `jobVoList` listing plus `/candidate/candidatejobdetail` full JD supported |
 | Tata Steel | https://www.tatasteel.com/careers/work-with-us/tata-steel-india-careers/ | tatasteel.ripplehire.com | kYAz91uy1lFDi6FeSiRZ | 31 | ✅ CRACKED 2026-05-21 — discovery promoted; `jobVoList` listing plus `/candidate/candidatejobdetail` full JD supported |
+| LTIMindtree | https://www.ltm.com/careers | ltimindtree.ripplehire.com | xviyQvbnyYZdGtozXoNm | 892 | ✅ RECRACKED 2026-10-01 — rebranded to LTM; its careers page links this RippleHire board with an India geo token; was SAP Jobs2Web (~2 jobs, domain since retired) |
 
 ---
 
@@ -595,7 +596,7 @@ Each entry: Company | Human Careers URL | ATS Platform | Scraping API / Endpoint
 | Walmart | https://careers.walmart.com/results?q=india | Custom Next.js SPA | Direct/Firecrawl listing is a JS shell; cloud map returns US detail pages despite `q=india` | ⚠️ PARKED 2026-06-11 — needs durable browser listing XHR; no guessed route promoted |
 | DE Shaw | https://www.deshawindia.com/careers | D.E. Shaw Next.js SSR | Embedded `__NEXT_DATA__.props.pageProps.regularJobs`; full JD in `jobDescription`; apply redirect via `/recruit/jobs/Ads/Link/{jobUrl}` | ✅ CRACKED 2026-05-08 — routed to `ats=deshaw_india`; 76 public India roles in live probe; no Firecrawl needed |
 | Adidas | https://jobs.adidas-group.com/search/?q=&optionsFacetsDD_country=IN | SAP SuccessFactors / Jobs2Web (HTML) | `GET https://jobs.adidas-group.com/search/?q=&optionsFacetsDD_country=IN&startrow=N` | `optionsFacetsDD_country=IN` | 7 | ✅ CRACKED 2026-05-13 — SAP Jobs2Web HTML at jobs.adidas-group.com; 7 India jobs; routed to `ats=sap_jobs2web_html` |
-| LTIMindtree | https://careers.ltimindtree.com/search/?createNewAlert=false&q=&locationsearch=india | SAP Jobs2Web HTML | India-filtered URL returns ~2 India jobs; parse direct table cards and detail pages | ✅ CRACKED 2026-05-08 — routed to `ats=sap_jobs2web_html`; no Firecrawl needed |
+| LTIMindtree | https://careers.ltimindtree.com/search/?createNewAlert=false&q=&locationsearch=india | SAP Jobs2Web HTML | Domain gone (NXDOMAIN) after the rebrand to LTM; careers.ltm.com/search now redirect-loops | ↪️ moved 2026-10-01 — use the RippleHire row (892 India jobs vs ~2 here) |
 | Genpact | https://careers.genpact.com | Workday | Active route recorded in WORKDAY COMPANIES section | ↪️ moved 2026-05-22 — use Workday row above |
 | Amdocs | https://jobs.amdocs.com/careers?domain=amdocs.com&location=India | Phenom CX / PCSX | Active direct route recorded in PHENOM CX (PCSX) section | ↪️ moved 2026-08-21 — use PCSX row above |
 | Zoho | https://careers.zohocorp.com/jobs/careers | Zoho Recruit (self-hosted) | `https://careers.zohocorp.com/jobs/careers` — Zoho uses own Zoho Recruit product; Chennai HQ | ⬇️ deprioritized — only 2 India jobs visible 2026-04-30 |

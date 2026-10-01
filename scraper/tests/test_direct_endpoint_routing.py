@@ -28,7 +28,7 @@ def test_direct_endpoint_routes() -> None:
         "Eli Lilly": "phenom_ssr",
         "Cisco": "phenom_ssr",
         "BCG": "phenom_ssr",
-        "LTIMindtree": "sap_jobs2web_html",
+        "LTIMindtree": "ripplehire",
         "GMR Group": "sap_jobs2web_html",
         "HP (HPE)": "phenom_ssr",
         "HiLabs": "hilabs_careers",
