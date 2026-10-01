@@ -384,6 +384,48 @@ def _write_report(report: dict) -> Path:
     return path
 
 
+INFERENCE_UNAVAILABLE_EXIT = 4
+ENRICHMENT_MAX_RESTARTS = 5
+ENRICHMENT_RESTART_WAIT_SECONDS = 60
+
+
+def run_enrichment_stage(
+    worker: list[str],
+    *,
+    env: dict[str, str],
+    model_ttl_seconds: int,
+    timeout_seconds: int,
+    run=None,
+    ensure=None,
+    sleep=None,
+    max_restarts: int = ENRICHMENT_MAX_RESTARTS,
+) -> dict:
+    """Run the enrichment drain, restarting it when local inference drops.
+
+    The worker exits 4 on inference_unavailable on purpose: it pauses rather
+    than burn the queue. A drain takes days on local hardware, and LM Studio
+    can unload its model in the middle (2026-10-01). Reload the model and
+    resume, a bounded number of times. Any other exit (busy, failure) stops.
+    """
+    run = run or _run
+    ensure = ensure or ensure_inference_ready
+    sleep = sleep or time.sleep
+    restarts = 0
+    while True:
+        step = run(worker, env=env)
+        if step["returncode"] != INFERENCE_UNAVAILABLE_EXIT or restarts >= max_restarts:
+            break
+        restarts += 1
+        sleep(ENRICHMENT_RESTART_WAIT_SECONDS)
+        try:
+            ensure(env=env, model_ttl_seconds=model_ttl_seconds, timeout_seconds=timeout_seconds)
+        except Exception as exc:
+            step["restart_error"] = str(exc)
+            break
+    step["restarts"] = restarts
+    return step
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Poll, publish, embed jobs, start inference, and drain enrichment"
@@ -480,7 +522,12 @@ def main() -> None:
         path = _write_report(report)
         raise SystemExit(f"Daily cycle could not start inference; report: {path}") from exc
 
-    report["steps"]["enrichment"] = _run(worker, env=env)
+    report["steps"]["enrichment"] = run_enrichment_stage(
+        worker,
+        env=env,
+        model_ttl_seconds=args.model_ttl_seconds,
+        timeout_seconds=args.inference_timeout_seconds,
+    )
     if report["steps"]["enrichment"]["returncode"] != 0:
         report["status"] = "failed"
         report["failed_step"] = "enrichment"

@@ -123,3 +123,63 @@ def test_loaded_embedding_model_needs_no_reload(monkeypatch) -> None:
 
     assert result["model_loaded"] is False
     assert result["loaded_models"] == ["text-embedding-nomic-embed-text-v1.5"]
+
+
+# ── Enrichment supervisor (2026-10-01) ─────────────────────────────────────────
+# LM Studio dropped its model two hours into a ~2.5-day drain. The worker
+# pauses with exit 4 on inference_unavailable by design, expecting to be
+# restarted; the cycle had no supervisor, so the whole drain stopped.
+
+
+def _stage(monkeypatch, returncodes, *, ensure_error=None):
+    calls = {"run": 0, "ensure": 0, "sleeps": []}
+    codes = iter(returncodes)
+
+    def run(command, *, env):
+        calls["run"] += 1
+        return {"command": command, "returncode": next(codes)}
+
+    def ensure(*, env, model_ttl_seconds, timeout_seconds):
+        calls["ensure"] += 1
+        if ensure_error:
+            raise ensure_error
+        return {"model_loaded": True}
+
+    step = daily_cycle.run_enrichment_stage(
+        ["worker"], env={}, model_ttl_seconds=60, timeout_seconds=1,
+        run=run, ensure=ensure, sleep=calls["sleeps"].append, max_restarts=3,
+    )
+    return step, calls
+
+
+def test_enrichment_stage_restarts_after_inference_drops(monkeypatch) -> None:
+    step, calls = _stage(monkeypatch, [4, 4, 0])
+
+    assert step["returncode"] == 0
+    assert step["restarts"] == 2
+    assert calls["ensure"] == 2
+    assert len(calls["sleeps"]) == 2
+
+
+def test_enrichment_stage_gives_up_after_bounded_restarts(monkeypatch) -> None:
+    step, calls = _stage(monkeypatch, [4, 4, 4, 4, 4])
+
+    assert step["returncode"] == 4
+    assert step["restarts"] == 3
+    assert calls["run"] == 4
+
+
+def test_enrichment_stage_does_not_restart_other_failures(monkeypatch) -> None:
+    for code in (1, 3):
+        step, calls = _stage(monkeypatch, [code])
+        assert step["returncode"] == code
+        assert calls["run"] == 1
+        assert calls["ensure"] == 0
+
+
+def test_enrichment_stage_stops_when_the_model_cannot_be_reloaded(monkeypatch) -> None:
+    step, calls = _stage(monkeypatch, [4, 0], ensure_error=RuntimeError("model not loaded within 1s"))
+
+    assert step["returncode"] == 4
+    assert "model not loaded" in step["restart_error"]
+    assert calls["run"] == 1
