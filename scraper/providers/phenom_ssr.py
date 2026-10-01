@@ -11,7 +11,7 @@ from urllib.parse import urlparse
 import requests
 
 from config import REQUEST_TIMEOUT
-from providers.base import ProviderResult, ScrapeReason
+from providers.base import PartialSnapshot, ProviderResult, ScrapeReason, is_transport_failure, is_transport_status
 from utils import is_india, job_hash, strip_html
 
 _log = logging.getLogger("mirror")
@@ -203,10 +203,16 @@ def _scrape_phenom_ssr(portal: Portal, max_jobs: int | None = None) -> list[dict
             resp = requests.get(url, headers=_HEADERS, timeout=REQUEST_TIMEOUT)
             if resp.status_code != 200:
                 _log.error(f"    [ERROR] Phenom SSR {company}: status={resp.status_code} url={url}")
+                if page_count > 1 and is_transport_status(resp.status_code):
+                    raise PartialSnapshot(jobs, f"page {page_count} status {resp.status_code}")
                 break
             html = resp.text
+        except PartialSnapshot:
+            raise
         except Exception as e:
             _log.error(f"    [ERROR] Phenom SSR {company}: {e}")
+            if page_count > 1 and is_transport_failure(e):
+                raise PartialSnapshot(jobs, f"page {page_count} failed: {e}")
             break
 
         raw_jobs = _extract_search_jobs(html)

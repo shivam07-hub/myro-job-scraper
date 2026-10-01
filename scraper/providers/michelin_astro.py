@@ -17,7 +17,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from config import REQUEST_TIMEOUT
-from providers.base import ProviderResult
+from providers.base import PartialSnapshot, ProviderResult, is_transport_failure, is_transport_status
 from schema import Portal
 from utils import is_india, strip_html
 
@@ -153,9 +153,15 @@ def _scrape_michelin(portal: Portal, max_jobs: int | None = None) -> list[dict]:
         try:
             r = session.get(url, timeout=REQUEST_TIMEOUT)
             if r.status_code != 200:
+                if page > 1 and is_transport_status(r.status_code):
+                    raise PartialSnapshot(jobs, f"page {page} status {r.status_code}")
                 break
             r.encoding = r.apparent_encoding or "utf-8"
-        except Exception:
+        except PartialSnapshot:
+            raise
+        except Exception as e:
+            if page > 1 and is_transport_failure(e):
+                raise PartialSnapshot(jobs, f"page {page} failed: {e}")
             break
 
         soup = BeautifulSoup(r.text, "html.parser")

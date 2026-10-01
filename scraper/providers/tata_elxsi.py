@@ -18,7 +18,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from config import REQUEST_TIMEOUT
-from providers.base import FALLBACK_FIRECRAWL_EXTRACT, ProviderResult
+from providers.base import PartialSnapshot, FALLBACK_FIRECRAWL_EXTRACT, ProviderResult
 from schema import Portal
 from utils import is_india, job_hash, strip_html
 
@@ -41,7 +41,10 @@ class TataElxsiProvider:
         max_jobs: int | None = None,
         validate_mode: bool = False,
     ) -> ProviderResult:
-        jobs = _scrape_tata_elxsi(portal, max_jobs=max_jobs)
+        try:
+            jobs = _scrape_tata_elxsi(portal, max_jobs=max_jobs)
+        except PartialSnapshot as partial:
+            return ProviderResult.partial(partial.jobs, partial.note)
         if jobs is None:
             return ProviderResult.fallback(
                 policy=FALLBACK_FIRECRAWL_EXTRACT,
@@ -169,11 +172,15 @@ def _scrape_tata_elxsi(portal: Portal, max_jobs: int | None = None) -> list[dict
             r = session.get(listing_url, timeout=REQUEST_TIMEOUT)
             if r.status_code != 200:
                 _log.warning(f"    [WARN] Tata Elxsi listing status={r.status_code} page={page}")
-                return None if page == 1 else jobs
+                if page == 1:
+                    return None
+                raise PartialSnapshot(jobs, f"page {page} status {r.status_code}")
             list_html = r.text
         except Exception as e:
             _log.warning(f"    [WARN] Tata Elxsi listing fetch failed page={page}: {e}")
-            return None if page == 1 else jobs
+            if page == 1:
+                return None
+            raise PartialSnapshot(jobs, f"page {page} failed: {e}")
 
         rows = extract_tata_elxsi_listing_items(list_html, listing_url)
         if not rows:

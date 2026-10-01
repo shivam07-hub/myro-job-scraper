@@ -19,7 +19,7 @@ from urllib.parse import urljoin, urlparse
 import requests
 
 from config import REQUEST_TIMEOUT
-from providers.base import FALLBACK_FIRECRAWL_EXTRACT, ProviderResult
+from providers.base import FALLBACK_FIRECRAWL_EXTRACT, PartialSnapshot, ProviderResult, is_transport_failure, is_transport_status
 from schema import Portal
 from utils import is_india, job_hash, strip_html
 
@@ -277,13 +277,19 @@ def _scrape_yello(portal: Portal, max_jobs: int | None = None) -> list[dict] | N
             r = session.get(search_url, params=params, timeout=REQUEST_TIMEOUT)
             if r.status_code != 200:
                 _log.warning(f"    [WARN] Yello page {page} status={r.status_code} for {company}")
+                if page > 1 and is_transport_status(r.status_code):
+                    raise PartialSnapshot(jobs, f"page {page} status {r.status_code}")
                 break
             payload = r.json()
+        except PartialSnapshot:
+            raise
         except json.JSONDecodeError:
             _log.warning(f"    [WARN] Yello non-JSON response on page {page} for {company}")
             break
         except Exception as e:
             _log.warning(f"    [WARN] Yello listing fetch failed page {page} for {company}: {e}")
+            if page > 1 and is_transport_failure(e):
+                raise PartialSnapshot(jobs, f"page {page} failed: {e}")
             break
 
         list_html = payload.get("html", "") or ""

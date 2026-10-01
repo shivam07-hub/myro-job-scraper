@@ -12,7 +12,7 @@ from urllib.parse import urlsplit, urlunsplit
 
 import firecrawl_client as fc
 from config import REQUEST_TIMEOUT, WORKDAY_PAGE_SIZE, WORKDAY_MAX_JOBS, WORKDAY_JD_FETCH_LIMIT
-from providers.base import FALLBACK_FIRECRAWL_EXTRACT, ProviderResult, ScrapeReason
+from providers.base import FALLBACK_FIRECRAWL_EXTRACT, PartialSnapshot, ProviderResult, ScrapeReason, is_transport_failure
 from utils import is_india, job_hash, strip_html, workday_req_id
 from scrape_select import select_for_cap
 
@@ -208,6 +208,8 @@ def scrape_workday(
             _log.error(f"    [ERROR] Workday {portal['company']} offset={offset}: {e}")
             if offset == 0:
                 return None, ScrapeReason.API_BLOCKED
+            if is_transport_failure(e):
+                raise PartialSnapshot(jobs, f"offset {offset} failed: {e}")
             break
 
         postings = data.get('jobPostings', [])

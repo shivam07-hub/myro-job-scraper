@@ -20,7 +20,7 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 import requests
 
 from config import REQUEST_TIMEOUT
-from providers.base import FALLBACK_FIRECRAWL_EXTRACT, ProviderResult, ScrapeReason
+from providers.base import FALLBACK_FIRECRAWL_EXTRACT, PartialSnapshot, ProviderResult, ScrapeReason, is_transport_failure
 from schema import Portal
 from utils import is_india, strip_html
 
@@ -259,6 +259,8 @@ def _scrape_siemens_externaljobs(portal: Portal, max_jobs: int | None = None) ->
             r.raise_for_status()
         except Exception as e:
             _log.warning(f"    [WARN] SiemensExternalJobs page fetch failed (offset={offset}): {e}")
+            if page_num > 1 and is_transport_failure(e):
+                raise PartialSnapshot(jobs, f"offset {offset} failed: {e}")
             break
 
         listing_html = r.text

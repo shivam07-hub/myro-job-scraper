@@ -19,7 +19,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from config import REQUEST_TIMEOUT
-from providers.base import FALLBACK_FIRECRAWL_EXTRACT, ProviderResult
+from providers.base import FALLBACK_FIRECRAWL_EXTRACT, PartialSnapshot, ProviderResult, is_transport_failure, is_transport_status
 from schema import Portal
 from utils import is_india, strip_html, job_hash
 
@@ -205,10 +205,16 @@ def _scrape_sap_jobs2web_html(portal: Portal, max_jobs: int | None = None) -> li
             r = session.get(listing_url, timeout=REQUEST_TIMEOUT)
             if r.status_code != 200:
                 _log.warning(f"    [WARN] SAP Jobs2Web listing status={r.status_code} row={startrow} ({company})")
+                if page > 1 and is_transport_status(r.status_code):
+                    raise PartialSnapshot(jobs, f"row {startrow} status {r.status_code}")
                 break
             list_html = r.text
+        except PartialSnapshot:
+            raise
         except Exception as e:
             _log.warning(f"    [WARN] SAP Jobs2Web listing fetch failed row={startrow} ({company}): {e}")
+            if page > 1 and is_transport_failure(e):
+                raise PartialSnapshot(jobs, f"row {startrow} failed: {e}")
             break
 
         rows = _extract_rows(list_html)
