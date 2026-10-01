@@ -226,6 +226,66 @@ def test_run_worker_stops_after_repeated_failed_claims() -> None:
     assert counts["claimed"] == 0
 
 
+class SizeLimitedStore(FakeStore):
+    """apply() times out for any batch larger than `limit`, like a busy HNSW index."""
+
+    def __init__(self, jobs: list[EmbeddingJob], limit: int) -> None:
+        super().__init__()
+        self.queue = list(jobs)
+        self.limit = limit
+        self.claim_sizes: list[int] = []
+
+    def claim(self, quantity: int, max_attempts: int) -> list[EmbeddingJob]:
+        self.claim_sizes.append(quantity)
+        batch, self.queue = self.queue[:quantity], self.queue[quantity:]
+        return batch
+
+    def apply(self, items: list[dict]) -> tuple[int, int]:
+        if len(items) > self.limit:
+            raise RuntimeError("canceling statement due to statement timeout")
+        return super().apply(items)
+
+    def retry(self, jobs: list[EmbeddingJob], error: str, max_attempts: int) -> int:
+        self.queue = list(jobs) + self.queue
+        return super().retry(jobs, error, max_attempts)
+
+
+def test_run_worker_shrinks_the_batch_until_apply_fits() -> None:
+    # 2026-10-01: with importers writing to jobs, 32 HNSW inserts no longer
+    # fit the 8s statement timeout and the worker aborted with nothing applied.
+    store = SizeLimitedStore([_job(str(i)) for i in range(40)], limit=8)
+
+    counts = run_worker(
+        store,
+        FakeClient(),  # type: ignore[arg-type]
+        batch_size=32,
+        max_jobs=1000,
+        max_attempts=5,
+        sleep=lambda _: None,
+    )
+
+    assert counts["aborted"] == 0
+    assert counts["applied"] == 40
+    assert store.claim_sizes[:3] == [32, 16, 8]
+    assert max(store.claim_sizes[3:]) == 8  # stays small for the rest of the run
+
+
+def test_run_worker_still_stops_when_even_the_smallest_batch_fails() -> None:
+    store = SizeLimitedStore([_job(str(i)) for i in range(40)], limit=0)
+
+    counts = run_worker(
+        store,
+        FakeClient(),  # type: ignore[arg-type]
+        batch_size=32,
+        max_jobs=1000,
+        max_attempts=5,
+        sleep=lambda _: None,
+    )
+
+    assert counts["aborted"] == 1
+    assert counts["applied"] == 0
+
+
 class FakeResponse:
     def __init__(self, payload: dict) -> None:
         self.payload = payload

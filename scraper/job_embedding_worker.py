@@ -42,6 +42,9 @@ log = logging.getLogger("job_embedding_worker")
 
 MAX_CONSECUTIVE_FAILURES = 3
 FAILURE_BACKOFF_SECONDS = 30
+# Every applied vector is an HNSW insert, so apply time grows with the batch.
+MIN_BATCH_SIZE = 4
+SHRINK_BACKOFF_SECONDS = 5
 
 
 class EmbeddingUnavailable(RuntimeError):
@@ -305,6 +308,7 @@ def run_worker(
 ) -> dict[str, int]:
     counts = {"claimed": 0, "applied": 0, "rejected": 0, "retryable": 0, "aborted": 0}
     consecutive_failures = 0
+    current_batch = batch_size
 
     def keep_going(stage: str, exc: Exception) -> bool:
         # One failure is usually contention: the post-publish analytics
@@ -329,7 +333,7 @@ def run_worker(
 
     while counts["claimed"] < max_jobs:
         try:
-            jobs = store.claim(min(batch_size, max_jobs - counts["claimed"]), max_attempts)
+            jobs = store.claim(min(current_batch, max_jobs - counts["claimed"]), max_attempts)
         except Exception as exc:
             if keep_going("claim", exc):
                 continue
@@ -346,6 +350,18 @@ def run_worker(
             )
         except Exception as exc:
             counts["retryable"] += len(jobs)
+            if len(jobs) > MIN_BATCH_SIZE:
+                # A smaller apply does fewer HNSW inserts, so it can fit the 8s
+                # statement timeout on a busy database (2026-10-01). Stay small
+                # for the rest of the run: growing back would oscillate, and
+                # every failed attempt counts against the rows' max_attempts.
+                current_batch = max(MIN_BATCH_SIZE, len(jobs) // 2)
+                log.warning(
+                    "Embedding batch of %s failed; continuing with batches of %s: %s",
+                    len(jobs), current_batch, exc,
+                )
+                sleep(SHRINK_BACKOFF_SECONDS)
+                continue
             if keep_going("batch", exc):
                 continue
             break
