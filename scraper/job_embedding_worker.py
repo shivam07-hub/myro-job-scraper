@@ -305,8 +305,35 @@ def run_worker(
 ) -> dict[str, int]:
     counts = {"claimed": 0, "applied": 0, "rejected": 0, "retryable": 0, "aborted": 0}
     consecutive_failures = 0
+
+    def keep_going(stage: str, exc: Exception) -> bool:
+        # One failure is usually contention: the post-publish analytics
+        # refresh and True_Yodha's unload made apply and claim time out on
+        # 2026-09-30/10-01. Back off and continue; only a run of failures
+        # means the model or database is really down. Rows a failed batch
+        # claimed are already back in the queue, and a claim lost in transit
+        # is reclaimed after its 30-minute lease.
+        nonlocal consecutive_failures
+        consecutive_failures += 1
+        if consecutive_failures >= MAX_CONSECUTIVE_FAILURES:
+            counts["aborted"] = 1
+            log.error(
+                "Embedding %s failed %s times in a row; stopping: %s",
+                stage, consecutive_failures, exc,
+            )
+            return False
+        delay = FAILURE_BACKOFF_SECONDS * consecutive_failures
+        log.warning("Embedding %s failed; backing off %ss: %s", stage, delay, exc)
+        sleep(delay)
+        return True
+
     while counts["claimed"] < max_jobs:
-        jobs = store.claim(min(batch_size, max_jobs - counts["claimed"]), max_attempts)
+        try:
+            jobs = store.claim(min(batch_size, max_jobs - counts["claimed"]), max_attempts)
+        except Exception as exc:
+            if keep_going("claim", exc):
+                continue
+            break
         if not jobs:
             break
         counts["claimed"] += len(jobs)
@@ -318,26 +345,10 @@ def run_worker(
                 max_attempts=max_attempts,
             )
         except Exception as exc:
-            # The rows are already back in the queue. One failure is usually
-            # contention (the post-publish analytics refresh made apply time
-            # out on 2026-09-30), so back off and continue; only a run of
-            # failures means the model or database is really down.
             counts["retryable"] += len(jobs)
-            consecutive_failures += 1
-            if consecutive_failures >= MAX_CONSECUTIVE_FAILURES:
-                counts["aborted"] = 1
-                log.error(
-                    "Embedding batch failed %s times in a row; stopping: %s",
-                    consecutive_failures, exc,
-                )
-                break
-            delay = FAILURE_BACKOFF_SECONDS * consecutive_failures
-            log.warning(
-                "Embedding batch failed; rows returned for retry, backing off %ss: %s",
-                delay, exc,
-            )
-            sleep(delay)
-            continue
+            if keep_going("batch", exc):
+                continue
+            break
         consecutive_failures = 0
         counts["applied"] += applied
         counts["rejected"] += rejected

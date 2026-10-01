@@ -177,6 +177,55 @@ def test_run_worker_stops_after_repeated_failures() -> None:
     assert sleeps == sorted(sleeps) and len(sleeps) == 2
 
 
+class FlakyClaimStore(FakeStore):
+    """claim() raises the queued errors first, then hands out batches."""
+
+    def __init__(self, batches: list[list[EmbeddingJob]], errors: list[Exception]) -> None:
+        super().__init__(batches)
+        self.errors = list(errors)
+
+    def claim(self, quantity: int, max_attempts: int) -> list[EmbeddingJob]:
+        if self.errors:
+            raise self.errors.pop(0)
+        return super().claim(quantity, max_attempts)
+
+
+def test_run_worker_rides_out_a_failed_claim() -> None:
+    # 2026-10-01: the claim RPC timed out reading its response and crashed
+    # the worker with 1,093 rows still queued.
+    store = FlakyClaimStore([[_job("a")], [_job("b")]], [TimeoutError("read timed out")])
+    sleeps: list[float] = []
+
+    counts = run_worker(
+        store,
+        FakeClient(),  # type: ignore[arg-type]
+        batch_size=1,
+        max_jobs=10,
+        max_attempts=5,
+        sleep=sleeps.append,
+    )
+
+    assert counts["applied"] == 2
+    assert counts["aborted"] == 0
+    assert len(sleeps) == 1
+
+
+def test_run_worker_stops_after_repeated_failed_claims() -> None:
+    store = FlakyClaimStore([[_job("a")]], [TimeoutError("read timed out")] * 5)
+
+    counts = run_worker(
+        store,
+        FakeClient(),  # type: ignore[arg-type]
+        batch_size=1,
+        max_jobs=10,
+        max_attempts=5,
+        sleep=lambda _: None,
+    )
+
+    assert counts["aborted"] == 1
+    assert counts["claimed"] == 0
+
+
 class FakeResponse:
     def __init__(self, payload: dict) -> None:
         self.payload = payload
