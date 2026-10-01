@@ -914,7 +914,8 @@ def _find_json_files(
     for company_dir in sorted(base.iterdir()):
         if not company_dir.is_dir():
             continue
-        if company_filter and company_filter.lower() not in company_dir.name.lower():
+        # The writer names the folder company_slug(company); match it exactly.
+        if company_filter and company_dir.name.casefold() != company_slug(company_filter).casefold():
             continue
 
         outputs = company_dir / "Outputs"
