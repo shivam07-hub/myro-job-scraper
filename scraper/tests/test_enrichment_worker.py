@@ -206,3 +206,82 @@ def test_already_claimed_priority_work_is_singleflight_and_has_no_queue_ack() ->
     assert store.processing == []
     assert queue.archived == []
     assert store.applied
+
+
+# ── Transient backend errors (2026-10-02) ──────────────────────────────────────
+# Sixteen hours and 6,475 jobs into the drain, one archive RPC got
+# "Connection reset by peer" and the unhandled httpx.ReadError ended the worker.
+
+import httpx
+
+import enrichment_worker
+from enrichment_worker import run_worker
+
+
+def _row(msg_id: int, job_id: str) -> dict:
+    return {"msg_id": msg_id, "read_ct": 1, "message": {
+        "job_id": job_id, "source_content_hash": "source-hash",
+        "enrichment_version": CORE_ENRICHMENT_VERSION,
+    }}
+
+
+class ReadingQueue(FakeQueue):
+    def __init__(self, rows: list[dict], archive_errors: list[Exception]) -> None:
+        super().__init__()
+        self.rows = list(rows)
+        self.archive_errors = list(archive_errors)
+
+    def read(self, *, visibility_seconds: int, quantity: int) -> list[dict]:
+        batch, self.rows = self.rows[:quantity], self.rows[quantity:]
+        return batch
+
+    def archive(self, msg_id: int) -> bool:
+        if self.archive_errors:
+            raise self.archive_errors.pop(0)
+        return super().archive(msg_id)
+
+
+class AnyJobStore(FakeStore):
+    def fetch_job(self, job_id: str) -> dict | None:
+        return _job(job_id=job_id)
+
+
+def _drain(queue, sleeps):
+    return run_worker(
+        None, batch_size=10, visibility_seconds=60, max_messages=100, max_attempts=5,
+        queue=queue, store=AnyJobStore(None), enrich=_successful_enrich, sleep=sleeps.append,
+    )
+
+
+def test_worker_rides_out_a_connection_reset() -> None:
+    reset = httpx.ReadError("[Errno 54] Connection reset by peer")
+    queue = ReadingQueue([_row(1, "a"), _row(2, "b"), _row(3, "c")], [reset])
+    sleeps: list[float] = []
+
+    counts = _drain(queue, sleeps)
+
+    assert counts.get("complete") == 3
+    assert counts.get("backend_unavailable") is None
+    assert queue.archived == [1, 2, 3]
+    assert len(sleeps) == 1
+
+
+def test_worker_pauses_when_the_backend_stays_down() -> None:
+    reset = httpx.ConnectError("Could not resolve host")
+    queue = ReadingQueue([_row(1, "a"), _row(2, "b")], [reset] * 10)
+    sleeps: list[float] = []
+
+    counts = _drain(queue, sleeps)
+
+    assert counts["backend_unavailable"] == 1
+    assert len(sleeps) == enrichment_worker.MAX_BACKEND_FAILURES - 1
+
+
+def test_worker_does_not_swallow_programming_errors() -> None:
+    queue = ReadingQueue([_row(1, "a")], [KeyError("msg_id")])
+
+    try:
+        _drain(queue, [])
+    except KeyError:
+        return
+    raise AssertionError("KeyError must propagate")
