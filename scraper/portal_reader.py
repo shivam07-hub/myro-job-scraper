@@ -778,6 +778,7 @@ _INDIA_ONLY_OVERRIDES: dict[str, bool] = {
     'Cisco': True,
     'HiLabs': True,
     'Tata Elxsi': True,
+    'Atomicwork': True,
     'Vector Consulting Group': True,
     'DE Shaw': True,
     'Nykaa': True,

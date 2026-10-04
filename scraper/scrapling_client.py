@@ -9,8 +9,10 @@ StealthyFetcher / DynamicFetcher need a browser and are not wired here.
 """
 from __future__ import annotations
 
+from dataclasses import dataclass
 from html.parser import HTMLParser
 import logging
+import re
 from urllib.parse import urljoin
 
 _log = logging.getLogger("mirror")
@@ -98,6 +100,46 @@ def fetch_text(url: str) -> str | None:
 
     text = strip_html(html).strip()
     return text or None
+
+
+@dataclass(frozen=True)
+class JobPage:
+    title: str
+    text: str
+
+
+def fetch_job_page(url: str) -> JobPage | None:
+    html = fetch_html(url)
+    return parse_job_page(html) if html else None
+
+
+def parse_job_page(html: str) -> JobPage:
+    """The posting's own title and visible text, starting at that title.
+
+    Careers pages put menus, inline CSS and scripts ahead of the posting, so
+    raw page text buries the location thousands of characters in (Atomicwork,
+    2026-09-30). Start the text at the job's heading instead.
+    """
+    from bs4 import BeautifulSoup
+
+    soup = BeautifulSoup(html, "html.parser")
+    title = ""
+    heading = soup.find("h1")
+    if heading:
+        title = " ".join(heading.get_text(" ").split())
+    if not title:
+        meta = soup.find("meta", attrs={"property": "og:title"})
+        title = (meta.get("content") or "").strip() if meta else ""
+    if not title and soup.title:
+        title = soup.title.get_text(" ")
+    title = re.split(r"\s+[|–—]\s+", " ".join(title.split()))[0].strip()
+
+    for tag in soup(["script", "style", "noscript", "svg", "template", "head"]):
+        tag.decompose()
+    text = "\n".join(line.strip() for line in soup.get_text("\n").splitlines() if line.strip())
+    if title and title in text:
+        text = text[text.index(title):]
+    return JobPage(title=title, text=text)
 
 
 def _page_html(page: object) -> str | None:
