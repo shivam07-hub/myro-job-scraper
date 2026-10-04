@@ -488,11 +488,11 @@ Confirmed blocked: Engie, GE Aerospace, Bank of America, Ford, Medtronic, Inspir
 
 | # | Decision | Status |
 |---|---|---|
-| 1 | Branch `fix/first-seen-is-discovery-not-last-crawl` reaches `main` by PR, merged with a merge commit | PR open |
+| 1 | Branch `fix/first-seen-is-discovery-not-last-crawl` reaches `main` by PR, merged with a merge commit | PR #1 open (review + merge) |
 | 2 | The stranded India-keyword fix (`5cdcfb69`) ships in that PR | done (`3ded7245`) |
-| 3 | **Hybrid clock:** Railway cron runs `daily_poll.py` (scrape → resolve → publish). The laptop only runs inference (embeddings, enrichment) | Railway files next |
-| 4 | Railway service gets a small volume for `All_CSV_Outputs/` and `logs/` | with Railway files |
-| 5 | Laptop: launchd agent, hourly, runs `daily_cycle.py --inference-only`. A busy lock is a quiet skip | flag done (`a253459c`); plist next |
+| 3 | **Hybrid clock:** Railway cron runs `daily_poll.py` (scrape → resolve → publish). The laptop only runs inference (embeddings, enrichment) | files in repo (`c8ac23d5`, `docs/RAILWAY.md`); deploy waits on owner login + secrets |
+| 4 | Railway service gets a small volume for `All_CSV_Outputs/` and `logs/` | in `railway.json` / `Dockerfile`; volume added at deploy |
+| 5 | Laptop: launchd agent, hourly, runs `daily_cycle.py --inference-only`. A busy lock is a quiet skip | flag (`a253459c`) + plist in `ops/launchd/` (`43417110`); **not installed yet** (owner deferred) |
 | 6 | Codex automation `daily-trusted-career-poll` bridges until the first green Railway publish, then is set to PAUSED | pending |
 | 7 | Staleness alert (no `job_source_runs` for 36h) lives in True_Yodha | filed as a True_Yodha task |
 | 8 | Lifecycle coverage floor: below **50%** of the last complete count, a run is partial and demotes nothing | done (`7700384e`) |
@@ -500,7 +500,7 @@ Confirmed blocked: Engie, GE Aerospace, Bank of America, Ford, Medtronic, Inspir
 | 10 | Fallback (Scrapling) route titles and places jobs from the job page; Atomicwork re-added (2 India jobs) | done (`5078a4d4`) |
 | 11 | Scrapling fetcher is a core requirement, checked at startup | done (`a9653857`) |
 | 12 | Dream Sports stays parked; recheck its careers page monthly | parked |
-| 13 | Railway cron at **01:00 IST** daily (~10h run, publishes by ~11:00 IST) | with Railway files |
+| 13 | Railway cron at **01:00 IST** daily (~10h run, publishes by ~11:00 IST) | in `railway.json` / `Dockerfile`; volume added at deploy |
 | 14 | Claude builds the Railway setup; the owner installs the CLI, runs `railway login`, and pastes the 4 secrets | pending |
 
 ### 00 — INCIDENT: ingestion stopped 2026-09-09 (filed 2026-09-19 from a True_Yodha session)
