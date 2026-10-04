@@ -183,3 +183,70 @@ def test_enrichment_stage_stops_when_the_model_cannot_be_reloaded(monkeypatch) -
     assert step["returncode"] == 4
     assert "model not loaded" in step["restart_error"]
     assert calls["run"] == 1
+
+
+# ── Inference-only mode (decided 2026-10-03) ───────────────────────────────────
+# Railway publishes; the laptop's hourly launchd agent runs only embeddings and
+# enrichment. An hour that finds the previous drain still holding the
+# one-worker lock (exit 3) is a skip, not a failure.
+
+
+def _stages(monkeypatch, codes: dict[str, int]):
+    ran: list[str] = []
+
+    def run(command, *, env):
+        name = "embeddings" if command == ["embed"] else "poll"
+        ran.append(name)
+        return {"command": command, "returncode": codes.get(name, 0)}
+
+    def enrichment(worker, *, env, model_ttl_seconds, timeout_seconds):
+        ran.append("enrichment")
+        return {"command": worker, "returncode": codes.get("enrichment", 0), "restarts": 0}
+
+    monkeypatch.setattr(daily_cycle, "_run", run)
+    monkeypatch.setattr(daily_cycle, "run_enrichment_stage", enrichment)
+    monkeypatch.setattr(daily_cycle, "ensure_job_embedding_ready", lambda **k: {"ok": True})
+    monkeypatch.setattr(daily_cycle, "ensure_inference_ready", lambda **k: {"ok": True})
+    monkeypatch.setattr(daily_cycle, "unload_embedding_model", lambda **k: {"unloaded": True})
+    report = {"status": "running", "steps": {}}
+    failure = daily_cycle.run_inference_stages(
+        report, env={}, embeddings=["embed"], worker=["enrich"],
+        model_ttl_seconds=60, timeout_seconds=1,
+    )
+    return report, failure, ran
+
+
+def test_inference_stages_run_embeddings_then_enrichment(monkeypatch) -> None:
+    report, failure, ran = _stages(monkeypatch, {})
+
+    assert failure is None
+    assert report["status"] == "complete"
+    assert ran == ["embeddings", "enrichment"]
+
+
+def test_busy_lock_is_a_quiet_skip_not_a_failure(monkeypatch) -> None:
+    report, failure, ran = _stages(monkeypatch, {"embeddings": 3})
+
+    assert failure is None
+    assert report["status"] == "skipped_busy"
+    assert ran == ["embeddings"]
+
+
+def test_real_embedding_failure_still_fails(monkeypatch) -> None:
+    report, failure, ran = _stages(monkeypatch, {"embeddings": 4})
+
+    assert report["status"] == "failed"
+    assert report["failed_step"] == "job_embeddings"
+    assert "job embeddings" in failure
+
+
+def test_inference_only_never_polls(monkeypatch) -> None:
+    calls: list[str] = []
+    monkeypatch.setattr(daily_cycle, "_run", lambda command, *, env: calls.append("poll") or {"returncode": 0})
+    monkeypatch.setattr(daily_cycle, "run_inference_stages", lambda report, **k: report.update(status="complete"))
+    monkeypatch.setattr(daily_cycle, "_write_report", lambda report: "report.json")
+    monkeypatch.setattr(daily_cycle.sys, "argv", ["daily_cycle.py", "--inference-only"])
+
+    daily_cycle.main()
+
+    assert calls == []
