@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Hourly local-inference drain (decided 2026-10-03; CLAUDE.md PENDING WORK -> 00a).
+  Install:   cp ops/launchd/com.myro.inference-drain.plist ~/Library/LaunchAgents/
+             launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.myro.inference-drain.plist
+  Remove:    launchctl bootout gui/$(id -u)/com.myro.inference-drain
+  launchd never overlaps two runs of this label, and a missed hour fires on wake.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.myro.inference-drain</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/sh</string>
+    <string>/Users/incognito/myro-job-scraper/scraper/laptop_inference.sh</string>
+  </array>
+  <key>StartInterval</key>
+  <integer>3600</integer>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/Users/incognito/.lmstudio/bin:/opt/anaconda3/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+  </dict>
+  <key>StandardOutPath</key>
+  <string>/Users/incognito/myro-job-scraper/logs/launchd_inference.out</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/incognito/myro-job-scraper/logs/launchd_inference.out</string>
+</dict>
+</plist>
