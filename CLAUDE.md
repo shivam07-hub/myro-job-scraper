@@ -37,7 +37,7 @@ Weekly global scrape of 100+ company portals → full JDs → LM Studio skill ex
 
 ## CURRENT STATE (as of 2026-09-07)
 
-- **🟡 INCIDENT 2026-09-18 — no source publication 2026-09-09 → 09-30.** Root cause found 2026-09-30: the automation targets the pre-split repo path, and the "stalled runs" were dry-run/test log noise. Recovery run in progress. See `PENDING WORK → 00`.
+- **✅ INCIDENT 2026-09-18 — no source publication 2026-09-09 → 09-30 — recovered.** Root cause: the Codex automation was paused (and stale), and the "stalled runs" were dry-run/test log noise. Recovered 2026-09-30/10-01. The schedule is moving off the laptop; see `PENDING WORK → 00a` for the locked decisions and `00` for the record.
 - **Session 2026-09-07 — source snapshot writer landed; Stripe canary found two publication bugs, now fixed.** `source_snapshot.py` owns homogeneous PostgREST upserts (omit-to-preserve cannot NULL sibling `job_summary` cells) and feed close (presence + 30-day age delist on full scope only). Physical unload is True_Yodha after a one-hour quarantine — this writer does not delete rows. Stripe `--company` upserted 40 rows then crashed on `p_limit=10000`; mixed fill/preserve also wiped 11 LLM summaries. Repair those 11 with extractive fill, re-run the Stripe canary, then a full-scope publish is safe to close `last_seen` older than 30 days. Clock stays on this laptop; uncommitted on `main` after `223578206`.
 - **Job-feed contract (2026-09-07):** `--company-cap` default is **0 (unlimited)** on `main.py`, `daily_poll.py`, and `daily_cycle.py`. Provider listing loops no longer substitute a silent 2000. Workday lists up to `WORKDAY_MAX_JOBS` (runaway 100000) and fetches JDs for the full selected set when uncapped. Quality `select_for_cap` still runs only when a positive cap is passed. Every imported row gets an **extractive `job_summary`** at scrape/import if the DB cell is empty; the LLM summary remains an upgrade and is never overwritten by a re-scrape. After a full-scope publish, jobs with `last_seen` older than **30 days** are closed (`AGE_STALE_DAYS`); `--company` canaries skip that backstop. NULL `last_seen` (extension saves) is left alone. Clock stays on this laptop this version; cloud move is next. Opaque HTML boards try [Scrapling](https://github.com/D4Vinci/Scrapling) HTTP fetch before Firecrawl (`scrapling_client.py`). Direct ATS APIs stay the default.
 - **Data:** 53,046 jobs in Supabase (`jobs`, project `gipvxuugajkugntwkeiz`), 46,206 currently active, and 413,836 `job_skills` rows (read-only snapshot 2026-07-12; active count moves as the delisting loop runs).
@@ -483,6 +483,25 @@ Confirmed blocked: Engie, GE Aerospace, Bank of America, Ford, Medtronic, Inspir
 ## PENDING WORK
 
 > Agile/forward-only doc: completed work is pruned from here once shipped. History lives in git + `RUN_HISTORY.md`; portal status lives in `KNOWN_PORTALS.md`.
+
+### 00a — Decisions locked 2026-10-03 (grill session) and their status
+
+| # | Decision | Status |
+|---|---|---|
+| 1 | Branch `fix/first-seen-is-discovery-not-last-crawl` reaches `main` by PR, merged with a merge commit | PR open |
+| 2 | The stranded India-keyword fix (`5cdcfb69`) ships in that PR | done (`3ded7245`) |
+| 3 | **Hybrid clock:** Railway cron runs `daily_poll.py` (scrape → resolve → publish). The laptop only runs inference (embeddings, enrichment) | Railway files next |
+| 4 | Railway service gets a small volume for `All_CSV_Outputs/` and `logs/` | with Railway files |
+| 5 | Laptop: launchd agent, hourly, runs `daily_cycle.py --inference-only`. A busy lock is a quiet skip | flag done (`a253459c`); plist next |
+| 6 | Codex automation `daily-trusted-career-poll` bridges until the first green Railway publish, then is set to PAUSED | pending |
+| 7 | Staleness alert (no `job_source_runs` for 36h) lives in True_Yodha | filed as a True_Yodha task |
+| 8 | Lifecycle coverage floor: below **50%** of the last complete count, a run is partial and demotes nothing | done (`7700384e`) |
+| 9 | Enrichment stays on local LM Studio. **Checkpoint 2026-10-17:** if the backlog is not under 5,000, revisit paid open-weight inference | pending check |
+| 10 | Fallback (Scrapling) route titles and places jobs from the job page; Atomicwork re-added (2 India jobs) | done (`5078a4d4`) |
+| 11 | Scrapling fetcher is a core requirement, checked at startup | done (`a9653857`) |
+| 12 | Dream Sports stays parked; recheck its careers page monthly | parked |
+| 13 | Railway cron at **01:00 IST** daily (~10h run, publishes by ~11:00 IST) | with Railway files |
+| 14 | Claude builds the Railway setup; the owner installs the CLI, runs `railway login`, and pastes the 4 secrets | pending |
 
 ### 00 — INCIDENT: ingestion stopped 2026-09-09 (filed 2026-09-19 from a True_Yodha session)
 
