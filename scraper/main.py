@@ -33,6 +33,7 @@ from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from portal_reader import parse_portals
 import network_guard
+from environment import scrapling_fetcher_problem
 from providers import dispatch_scrape_result
 from providers.base import ProviderResult, ScrapeReason
 from enricher import InferenceQuotaExceeded, enrich_job, has_terminal_core_enrichment
@@ -709,6 +710,14 @@ def main():
 
     log.info(f"Scope: {args.scope}")
     log.info(f"Portals to process: {len(portals)}")
+    fallback_portals = [p for p in portals if p.get("js_required")]
+    if fallback_portals:
+        problem = scrapling_fetcher_problem()
+        if problem:
+            log.error(
+                f"Scrapling fetcher unavailable ({problem}): {len(fallback_portals)} "
+                "fallback portals will return nothing. Run: pip install -r requirements.txt"
+            )
     for p in portals:
         flag = "🌐" if p["js_required"] else "⚡"
         log.info(f"  {flag}  {p['company']:<30} [{p['ats']}]")

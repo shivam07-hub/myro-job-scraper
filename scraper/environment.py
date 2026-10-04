@@ -144,6 +144,20 @@ def require(*capabilities: str, env: Mapping[str, str] | None = None) -> None:
     raise EnvironmentError_("\n".join(lines))
 
 
+def scrapling_fetcher_problem() -> str | None:
+    """Why Scrapling's HTTP fetcher can't run here, or None when it can.
+
+    It is the fallback for portals without a job API. Without its curl_cffi
+    extra the import fails, and those portals used to fall through quietly to
+    a Firecrawl stack that no longer runs (found 2026-09-30).
+    """
+    try:
+        from scrapling.fetchers import Fetcher  # noqa: F401
+    except ImportError as exc:
+        return str(exc)
+    return None
+
+
 def report(env: Mapping[str, str] | None = None) -> str:
     """Operator-facing status. Reports presence only — never a value."""
     values = _values(env)
@@ -166,6 +180,11 @@ def report(env: Mapping[str, str] | None = None) -> str:
     lines.append("")
     lines.append(
         "blocked capabilities: " + (", ".join(blocked) if blocked else "none")
+    )
+    problem = scrapling_fetcher_problem()
+    lines.append(
+        "scrapling fetcher: ready" if problem is None
+        else f"scrapling fetcher: MISSING ({problem}) — pip install -r requirements.txt"
     )
     return "\n".join(lines)
 
