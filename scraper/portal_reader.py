@@ -672,6 +672,7 @@ _ATS_OVERRIDES: dict[str, str] = {
     'AstraZeneca': 'talentbrew',
     'Adobe': 'phenom_ssr',
     'Siemens': 'siemens_externaljobs',
+    'Bain & Company': 'bain_careers',
     'ABB': 'phenom_ssr',
     'Eli Lilly': 'phenom_ssr',
     'Cisco': 'phenom_ssr',

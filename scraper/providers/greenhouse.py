@@ -7,6 +7,7 @@ import re
 import requests
 
 from config import REQUEST_TIMEOUT
+from location_vocab import is_country_name, location_fields
 from providers.base import ProviderResult, ScrapeReason
 from utils import is_india, job_hash, strip_html
 
@@ -56,6 +57,25 @@ def _infer_india_location(text: str) -> str:
     return ""
 
 
+def _office_location(posting: dict, india_only: bool) -> str:
+    """First city-bearing office when the posting's location is only a country.
+
+    Greenhouse offices carry a name ("India") and a location
+    ("Bengaluru, Karnataka, India"); either may be the one with the city.
+    """
+    for office in posting.get('offices') or []:
+        if not isinstance(office, dict):
+            continue
+        for candidate in (office.get('location'), office.get('name')):
+            candidate = (candidate or '').strip() if isinstance(candidate, str) else ''
+            if not candidate or is_country_name(candidate):
+                continue
+            if india_only and not is_india(candidate):
+                continue
+            return candidate
+    return ''
+
+
 def scrape_greenhouse(portal: Portal, max_jobs: int | None = None) -> list[dict] | None:
     url = portal['endpoint']
     try:
@@ -82,6 +102,8 @@ def scrape_greenhouse(portal: Portal, max_jobs: int | None = None) -> list[dict]
         loc_out = loc
         if match_content and not is_india(loc_out):
             loc_out = _infer_india_location(" ".join([p.get('title', ''), raw_jd])) or loc_out
+        if not loc_out or is_country_name(loc_out):
+            loc_out = _office_location(p, india_only) or loc_out
         jobs.append({
             'job_id':          str(p.get('id', job_hash(p.get('title', ''), p.get('absolute_url', '')))),
             'title':           p.get('title', ''),
@@ -89,7 +111,7 @@ def scrape_greenhouse(portal: Portal, max_jobs: int | None = None) -> list[dict]
             'source_api_url':  url,
             'business_unit':   depts[0]['name'] if depts else None,
             'raw_jd_text':     raw_jd,
-            'location_city':   loc_out,
+            **location_fields(loc_out),
             'date_posted':     p.get('updated_at'),
             'source_platform': 'Greenhouse',
             'industry':        portal.get('industry', ''),

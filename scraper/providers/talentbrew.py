@@ -13,6 +13,7 @@ import requests
 
 from config import REQUEST_TIMEOUT
 from providers.base import FALLBACK_FIRECRAWL_EXTRACT, ProviderResult, ScrapeReason
+from location_vocab import location_fields
 from utils import is_india, job_hash, strip_html
 
 _log = logging.getLogger("mirror")
@@ -64,6 +65,12 @@ _CARD_LOC_RE = re.compile(
 )
 _SECTION29_LOC_RE = re.compile(
     r'<span[^>]*class="[^"]*\bsection29__result-location\b[^"]*"[^>]*>(?P<loc>.*?)</span>',
+    re.IGNORECASE | re.DOTALL,
+)
+# ADP cards print the location outside the title anchor:
+# <span class="job-meta-location"> Pune, Maharashtra, India </span>
+_ADP_CARD_LOC_RE = re.compile(
+    r'<span[^>]*class="[^"]*\bjob-meta-location\b[^"]*"[^>]*>(?P<loc>.*?)</span>',
     re.IGNORECASE | re.DOTALL,
 )
 _TOTAL_PAGES_RE = re.compile(r'data-total-pages="(?P<n>\d+)"', re.IGNORECASE)
@@ -176,12 +183,18 @@ def _extract_listing_items(listing_html: str) -> list[dict]:
         if not title or len(title) < 2:
             continue
 
+        # The card's location span sits after this anchor and before the next one.
+        next_link = _LISTING_LINK_RE_ADP.search(listing_html, m.end())
+        card_tail = listing_html[m.end():next_link.start() if next_link else None]
+        loc_m = _ADP_CARD_LOC_RE.search(card_tail)
+        listing_loc = strip_html(_html.unescape(loc_m.group("loc") if loc_m else ""))
+
         items.append(
             {
                 "job_id": job_id,
                 "href": href,
                 "title": title,
-                "listing_loc": "",
+                "listing_loc": listing_loc,
             }
         )
 
@@ -463,7 +476,7 @@ def _scrape_talentbrew(portal: Portal, max_jobs: int | None = None) -> list[dict
                     "source_api_url": page_url,
                     "business_unit": None,
                     "raw_jd_text": raw_jd,
-                    "location_city": location or "India",
+                    **location_fields(location or "India"),
                     "date_posted": None,
                     "source_platform": "TalentBrew",
                     "industry": industry,

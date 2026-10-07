@@ -6,6 +6,7 @@ import logging
 import requests
 
 from config import REQUEST_TIMEOUT
+from location_vocab import location_fields
 from providers.base import ProviderResult, ScrapeReason
 from utils import strip_html
 
@@ -36,6 +37,16 @@ class McKinseyProvider:
         return ProviderResult.success(jobs)
 
 
+def _india_cities(doc: dict) -> list[str]:
+    """``countries`` and ``cities`` are parallel arrays; keep India's cities."""
+    cities: list[str] = []
+    for country, city in zip(doc.get("countries") or [], doc.get("cities") or []):
+        city = (city or "").strip() if isinstance(city, str) else ""
+        if country == "India" and city and city not in cities:
+            cities.append(city)
+    return cities
+
+
 def _scrape_mckinsey(portal: Portal, max_jobs: int | None = None) -> list[dict] | None:
     params = {"pageSize": 200, "start": 1, "countries": "India", "lang": "en"}
     try:
@@ -61,6 +72,7 @@ def _scrape_mckinsey(portal: Portal, max_jobs: int | None = None) -> list[dict] 
         raw_jd = strip_html("\n".join(p for p in jd_parts if p))
         job_id = str(j.get("jobID") or j.get("friendlyURL") or "")
         apply_url = j.get("jobApplyURL") or f"https://www.mckinsey.com/careers/search-jobs/{j.get('friendlyURL','')}"
+        cities = _india_cities(j)
 
         jobs.append({
             "job_id":          job_id,
@@ -69,7 +81,8 @@ def _scrape_mckinsey(portal: Portal, max_jobs: int | None = None) -> list[dict] 
             "source_api_url":  _API_URL,
             "business_unit":   (j.get("functions") or [None])[0],
             "raw_jd_text":     raw_jd,
-            "location_city":   "India",
+            **location_fields(f"{cities[0]}, India" if cities else "India"),
+            "locations":       cities,
             "date_posted":     None,
             "source_platform": "McKinsey",
             "industry":        portal.get("industry", ""),

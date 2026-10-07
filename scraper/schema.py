@@ -95,6 +95,7 @@ CANONICAL_FIELDS: list[str] = [
     "location_mode",
     "location_quality",
     "locations",
+    "location_states",          # Indian states named or implied; importer derives the final list
     "apply_url",
     "source_url",
     "source_platform",

@@ -24,6 +24,7 @@ from config import OUTPUT_BASE
 from job_career_band import normalize_job_career_band
 from job_seniority import normalize_job_seniority
 from job_summary import extractive_job_summary
+from location_vocab import is_country_name, is_india_state
 from schema import CANONICAL_FIELDS, MIN_JOB_DESCRIPTION_LEN, MISSING_JD_NOTE
 
 # SCHEMA kept as alias for backward-compat imports (e.g. main.py: from writer import SCHEMA)
@@ -100,7 +101,13 @@ def to_canonical(raw: dict, company_name: str) -> dict:
         # Try canonical key first (already-mapped field), then raw key alias
         return raw.get(canonical_key) or raw.get(raw_key) or default
 
-    location = _get('location_city', 'location') or raw.get('Location') or raw.get('location_raw') or 'India'
+    # An adapter that saw only a country sends location_city=None plus
+    # location_country; the display falls back to that country, never a city.
+    location = (
+        _get('location_city', 'location') or raw.get('Location')
+        or raw.get('location_country') or raw.get('location_raw') or 'India'
+    )
+    location_city = raw.get('location_city') or location
     source_job_description = _get('raw_jd_text', 'job_description')
     job_description = source_job_description
     metadata_only = len(str(source_job_description or '').strip()) < MIN_JOB_DESCRIPTION_LEN
@@ -144,13 +151,14 @@ def to_canonical(raw: dict, company_name: str) -> dict:
         "company_name":     company_name,
         "location":         location,
         "location_raw":     raw.get('location_raw') or location,
-        "location_city":    raw.get('location_city') or location,
+        "location_city":    None if is_country_name(location_city) or is_india_state(location_city) else location_city,
         "location_country": raw.get('location_country') or ('India' if location else ''),
         "location_mode":    raw.get('location_mode') or '',
         "location_quality": raw.get('location_quality') or '',
         # per-city raw strings for multi-location postings (firecrawl #6).
         # csv_importer._normalize_location canonicalizes; empty list → derived from scalar.
         "locations":        [location for location in (raw.get('locations') or []) if isinstance(location, str) and location.strip()],
+        "location_states":  [state for state in (raw.get('location_states') or []) if isinstance(state, str) and state.strip()],
         "apply_url":        _get('job_url', 'apply_url'),
         "source_url":       raw.get('source_url') or raw.get('source_api_url') or '',
         "source_platform":  raw.get('source_platform') or raw.get('ats') or '',

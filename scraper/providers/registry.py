@@ -6,6 +6,7 @@ import logging
 
 from providers.base import FALLBACK_FIRECRAWL_EXTRACT, Provider, ProviderResult, ScrapeReason
 from providers.eightfold import EightfoldProvider
+from providers.bain_careers import BainCareersProvider
 from providers.firecrawl_js import FirecrawlJSProvider
 from providers.darwinbox import DarwinboxProvider
 from providers.google_careers import GoogleCareersProvider
@@ -103,6 +104,7 @@ _ATS_PROVIDERS: dict[str, Provider] = {
     "trakstar": TrakstarProvider(),
     "phenom_ssr": PhenomSSRProvider(),
     "siemens_externaljobs": SiemensExternalJobsProvider(),
+    "bain_careers": BainCareersProvider(),
     "deloitte_usi": DeloitteUSIProvider(),
     "yello": YelloProvider(),
     "sap_jobs2web_html": SAPJobs2WebHTMLProvider(),

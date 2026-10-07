@@ -66,6 +66,13 @@ from enrichment_state import (  # noqa: E402
 from utils import company_slug  # noqa: E402
 from job_career_band import VALID_CAREER_BANDS  # noqa: E402
 from job_summary import extractive_job_summary  # noqa: E402
+from location_vocab import (  # noqa: E402
+    foreign_signal,
+    india_city,
+    is_country_name,
+    is_india_state,
+    states_in,
+)
 from schema import MIN_JOB_DESCRIPTION_LEN  # noqa: E402
 from source_snapshot import finalize_source_snapshot, upsert_rows  # noqa: E402
 
@@ -345,12 +352,14 @@ class NormalizedLocation:
     location_mode: str
     location_quality: str
     locations: tuple[str, ...] = ()
+    location_states: tuple[str, ...] = ()
 
 
 _SPACE_RE = re.compile(r"\s+")
 _MULTI_LOCATION_RE = re.compile(r"\b\d+\s*locations?\b|multiple locations|various locations")
 _REMOTE_RE = re.compile(r"\bremote\b|\bwork from home\b|\bwfh\b|\bworldwide\b|\banywhere\b")
 _HYBRID_RE = re.compile(r"\bhybrid\b")
+_INDIA_WORD_RE = re.compile(r"\bindia\b", re.IGNORECASE)
 
 _CITY_ALIASES: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"\bbangalore\b|\bbengaluru\b"), "Bengaluru"),
@@ -375,18 +384,7 @@ _COUNTRY_ALIASES: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"\bfrance\b"), "France"),
 )
 
-_INDIA_CITIES = {
-    "Bengaluru",
-    "Hyderabad",
-    "Mumbai",
-    "Pune",
-    "Chennai",
-    "Delhi NCR",
-    "Gurugram",
-    "Noida",
-    "Kolkata",
-    "Ahmedabad",
-}
+CITY_NOT_SPECIFIED = "city not specified"
 
 
 def _clean_text(value: str | None) -> str | None:
@@ -404,19 +402,59 @@ def _infer_mode(lower: str) -> str:
     return "unknown"
 
 
+_NON_CITY_WORDS = ("location", "remote", "hybrid", "worldwide", "anywhere")
+
+
+def _city_token(token: str) -> str | None:
+    """A city name, or None for anything that is not one.
+
+    Countries, states and two-letter codes ("IN", "MH") are never cities, nor
+    is a fragment that still names a state or India ("India Maharashtra").
+    """
+    if not token or len(token) <= 2 or re.search(r"\d", token):
+        return None
+    if is_country_name(token) or is_india_state(token):
+        return None
+    if states_in(token) or _INDIA_WORD_RE.search(token):
+        return None
+    token_lower = token.lower()
+    if any(word in token_lower for word in _NON_CITY_WORDS):
+        return None
+    known = india_city(token)
+    if known:
+        return known[0]
+    return _SPACE_RE.sub(" ", token.title())
+
+
 def _infer_city(lower: str, raw: str) -> str | None:
     for pattern, canonical in _CITY_ALIASES:
         if pattern.search(lower):
             return canonical
 
-    token = re.split(r"[;,|]", raw, maxsplit=1)[0]
-    token = re.split(r"\s+-\s+", token, maxsplit=1)[0].strip()
-    if not token or re.search(r"\d", token):
+    tokens = [
+        piece.strip()
+        for part in re.split(r"[;,|]", raw)
+        for piece in re.split(r"\s+-\s+", part)
+        if piece.strip()
+    ]
+    if not tokens:
         return None
-    token_lower = token.lower()
-    if any(word in token_lower for word in ("location", "remote", "hybrid", "worldwide", "anywhere")):
+    first = tokens[0]
+    if is_country_name(first) and first.lower() != "india":
+        # Other countries' region names are unknown here; their city stays NULL.
         return None
-    return _SPACE_RE.sub(" ", token.title())
+    if first.lower() != "india" and not is_india_state(first):
+        return _city_token(first)
+    # A country or state is never a city. Country- and state-first strings put
+    # the city later ("India, Gujarat, Mehsana, 384421"), or name none at all
+    # ("Maharashtra, India").
+    for token in tokens[1:]:
+        if len(token) <= 3:
+            continue
+        city = _city_token(token)
+        if city:
+            return city
+    return None
 
 
 def _infer_country(lower: str) -> str | None:
@@ -430,6 +468,7 @@ def _display_location(
     *,
     city: str | None,
     country: str | None,
+    states: tuple[str, ...],
     mode: str,
     quality: str,
     raw: str | None,
@@ -438,12 +477,17 @@ def _display_location(
         return raw
     if mode == "remote":
         return f"Remote - {country}" if country else "Remote"
+    if city is None and (states or country):
+        # CEO decision 2026-10-04: a job with no city is shown, and says so.
+        region = " or ".join(states) if states else country
+        label = f"{region} — {CITY_NOT_SPECIFIED}"
+        return f"Hybrid - {label}" if mode == "hybrid" else label
     if mode == "hybrid":
         if city and country:
             return f"Hybrid - {city}, {country}"
         if city:
             return f"Hybrid - {city}"
-        return f"Hybrid - {country}" if country else "Hybrid"
+        return "Hybrid"
     if city and country:
         return f"{city}, {country}"
     return city or country or raw
@@ -464,12 +508,35 @@ def _canonical_city_list(raw_locations: list | tuple | None) -> list[str]:
     return out
 
 
+def _location_states(
+    raw: str | None,
+    raw_locations: list | tuple | None,
+    cities: list[str],
+    states: list | tuple | None,
+) -> tuple[str, ...]:
+    """Indian states the posting names or whose cities it names, in order."""
+    out: list[str] = []
+    candidates = [*(states or []), *states_in(raw)]
+    for entry in raw_locations or []:
+        if isinstance(entry, str):
+            candidates.extend(states_in(entry))
+    for city in cities:
+        known = india_city(city)
+        if known:
+            candidates.append(known[1])
+    for state in candidates:
+        if isinstance(state, str) and state.strip() and state.strip() not in out:
+            out.append(state.strip())
+    return tuple(out)
+
+
 def _normalize_location(
     value: str | None,
     raw_locations: list | tuple | None = None,
+    states: list | tuple | None = None,
 ) -> NormalizedLocation:
     raw = _clean_text(value)
-    if raw is None and not raw_locations:
+    if raw is None and not raw_locations and not states:
         return NormalizedLocation(
             location="Unknown",
             location_raw=None,
@@ -495,7 +562,8 @@ def _normalize_location(
         mode = _infer_mode(lower)
         city = _infer_city(lower, raw)
         country = _infer_country(lower)
-        if city in _INDIA_CITIES and not country:
+        # A known Indian city or a named state places the posting in India.
+        if country is None and (india_city(city) or states_in(raw)):
             country = "India"
 
         if mode == "unknown" and _MULTI_LOCATION_RE.search(lower):
@@ -516,7 +584,7 @@ def _normalize_location(
                 if inferred:
                     country = inferred
                     break
-        if city in _INDIA_CITIES and not country:
+        if country is None and india_city(city):
             country = "India"
         if quality == "unknown" and city:
             quality = "ok"
@@ -532,15 +600,61 @@ def _normalize_location(
         if c not in locations:
             locations.append(c)
 
+    location_states: tuple[str, ...] = ()
+    if country in (None, "India"):
+        location_states = _location_states(raw, raw_locations, locations, states)
+
     return NormalizedLocation(
-        location=_display_location(city=city, country=country, mode=mode, quality=quality, raw=raw),
+        location=_display_location(
+            city=city,
+            country=country,
+            states=location_states,
+            mode=mode,
+            quality=quality,
+            raw=raw,
+        ),
         location_raw=raw,
         location_city=city,
         location_country=country,
         location_mode=mode,
         location_quality=quality,
         locations=tuple(locations),
+        location_states=location_states,
     )
+
+
+def _outside_india(job: dict) -> bool:
+    """Myro is India-only (CEO decision 2026-10-04): drop a posting only when it
+    is positively outside India. An unrecognised place is kept."""
+    normalized = _normalize_location(job.get("location"), job.get("locations"), job.get("location_states"))
+    if normalized.location_country == "India" or normalized.location_states:
+        return False
+    if normalized.location_country is not None:
+        return True
+    places = [normalized.location_raw or "", *(job.get("locations") or [])]
+    return any(foreign_signal(place) for place in places if isinstance(place, str))
+
+
+def _report_location_rule_violations(sb) -> dict | None:
+    """The daily location check (CEO decision 2026-10-04): every count should be 0.
+
+    Rows published before the release keep their old shape until re-scraped or
+    aged out (no backfill), so the counts fall over the first 30 days. A failed
+    check never fails a publish that already landed.
+    """
+    try:
+        counts = sb.rpc("location_rule_violations").execute().data
+    except Exception as exc:  # noqa: BLE001 — diagnostics only
+        log.warning("Location rule check unavailable: %s", exc)
+        return None
+    if not isinstance(counts, dict):
+        log.warning("Location rule check returned %r", counts)
+        return None
+    if any(int(value or 0) for value in counts.values()):
+        log.warning("Location rule violations (expect 0): %s", counts)
+    else:
+        log.info("Location rule check: 0 violations")
+    return counts
 
 
 def _valid_apply_url(url: str | None) -> str | None:
@@ -619,56 +733,47 @@ def _assert_location_audit_contract(run_id: str) -> None:
     log.info("Supabase audit contract preflight OK")
 
 
+def _jobs_has_column(column: str) -> bool:
+    """Return True when live Supabase jobs exposes ``column`` (PostgREST spec)."""
+    url = (os.getenv("SUPABASE_URL", "") or "").rstrip("/")
+    key = os.getenv("SUPABASE_SERVICE_KEY", "")
+    if not url or not key:
+        return False
+
+    headers = {
+        "apikey": key,
+        "Authorization": f"Bearer {key}",
+        "Accept": "application/openapi+json",
+    }
+    try:
+        response = requests.get(f"{url}/rest/v1/", headers=headers, timeout=30)
+        response.raise_for_status()
+        spec = response.json()
+    except Exception:
+        return False
+
+    schemas = spec.get("definitions") or spec.get("components", {}).get("schemas") or {}
+    table = schemas.get("jobs") or schemas.get("public.jobs") or {}
+    return column in (table.get("properties") or {})
+
+
 def _jobs_has_locations_column() -> bool:
     """Return True when live Supabase jobs exposes the locations[] column.
 
     _upsert_jobs sends `locations` on every row, so this MUST exist before real
     writes or the whole upsert batch fails (firecrawl #6).
     """
-    url = (os.getenv("SUPABASE_URL", "") or "").rstrip("/")
-    key = os.getenv("SUPABASE_SERVICE_KEY", "")
-    if not url or not key:
-        return False
+    return _jobs_has_column("locations")
 
-    headers = {
-        "apikey": key,
-        "Authorization": f"Bearer {key}",
-        "Accept": "application/openapi+json",
-    }
-    try:
-        response = requests.get(f"{url}/rest/v1/", headers=headers, timeout=30)
-        response.raise_for_status()
-        spec = response.json()
-    except Exception:
-        return False
 
-    schemas = spec.get("definitions") or spec.get("components", {}).get("schemas") or {}
-    table = schemas.get("jobs") or schemas.get("public.jobs") or {}
-    return "locations" in (table.get("properties") or {})
+def _jobs_has_location_states_column() -> bool:
+    """jobs.location_states[] — sent on every row; scraper/sql/add_location_states_and_city_rule.sql."""
+    return _jobs_has_column("location_states")
 
 
 def _jobs_has_job_content_hash_column() -> bool:
     """Return True when live Supabase jobs exposes the optional embedding-change signal."""
-    url = (os.getenv("SUPABASE_URL", "") or "").rstrip("/")
-    key = os.getenv("SUPABASE_SERVICE_KEY", "")
-    if not url or not key:
-        return False
-
-    headers = {
-        "apikey": key,
-        "Authorization": f"Bearer {key}",
-        "Accept": "application/openapi+json",
-    }
-    try:
-        response = requests.get(f"{url}/rest/v1/", headers=headers, timeout=30)
-        response.raise_for_status()
-        spec = response.json()
-    except Exception:
-        return False
-
-    schemas = spec.get("definitions") or spec.get("components", {}).get("schemas") or {}
-    table = schemas.get("jobs") or schemas.get("public.jobs") or {}
-    return "job_content_hash" in (table.get("properties") or {})
+    return _jobs_has_column("job_content_hash")
 
 
 def _jobs_missing_forward_enrichment_columns() -> list[str]:
@@ -1096,7 +1201,9 @@ def _upsert_jobs(
         row["industry"] = job.get("industry") or "unknown"
         row["ingestion_source"] = job.get("ingestion_source") or "scraper"
         row["quality_status"] = job.get("quality_status") or "auto_extracted"
-        normalized_location = _normalize_location(job.get("location"), job.get("locations"))
+        normalized_location = _normalize_location(
+            job.get("location"), job.get("locations"), job.get("location_states"),
+        )
 
         # Derived fields
         row["industry_group"] = _industry_group(job.get("industry"))
@@ -1107,6 +1214,7 @@ def _upsert_jobs(
         row["location_mode"] = normalized_location.location_mode
         row["location_quality"] = normalized_location.location_quality
         row["locations"] = list(normalized_location.locations)
+        row["location_states"] = list(normalized_location.location_states)
         row["apply_url"]      = _valid_apply_url(job.get("apply_url"))
         if supports_forward_enrichment:
             row["source_content_hash"] = source_content_hash(job)
@@ -1393,6 +1501,12 @@ def import_file(
             for job in eligible_jobs
         }.values())
         duplicates = len(eligible_jobs) - len(jobs)
+    # Myro is India-only: a posting positively outside India is not published,
+    # so a full-scope run closes any copy already live.
+    outside_india = sum(1 for job in jobs if _outside_india(job))
+    if outside_india:
+        jobs = [job for job in jobs if not _outside_india(job)]
+        log.info("  %s: %d postings outside India dropped", company, outside_india)
     unclassified = sum(
         1
         for job in jobs
@@ -1413,6 +1527,7 @@ def import_file(
             "job_ids": set(),
             "jobs": 0,
             "withheld": withheld,
+            "outside_india": outside_india,
             "unclassified": unclassified,
             "duplicates": duplicates,
             "profile_rows": 0,
@@ -1435,7 +1550,9 @@ def import_file(
     else:
         jobs_written = sum(1 for j in jobs if j.get("job_id"))
         for job in jobs:
-            normalized = _normalize_location(job.get("location"), job.get("locations"))
+            normalized = _normalize_location(
+                job.get("location"), job.get("locations"), job.get("location_states"),
+            )
             if normalized.location_quality == "unknown":
                 local_unknown += 1
                 if normalized.location_raw:
@@ -1462,6 +1579,7 @@ def import_file(
         "job_ids": {j.get("job_id") for j in jobs if j.get("job_id")},
         "jobs": jobs_written,
         "withheld": withheld,
+        "outside_india": outside_india,
         "unclassified": unclassified,
         "duplicates": duplicates,
         "profile_rows": profile_rows_written,
@@ -1853,11 +1971,27 @@ def main() -> None:
                 )
                 raise SystemExit(2)
 
+    if _jobs_has_location_states_column():
+        log.info("jobs.location_states[] contract OK")
+    else:
+        log.warning(
+            "jobs.location_states[] column is missing; dry-run can continue, "
+            "but real uploads require scraper/sql/add_location_states_and_city_rule.sql"
+        )
+        if not args.dry_run:
+            # Ship together (CEO decision 2026-10-04): the database change lands
+            # before the scraper writes state-only jobs, never after.
+            log.error(
+                "Stopping before writes: apply scraper/sql/add_location_states_and_city_rule.sql "
+                "and scraper/sql/seed_location_vocab.sql in the Supabase SQL editor first."
+            )
+            raise SystemExit(2)
     drift_counter: Counter = Counter()
     unknown_location_counter: Counter[str] = Counter()
     imported_company_job_ids: dict[str, set[str]] = {}
     imported_company_batch_dates: dict[str, int] = {}
     total_jobs = total_withheld = total_unclassified = total_duplicates = 0
+    total_outside_india = 0
     total_drift = total_unknown_location_rows = 0
     t0 = time.time()
 
@@ -1885,6 +2019,7 @@ def main() -> None:
             f"{result['jobs']} jobs, "
             f"{enriched_pct}% enriched"
             + (f", {result['withheld']} withheld" if result.get("withheld") else "")
+            + (f", {result['outside_india']} outside India dropped" if result.get("outside_india") else "")
             + (f", {result['unclassified']} unclassified" if result.get("unclassified") else "")
             + (f", {result['duplicates']} duplicates collapsed" if result.get("duplicates") else "")
             + (f", {result['drift']} drift" if result['drift'] else "")
@@ -1892,6 +2027,7 @@ def main() -> None:
         )
         total_jobs       += result["jobs"]
         total_withheld   += result.get("withheld", 0)
+        total_outside_india += result.get("outside_india", 0)
         total_unclassified += result.get("unclassified", 0)
         total_duplicates += result.get("duplicates", 0)
         total_drift      += result.get("drift", 0)
@@ -1949,6 +2085,8 @@ def main() -> None:
         lifecycle_summary["failed"],
         lifecycle_summary.get("age_delist"),
     )
+    if not args.dry_run:
+        _report_location_rule_violations(sb)
 
     total_missing = total_deactivated = blocked_deactivation = 0
     if args.deactivate_missing:
@@ -2011,6 +2149,8 @@ def main() -> None:
         )
     if total_duplicates:
         log.info("%s duplicate source rows collapsed before upsert.", total_duplicates)
+    if total_outside_india:
+        log.info("%s postings outside India dropped (Myro is India-only).", total_outside_india)
     log.info(
         "Location quality: %s unknown rows (%s)",
         total_unknown_location_rows,

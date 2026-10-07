@@ -11,6 +11,7 @@ from urllib.parse import urlencode
 
 from config import REQUEST_TIMEOUT
 from providers.base import FALLBACK_FIRECRAWL_EXTRACT, ProviderResult, ScrapeReason
+from location_vocab import is_country_name, location_fields
 from utils import is_india, job_hash, strip_html
 
 _log = logging.getLogger("mirror")
@@ -276,17 +277,41 @@ def _extract_oracle_nested(data: dict) -> list[dict]:
     return req_list if isinstance(req_list, list) else []
 
 
+def _oracle_work_cities(p: dict) -> list[str]:
+    """Cities from an expanded requisition: workLocation/otherWorkLocations
+    TownOrCity first, then secondaryLocations names ("Bengaluru, Karnataka, India")."""
+    cities: list[str] = []
+    for key in ('workLocation', 'otherWorkLocations'):
+        for place in p.get(key) or []:
+            town = place.get('TownOrCity') if isinstance(place, dict) else None
+            if isinstance(town, str) and town.strip() and town.strip() not in cities:
+                cities.append(town.strip())
+    if not cities:
+        for place in p.get('secondaryLocations') or []:
+            name = place.get('Name') if isinstance(place, dict) else None
+            if isinstance(name, str) and name.strip() and not is_country_name(name):
+                if name.strip() not in cities:
+                    cities.append(name.strip())
+    return cities
+
+
 def _parse_oracle_job(p: dict, host: str, site_num: str = "careers") -> dict:
     """Map Oracle HCM field names (Title, Id, PrimaryLocation) to canonical shape."""
     title = p.get('Title') or p.get('title') or ''
     loc_raw = p.get('PrimaryLocation') or p.get('primaryLocation') or ''
     loc = loc_raw if isinstance(loc_raw, str) else ''
+    cities = _oracle_work_cities(p)
+    # Multi-site requisitions print only the country as PrimaryLocation; the
+    # work locations still name the city. Without one, the city stays NULL.
+    if cities and (not loc or is_country_name(loc)):
+        loc = f"{cities[0]}, {loc}" if loc and loc not in cities[0] else cities[0]
     jid = str(p.get('Id') or p.get('requisitionId') or p.get('id') or job_hash(title, ''))
     site = site_num or "careers"
     job_url = f"https://{host}/hcmUI/CandidateExperience/en/sites/{site}/job/{jid}" if jid else ''
     return {
         '_title': title,
         '_loc':   loc,
+        '_locations': cities,
         '_jid':   jid,
         '_url':   job_url,
         '_jd':    strip_html(p.get('ExternalDescriptionStr') or p.get('ShortDescriptionStr') or p.get('jobDescription') or ''),
@@ -343,7 +368,8 @@ def _parse_json_response(
                 'source_api_url':  source_url,
                 'business_unit':   None,
                 'raw_jd_text':     jd,
-                'location_city':   mapped['_loc'],
+                **location_fields(mapped['_loc']),
+                'locations':       mapped['_locations'],
                 'date_posted':     mapped['_date'],
                 'source_platform': 'Oracle',
                 'industry':        portal.get('industry', ''),

@@ -20,6 +20,7 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 import requests
 
 from config import REQUEST_TIMEOUT
+from location_vocab import location_fields, states_in
 from providers.base import FALLBACK_FIRECRAWL_EXTRACT, ProviderResult, ScrapeReason
 from schema import Portal
 from utils import is_india, strip_html
@@ -178,6 +179,7 @@ def _fetch_detail(session: requests.Session, job_url: str) -> dict:
     out = {
         "title": "",
         "location": "",
+        "region": "",
         "date_posted": "",
         "business_unit": "",
         "apply_url": job_url,
@@ -210,6 +212,8 @@ def _fetch_detail(session: requests.Session, job_url: str) -> dict:
             field_map[label] = values[i]
 
     out["location"] = field_map.get("location(s)", "")
+    # Multi-site roles list states only: "Karnataka - India Maharashtra - India".
+    out["region"] = field_map.get("any siemens location in", "")
     out["date_posted"] = field_map.get("posted since", "")
     out["business_unit"] = field_map.get("field of work", "")
 
@@ -279,13 +283,14 @@ def _scrape_siemens_externaljobs(portal: Portal, max_jobs: int | None = None) ->
 
             detail = _fetch_detail(session, row["job_url"])
             title = detail["title"] or row["title"]
-            location = detail["location"] or row["listing_location"] or "India"
+            location = detail["location"] or row["listing_location"]
+            region = detail["region"]
             business_unit = detail["business_unit"] or row["family"]
             apply_url = detail["apply_url"] or row["job_url"]
             raw_jd = detail["raw_jd_text"] or ""
             date_posted = detail["date_posted"] or ""
 
-            if india_only and not is_india(location):
+            if india_only and not is_india(location or region or "India"):
                 continue
 
             jobs.append(
@@ -296,7 +301,10 @@ def _scrape_siemens_externaljobs(portal: Portal, max_jobs: int | None = None) ->
                     "source_api_url": page_url,
                     "business_unit": business_unit,
                     "raw_jd_text": raw_jd,
-                    "location_city": location,
+                    # A state-level region names no city: keep the country and its states.
+                    **location_fields(location or "India"),
+                    "location_raw": location or region,
+                    "location_states": [] if location else states_in(region),
                     "date_posted": date_posted,
                     "source_platform": "SiemensExternalJobs",
                     "industry": industry,

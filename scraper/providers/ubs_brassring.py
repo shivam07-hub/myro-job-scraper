@@ -3,11 +3,13 @@ from __future__ import annotations
 import html
 import json
 import logging
+import re
 
 import requests
 from bs4 import BeautifulSoup
 
 from config import REQUEST_TIMEOUT
+from location_vocab import location_fields
 from providers.base import ProviderResult, ScrapeReason
 from schema import Portal
 from utils import is_india, strip_html
@@ -60,12 +62,42 @@ def _parse_jobs(items: list[dict], portal: Portal) -> list[dict]:
             "source_api_url": portal.get("endpoint", ""),
             "business_unit": questions.get("department") or questions.get("formtext21"),
             "raw_jd_text": strip_html(questions.get("jobdescription", "")),
-            "location_city": location,
+            # The search payload carries only a country ("India"); no city to keep.
+            **location_fields(location),
             "date_posted": questions.get("lastupdated"),
             "source_platform": "BrassRing TGNewUI",
             "industry": portal.get("industry", ""),
         })
     return out
+
+
+# Job pages embed their answers as JSON; the search payload omits the City
+# question (VerityZone formtext2), which only says "India" there.
+_DETAIL_CITY_RE = re.compile(r'"QuestionName":"City","AnswerValue":"(?P<city>[^"]*)"')
+
+
+def parse_ubs_detail_cities(page_html: str) -> list[str]:
+    """Cities a UBS job page names under its "City" question, in order."""
+    match = _DETAIL_CITY_RE.search(html.unescape(page_html or ""))
+    if not match:
+        return []
+    return [city.strip() for city in match.group("city").split(",") if city.strip()]
+
+
+def _with_detail_city(session: requests.Session, job: dict) -> dict:
+    if job.get("location_city") or not job.get("job_url"):
+        return job
+    try:
+        response = session.get(job["job_url"], timeout=REQUEST_TIMEOUT)
+        response.raise_for_status()
+    except Exception as exc:
+        _log.warning("    [UBS BrassRing] job page %s failed: %s", job.get("job_id"), exc)
+        return job
+    cities = parse_ubs_detail_cities(response.text)
+    if cities:
+        country = job.get("location_country") or "India"
+        job.update(location_city=f"{cities[0]}, {country}", locations=cities)
+    return job
 
 
 def _embedded_search_payload(page_html: str) -> dict:
@@ -152,4 +184,5 @@ class UBSBrassRingProvider:
 
         if max_jobs:
             jobs = jobs[:max_jobs]
+        jobs = [_with_detail_city(session, job) for job in jobs]
         return ProviderResult.success(jobs)

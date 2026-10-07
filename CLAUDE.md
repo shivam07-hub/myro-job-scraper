@@ -35,8 +35,9 @@ Weekly global scrape of 100+ company portals → full JDs → LM Studio skill ex
 
 ---
 
-## CURRENT STATE (as of 2026-09-07)
+## CURRENT STATE (as of 2026-10-07)
 
+- **Location release (built 2026-10-07, branch `claude/blissful-mclean-a9f285`; NOT shipped — see PENDING WORK 0).** CEO decision record 2026-10-04: a country or a state is never a city; a job with no city is labeled "India — city not specified" (or "Maharashtra — city not specified") and shown; a state-only job reaches users whose cities are in that state; Delhi NCR = Delhi, Gurugram, Noida; Myro is India-only (drop a posting only when it is positively outside India); a known Indian city fills country + state. `india_cities.json` (376 cities, 48 aliases) is the one city → state list; `location_vocab.py` owns the rules and generates `sql/seed_location_vocab.sql`. New column `jobs.location_states[]`; the importer refuses real writes until it exists. A database rule cleans every writer; `location_rule_violations()` is logged after each publish and should trend to 0 as old rows are re-scraped (no backfill). Undated scraper rows now age by `batch_date`. Bain reads cities from its listing (`bain_careers`, job ids unchanged); UBS reads the City answer from each job page. Measured 2026-10-07 on 60,350 active rows: 606 city-is-country, 1,112 city-is-state, 6,233 Indian city with no country, 5 non-India country → all 0 after re-publish (projected); 400 foreign postings dropped (LTIMindtree 287, Mphasis 103).
 - **Session 2026-09-07 — source snapshot writer landed; Stripe canary found two publication bugs, now fixed.** `source_snapshot.py` owns homogeneous PostgREST upserts (omit-to-preserve cannot NULL sibling `job_summary` cells) and feed close (presence + 30-day age delist on full scope only). Physical unload is True_Yodha after a one-hour quarantine — this writer does not delete rows. Stripe `--company` upserted 40 rows then crashed on `p_limit=10000`; mixed fill/preserve also wiped 11 LLM summaries. Repair those 11 with extractive fill, re-run the Stripe canary, then a full-scope publish is safe to close `last_seen` older than 30 days. Clock stays on this laptop; uncommitted on `main` after `223578206`.
 - **Job-feed contract (2026-09-07):** `--company-cap` default is **0 (unlimited)** on `main.py`, `daily_poll.py`, and `daily_cycle.py`. Provider listing loops no longer substitute a silent 2000. Workday lists up to `WORKDAY_MAX_JOBS` (runaway 100000) and fetches JDs for the full selected set when uncapped. Quality `select_for_cap` still runs only when a positive cap is passed. Every imported row gets an **extractive `job_summary`** at scrape/import if the DB cell is empty; the LLM summary remains an upgrade and is never overwritten by a re-scrape. After a full-scope publish, jobs with `last_seen` older than **30 days** are closed (`AGE_STALE_DAYS`); `--company` canaries skip that backstop. NULL `last_seen` (extension saves) is left alone. Clock stays on this laptop this version; cloud move is next. Opaque HTML boards try [Scrapling](https://github.com/D4Vinci/Scrapling) HTTP fetch before Firecrawl (`scrapling_client.py`). Direct ATS APIs stay the default.
 - **Data:** 53,046 jobs in Supabase (`jobs`, project `gipvxuugajkugntwkeiz`), 46,206 currently active, and 413,836 `job_skills` rows (read-only snapshot 2026-07-12; active count moves as the delisting loop runs).
@@ -483,7 +484,20 @@ Confirmed blocked: Engie, GE Aerospace, Bank of America, Ford, Medtronic, Inspir
 
 > Agile/forward-only doc: completed work is pruned from here once shipped. History lives in git + `RUN_HISTORY.md`; portal status lives in `KNOWN_PORTALS.md`.
 
-### 0 — Next: full-scope source publish
+### 0 — Location release (database change applied 2026-10-07; Myro deploy + scraper merge pending)
+
+**Blocker found 2026-10-07:** the Supabase project returns HTTP 402 "restricted … exceed_db_size_quota" on the REST and Auth APIs (database 1,777 MB). Every publish and every Myro request fails until the owner upgrades the plan / lifts the spend cap or the database shrinks. Biggest tables: jobs 724 MB (141 MB rows, rest descriptions + indexes), job_listing_observations 286 MB, private.job_embeddings 225 MB, job_skills 172 MB.
+
+Ship as one release, in this order (each step is safe on its own):
+
+1. ✅ DONE 2026-10-07 (CEO go): `scraper/sql/add_location_states_and_city_rule.sql` applied as migrations `add_location_states_and_city_rule` + `location_rule_violations_counts_codes`; vocabulary loaded (687 rows, checksum equal to `location_vocab.seed_rows()`). Rule verified on live rows inside a rolled-back probe. Baseline `location_rule_violations()`: city_is_country 605, city_is_state 1,112, outside_india 5, indian_city_without_country 6,233.
+2. Deploy True_Yodha branch `claude/location-states` (admission + feed rules, `location_vocab` reader, label). It selects `location_states`, so it must follow step 1.
+3. Merge this branch; the next daily poll rewrites rows. The importer exits 2 if step 1 is missing.
+4. Check `select public.location_rule_violations();` after the first poll: city_is_country and city_is_state fall to near 0 for re-scraped companies; the rest age out within 30 days.
+
+After editing `india_cities.json`: `python location_vocab.py --write-seed`, then re-run the seed file.
+
+### 0b — Next: full-scope source publish
 
 Stripe `--company` canary is green on the source snapshot writer (2026-09-08 re-run of run date `2026_09_07`: summaries survived, Stage A accepted). A full-scope importer without `--company` will close every active job with `last_seen` older than 30 days; True_Yodha unloads those rows one hour later after writing `job_archive_v1` files. Pin `--run-date` to the scrape folder. Clock stays on this laptop.
 

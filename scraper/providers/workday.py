@@ -8,11 +8,12 @@ import re
 import threading
 import requests
 from pathlib import Path
-from urllib.parse import urlsplit, urlunsplit
+from urllib.parse import unquote, urlsplit, urlunsplit
 
 import firecrawl_client as fc
 from config import REQUEST_TIMEOUT, WORKDAY_PAGE_SIZE, WORKDAY_MAX_JOBS, WORKDAY_JD_FETCH_LIMIT
 from providers.base import FALLBACK_FIRECRAWL_EXTRACT, ProviderResult, ScrapeReason
+from location_vocab import is_country_name, location_fields
 from utils import is_india, job_hash, strip_html, workday_req_id
 from scrape_select import select_for_cap
 
@@ -61,6 +62,55 @@ def _workday_public_url(portal: Portal, external_path: str) -> str:
         path += "/"
     host = f"{tenant}.{instance}.myworkdayjobs.com"
     return urlunsplit(("https", host, path, parsed.query, parsed.fragment))
+
+
+def _workday_url_city(external_path: str) -> str:
+    """City from a posting path such as ``/job/Brussels/Title_R123``.
+
+    Workday puts the primary location's slug right after ``/job/``. Only a
+    plain place name is trusted. Office codes after the city are dropped
+    ("Pune-PDC2C" -> "Pune"); slugs with ``---`` separators, a country, or
+    more than three words ("India-Gujarat-Mehsana-384421") are too lossy to
+    read back and return "".
+    """
+    segments = [s for s in urlsplit(external_path or "").path.split("/") if s]
+    if "job" not in segments:
+        return ""
+    i = segments.index("job")
+    if i + 2 >= len(segments):  # need the location slug and the title slug after it
+        return ""
+    slug = unquote(segments[i + 1])
+    if "---" in slug:
+        return ""
+    words = []
+    for word in slug.split("-"):
+        if re.search(r"\d", word):
+            break
+        if word:
+            words.append(word)
+    if not words or len(words) > 3:
+        return ""
+    # "IndiaTamil-Nadu..." is "India, Tamil Nadu" with the comma slugged away.
+    if any(re.search(r"[a-z][A-Z]", w) for w in words):
+        return ""
+    city = " ".join(words)
+    lowered = city.lower()
+    if is_country_name(city) or any(is_country_name(w) for w in words):
+        return ""
+    if any(w in lowered for w in ("location", "remote", "hybrid")):
+        return ""
+    return city
+
+
+def _workday_location(location: str, external_path: str) -> str:
+    """Keep a city-bearing location; a bare country or blank borrows the URL city."""
+    location = (location or "").strip()
+    if location and not is_country_name(location):
+        return location
+    city = _workday_url_city(external_path)
+    if not city:
+        return location
+    return f"{city}, {location}" if location else city
 
 
 class WorkdayProvider:
@@ -224,7 +274,7 @@ def scrape_workday(
             new_on_page += 1
 
             url = _workday_public_url(portal, ext)
-            loc = p.get('locationsText') or p.get('primaryLocation', '')
+            loc = _workday_location(p.get('locationsText') or p.get('primaryLocation', ''), ext)
             if india_only and use_search_text and not is_india(loc):
                 continue
             bf  = p.get('bulletFields') or []
@@ -236,7 +286,7 @@ def scrape_workday(
                 'source_api_url':  endpoint,
                 'business_unit':   bu,
                 'raw_jd_text':     strip_html(p.get('jobDescription', '')),
-                'location_city':   loc,
+                **location_fields(loc),
                 'date_posted':     p.get('postedOn'),
                 'source_platform': 'Workday',
                 'industry':        portal.get('industry', ''),
@@ -393,9 +443,9 @@ def _fetch_workday_jds(jobs: list[dict], portal: Portal, limit: int | None = Non
             r = requests.get(detail_url, headers=_HEADERS, timeout=REQUEST_TIMEOUT)
             r.raise_for_status()
             info = r.json().get('jobPostingInfo', {})
-            detail_location = _workday_detail_location(info)
+            detail_location = _workday_location(_workday_detail_location(info), job['_ext'])
             if detail_location:
-                job['location_city'] = detail_location
+                job.update(location_fields(detail_location))
             detail_locations = _workday_detail_locations(info, detail_location)
             if detail_locations:
                 job['locations'] = detail_locations

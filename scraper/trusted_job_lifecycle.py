@@ -93,8 +93,10 @@ def delist_stale_jobs(
 
     Presence-based close (one complete miss) is the primary clock for
     companies in this run. This catches companies that never appeared in a
-    later folder — the ghost-job path. Rows with NULL last_seen are left
-    alone; those are extension/saved-job entries, not scraper inventory.
+    later folder — the ghost-job path. A scraper row with NULL last_seen
+    predates the last_seen column and ages by its batch_date instead; without
+    that, an April 2026 Accenture ghost stayed live forever. Extension saves
+    (``ingestion_source != 'scraper'``) are never aged here.
     """
     cutoff = stale_last_seen_cutoff(days=days, today=today)
     ids = _fetch_stale_active_ids(sb, cutoff)
@@ -130,24 +132,30 @@ def delist_stale_jobs(
 
 def _fetch_stale_active_ids(sb: Any, cutoff: int) -> list[str]:
     ids: list[str] = []
-    page = 0
-    while True:
-        batch = (
-            sb.table("jobs")
-            .select("job_id")
-            .eq("is_active", True)
-            .not_.is_("last_seen", "null")
-            .lt("last_seen", cutoff)
-            .range(page * _PAGE_SIZE, (page + 1) * _PAGE_SIZE - 1)
-            .execute()
-        ).data or []
-        for row in batch:
-            job_id = str(row.get("job_id") or "")
-            if job_id:
-                ids.append(job_id)
-        if len(batch) < _PAGE_SIZE:
-            break
-        page += 1
+    seen: set[str] = set()
+    for undated in (False, True):
+        page = 0
+        while True:
+            query = sb.table("jobs").select("job_id").eq("is_active", True)
+            if undated:
+                query = (
+                    query.is_("last_seen", "null")
+                    .eq("ingestion_source", "scraper")
+                    .lt("batch_date", cutoff)
+                )
+            else:
+                query = query.not_.is_("last_seen", "null").lt("last_seen", cutoff)
+            batch = (
+                query.range(page * _PAGE_SIZE, (page + 1) * _PAGE_SIZE - 1).execute()
+            ).data or []
+            for row in batch:
+                job_id = str(row.get("job_id") or "")
+                if job_id and job_id not in seen:
+                    seen.add(job_id)
+                    ids.append(job_id)
+            if len(batch) < _PAGE_SIZE:
+                break
+            page += 1
     return ids
 
 
