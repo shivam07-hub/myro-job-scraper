@@ -4,7 +4,7 @@ from schema import Portal
 
 import logging
 
-from providers.base import FALLBACK_FIRECRAWL_EXTRACT, Provider, ProviderResult, ScrapeReason
+from providers.base import FALLBACK_FIRECRAWL_EXTRACT, PartialSnapshot, Provider, ProviderResult, ScrapeReason
 from providers.eightfold import EightfoldProvider
 from providers.firecrawl_js import FirecrawlJSProvider
 from providers.darwinbox import DarwinboxProvider
@@ -214,7 +214,10 @@ def dispatch_scrape_result(
     if on_page_complete and supports_callback:
         scrape_kwargs["on_page_complete"] = on_page_complete
 
-    result = provider.scrape(portal, **scrape_kwargs)
+    try:
+        result = provider.scrape(portal, **scrape_kwargs)
+    except PartialSnapshot as partial:
+        result = ProviderResult.partial(partial.jobs, partial.note)
 
     # Log typed reason for non-success outcomes (aids debugging without log-string parsing)
     if result.reason not in (ScrapeReason.SUCCESS, ScrapeReason.NO_JOBS, ScrapeReason.FALLBACK):
@@ -274,11 +277,14 @@ def probe_scrape(
             portal=portal,
         )
 
-    result = provider.scrape(
-        portal,
-        max_jobs=max_jobs,
-        validate_mode=validate_mode,
-    )
+    try:
+        result = provider.scrape(
+            portal,
+            max_jobs=max_jobs,
+            validate_mode=validate_mode,
+        )
+    except PartialSnapshot as partial:
+        result = ProviderResult.partial(partial.jobs, partial.note)
 
     if result.fallback_policy == FALLBACK_FIRECRAWL_EXTRACT and allow_firecrawl:
         return _apply_fallback_result(

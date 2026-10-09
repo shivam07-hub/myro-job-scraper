@@ -15,7 +15,10 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 import logging
 import os
+import time
 from typing import Callable, Protocol
+
+import httpx
 
 import requests  # type: ignore[import-untyped]
 from supabase import Client, create_client
@@ -413,17 +416,83 @@ def local_inference_ready() -> bool:
     return True
 
 
+MAX_BACKEND_FAILURES = 3
+BACKEND_BACKOFF_SECONDS = 30
+
+
+class BackendUnavailable(Exception):
+    """Supabase kept failing in transport; pause and let the cycle restart us."""
+
+
+def _is_transient_backend_error(exc: BaseException) -> bool:
+    if isinstance(exc, httpx.TransportError):
+        return True
+    return getattr(exc, "code", None) == "57014" or "statement timeout" in str(exc)
+
+
 def run_worker(
-    sb: Client,
+    sb: Client | None,
     *,
     batch_size: int,
     visibility_seconds: int,
     max_messages: int,
     max_attempts: int,
+    queue: QueueBackend | None = None,
+    store: EnrichmentStore | None = None,
+    enrich: Callable[[dict], dict] = enrich_job,
+    sleep: Callable[[float], object] = time.sleep,
 ) -> dict[str, int]:
-    queue = PgmqQueueBackend(sb)
-    store = SupabaseEnrichmentStore(sb)
+    queue = queue or PgmqQueueBackend(sb)
+    store = store or SupabaseEnrichmentStore(sb)
     counts: dict[str, int] = {}
+    consecutive_failures = 0
+
+    def guarded(call, *args, **kwargs):
+        # A drain runs for days; one connection reset (2026-10-02, after
+        # 6,475 jobs) must not end it. Every guarded call is safe to repeat:
+        # claims and reads are leased, and a message retried after its apply
+        # landed is archived as an already-complete duplicate.
+        nonlocal consecutive_failures
+        while True:
+            try:
+                result = call(*args, **kwargs)
+                consecutive_failures = 0
+                return result
+            except Exception as exc:
+                if not _is_transient_backend_error(exc):
+                    raise
+                consecutive_failures += 1
+                counts["backend_retry"] = counts.get("backend_retry", 0) + 1
+                if consecutive_failures >= MAX_BACKEND_FAILURES:
+                    raise BackendUnavailable(str(exc)) from exc
+                delay = BACKEND_BACKOFF_SECONDS * consecutive_failures
+                log.warning("Supabase call failed; backing off %ss: %s", delay, exc)
+                sleep(delay)
+
+    try:
+        return _drain(
+            guarded, queue=queue, store=store, enrich=enrich, counts=counts,
+            batch_size=batch_size, visibility_seconds=visibility_seconds,
+            max_messages=max_messages, max_attempts=max_attempts,
+        )
+    except BackendUnavailable as exc:
+        log.error("Supabase unavailable after %s tries; pausing: %s", MAX_BACKEND_FAILURES, exc)
+        counts["backend_unavailable"] = 1
+        return counts
+
+
+def _drain(
+    guarded,
+    *,
+    queue: QueueBackend,
+    store: EnrichmentStore,
+    enrich: Callable[[dict], dict],
+    counts: dict[str, int],
+    batch_size: int,
+    visibility_seconds: int,
+    max_messages: int,
+    max_attempts: int,
+) -> dict[str, int]:
     processed = 0
 
     while processed < max_messages:
@@ -432,12 +501,14 @@ def run_worker(
         # those rows atomically before reading the normal durable queue; the
         # original pgmq message remains as the crash-safe fallback and becomes
         # a cheap duplicate-complete archive after priority work succeeds.
-        priority = store.claim_priority(quantity)
+        priority = guarded(store.claim_priority, quantity)
         for message in priority:
-            outcome = process_message(
+            outcome = guarded(
+                process_message,
                 message,
                 store=store,
                 queue=queue,
+                enrich=enrich,
                 max_attempts=max_attempts,
             )
             counts[outcome.action] = counts.get(outcome.action, 0) + 1
@@ -448,7 +519,7 @@ def run_worker(
         if priority:
             continue
 
-        rows = queue.read(visibility_seconds=visibility_seconds, quantity=quantity)
+        rows = guarded(queue.read, visibility_seconds=visibility_seconds, quantity=quantity)
         if not rows:
             break
         for row in rows:
@@ -457,16 +528,18 @@ def run_worker(
             except (KeyError, TypeError, ValueError) as exc:
                 msg_id = row.get("msg_id")
                 if msg_id is not None:
-                    queue.archive(int(msg_id))
+                    guarded(queue.archive, int(msg_id))
                 counts["invalid_message"] = counts.get("invalid_message", 0) + 1
                 log.warning("Archived invalid queue message %s: %s", msg_id, exc)
                 processed += 1
                 continue
 
-            outcome = process_message(
+            outcome = guarded(
+                process_message,
                 message,
                 store=store,
                 queue=queue,
+                enrich=enrich,
                 max_attempts=max_attempts,
             )
             counts[outcome.action] = counts.get(outcome.action, 0) + 1
@@ -554,7 +627,7 @@ def main() -> None:
         log.error("%s", exc)
         raise SystemExit(BUSY_EXIT_CODE) from exc
     log.info("Enrichment worker complete: %s", counts or {"queue_empty": 1})
-    if counts.get("inference_unavailable") or counts.get("quota_retry"):
+    if counts.get("inference_unavailable") or counts.get("quota_retry") or counts.get("backend_unavailable"):
         raise SystemExit(4)
 
 

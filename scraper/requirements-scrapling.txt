@@ -1,2 +1,3 @@
-# Optional local browser route-discovery lane. Not required for normal scraping.
+# Browser lane for `diagnose.py --probe-scrapling`: also run `scrapling install`.
+# The HTTP fetcher itself is now a core requirement (requirements.txt).
 scrapling[fetchers]==0.4.14

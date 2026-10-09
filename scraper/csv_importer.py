@@ -914,7 +914,8 @@ def _find_json_files(
     for company_dir in sorted(base.iterdir()):
         if not company_dir.is_dir():
             continue
-        if company_filter and company_filter.lower() not in company_dir.name.lower():
+        # The writer names the folder company_slug(company); match it exactly.
+        if company_filter and company_dir.name.casefold() != company_slug(company_filter).casefold():
             continue
 
         outputs = company_dir / "Outputs"
@@ -1122,11 +1123,28 @@ def _upsert_jobs(
             if normalized_location.location_raw:
                 location_alias_counter[normalized_location.location_raw.lower()] += 1
 
-        # Lifecycle: first_seen set only on insert; last_seen always updated
+        # Lifecycle. `first_seen` records DISCOVERY, `last_seen` this sighting.
+        #
+        # Both are sent on every row, including re-observations, and the upsert
+        # below is PostgREST merge-duplicates — it updates every column in the
+        # payload. This block used to claim `first_seen` was "ignored on
+        # conflict". It never was, and by 2026-09-19 that had restamped 34,022
+        # of 38,824 active listings with the date of the last full crawl, so the
+        # column read as "when did we last crawl this". True_Yodha's feed picked
+        # its candidate pool by ordering on it, and with 88% of the corpus tied
+        # the pool was an arbitrary slice.
+        #
+        # The invariant now lives where both repositories meet it: a BEFORE
+        # UPDATE trigger on public.jobs (True_Yodha migration
+        # 20260920090000_first_seen_is_written_once.sql) keeps the stored value.
+        # Sending it here stays correct for INSERT (a genuinely new listing) and
+        # is a no-op on UPDATE. Do not "optimise" that by pre-reading which
+        # job_ids exist — that is a 34k-row read per batch to save a write the
+        # database already discards.
         effective_date = batch_date or job.get("batch_date")
         if effective_date:
             row["last_seen"]  = effective_date
-            row["first_seen"] = effective_date  # ignored on conflict (see upsert below)
+            row["first_seen"] = effective_date  # INSERT only — trigger holds it on UPDATE
             row["is_active"]  = True
 
         rows.append(row)
@@ -1142,8 +1160,14 @@ def _upsert_jobs(
 
     for i in range(0, len(rows), _BATCH_SIZE):
         batch = rows[i:i + _BATCH_SIZE]
-        # On conflict: update everything EXCEPT first_seen and is_active
-        # (community owns is_active; first_seen is set once at insert)
+        # On conflict this updates EVERY column in the payload — PostgREST
+        # merge-duplicates has no per-column exclusion. It previously claimed to
+        # spare `first_seen` and `is_active`; it spares neither. `first_seen` is
+        # now held by a DB trigger (see the lifecycle block above). `is_active`
+        # is still forced True by any re-observation, which is right when the
+        # source still lists the role and wrong when the verifier has concluded
+        # it is closed — an open question for True_Yodha's listing-trust owner,
+        # not something to change quietly from here.
         upsert_rows(
             sb,
             "jobs",

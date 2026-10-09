@@ -24,6 +24,8 @@ from urllib.parse import urlparse
 
 import requests
 
+from lm_worker_lock import BUSY_EXIT_CODE
+
 from config import (
     INFERENCE_API_KEY,
     INFERENCE_BASE_URL,
@@ -384,6 +386,111 @@ def _write_report(report: dict) -> Path:
     return path
 
 
+INFERENCE_UNAVAILABLE_EXIT = 4
+ENRICHMENT_MAX_RESTARTS = 5
+ENRICHMENT_RESTART_WAIT_SECONDS = 60
+
+
+def run_enrichment_stage(
+    worker: list[str],
+    *,
+    env: dict[str, str],
+    model_ttl_seconds: int,
+    timeout_seconds: int,
+    run=None,
+    ensure=None,
+    sleep=None,
+    max_restarts: int = ENRICHMENT_MAX_RESTARTS,
+) -> dict:
+    """Run the enrichment drain, restarting it when local inference drops.
+
+    The worker exits 4 on inference_unavailable on purpose: it pauses rather
+    than burn the queue. A drain takes days on local hardware, and LM Studio
+    can unload its model in the middle (2026-10-01). Reload the model and
+    resume, a bounded number of times. Any other exit (busy, failure) stops.
+    """
+    run = run or _run
+    ensure = ensure or ensure_inference_ready
+    sleep = sleep or time.sleep
+    restarts = 0
+    while True:
+        step = run(worker, env=env)
+        if step["returncode"] != INFERENCE_UNAVAILABLE_EXIT or restarts >= max_restarts:
+            break
+        restarts += 1
+        sleep(ENRICHMENT_RESTART_WAIT_SECONDS)
+        try:
+            ensure(env=env, model_ttl_seconds=model_ttl_seconds, timeout_seconds=timeout_seconds)
+        except Exception as exc:
+            step["restart_error"] = str(exc)
+            break
+    step["restarts"] = restarts
+    return step
+
+
+def run_inference_stages(
+    report: dict,
+    *,
+    env: dict[str, str],
+    embeddings: list[str],
+    worker: list[str],
+    model_ttl_seconds: int,
+    timeout_seconds: int,
+) -> str | None:
+    """Embeddings, then the model hand-off, then the enrichment drain.
+
+    Shared by the full cycle and --inference-only (the laptop's hourly launchd
+    run). Returns a failure message, or None when the stages completed or were
+    skipped because another local-inference worker holds the lock.
+    """
+    def fail(step: str, message: str, error: str | None = None) -> str:
+        report["status"] = "failed"
+        report["failed_step"] = step
+        if error:
+            report["error"] = error
+        return message
+
+    try:
+        report["steps"]["embedding_inference"] = ensure_job_embedding_ready(
+            env=env, model_ttl_seconds=model_ttl_seconds, timeout_seconds=timeout_seconds,
+        )
+    except Exception as exc:
+        return fail("embedding_inference", "Daily cycle could not start job embeddings", str(exc))
+
+    report["steps"]["job_embeddings"] = _run(embeddings, env=env)
+    if report["steps"]["job_embeddings"]["returncode"] == BUSY_EXIT_CODE:
+        # The previous hour's drain still owns the model slot; let it finish.
+        report["status"] = "skipped_busy"
+        return None
+    if report["steps"]["job_embeddings"]["returncode"] != 0:
+        return fail("job_embeddings", "Daily cycle failed during job embeddings")
+
+    # Hand the model slot over explicitly. Loading the generative model while the
+    # embedding model is still resident makes LM Studio evict one to fit the
+    # other, and the evicted side then fails as an unrelated-looking network
+    # error rather than anything naming the cause.
+    report["steps"]["embedding_unload"] = unload_embedding_model(env=env)
+
+    try:
+        report["steps"]["inference"] = ensure_inference_ready(
+            env=env, model_ttl_seconds=model_ttl_seconds, timeout_seconds=timeout_seconds,
+        )
+    except Exception as exc:
+        return fail("inference", "Daily cycle could not start inference", str(exc))
+
+    report["steps"]["enrichment"] = run_enrichment_stage(
+        worker, env=env, model_ttl_seconds=model_ttl_seconds, timeout_seconds=timeout_seconds,
+    )
+    if report["steps"]["enrichment"]["returncode"] == BUSY_EXIT_CODE:
+        report["status"] = "skipped_busy"
+        return None
+    if report["steps"]["enrichment"]["returncode"] != 0:
+        return fail("enrichment", "Daily cycle failed during enrichment")
+
+    report["status"] = "complete"
+    return None
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Poll, publish, embed jobs, start inference, and drain enrichment"
@@ -397,6 +504,10 @@ def main() -> None:
     parser.add_argument("--model-ttl-seconds", type=int, default=3600)
     parser.add_argument("--inference-timeout-seconds", type=int, default=180)
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument(
+        "--inference-only", action="store_true",
+        help="Skip the poll; run embeddings and the enrichment drain (laptop hourly run)",
+    )
     args = parser.parse_args()
     if args.company_cap < 0:
         parser.error("--company-cap cannot be negative")
@@ -434,64 +545,27 @@ def main() -> None:
         "steps": {},
     }
 
-    report["steps"]["poll_publish"] = _run(poll, env=env)
-    if report["steps"]["poll_publish"]["returncode"] != 0:
-        report["status"] = "failed"
-        report["failed_step"] = "poll_publish"
-        path = _write_report(report)
-        raise SystemExit(f"Daily cycle failed during polling; report: {path}")
+    if not args.inference_only:
+        report["steps"]["poll_publish"] = _run(poll, env=env)
+        if report["steps"]["poll_publish"]["returncode"] != 0:
+            report["status"] = "failed"
+            report["failed_step"] = "poll_publish"
+            path = _write_report(report)
+            raise SystemExit(f"Daily cycle failed during polling; report: {path}")
 
-    try:
-        report["steps"]["embedding_inference"] = ensure_job_embedding_ready(
-            env=env,
-            model_ttl_seconds=args.model_ttl_seconds,
-            timeout_seconds=args.inference_timeout_seconds,
-        )
-    except Exception as exc:
-        report["status"] = "failed"
-        report["failed_step"] = "embedding_inference"
-        report["error"] = str(exc)
-        path = _write_report(report)
-        raise SystemExit(f"Daily cycle could not start job embeddings; report: {path}") from exc
-
-    report["steps"]["job_embeddings"] = _run(embeddings, env=env)
-    if report["steps"]["job_embeddings"]["returncode"] != 0:
-        report["status"] = "failed"
-        report["failed_step"] = "job_embeddings"
-        path = _write_report(report)
-        raise SystemExit(f"Daily cycle failed during job embeddings; report: {path}")
-
-    # Hand the model slot over explicitly. Loading the generative model while the
-    # embedding model is still resident makes LM Studio evict one to fit the
-    # other, and the evicted side then fails as an unrelated-looking network
-    # error rather than anything naming the cause.
-    report["steps"]["embedding_unload"] = unload_embedding_model(env=env)
-
-    try:
-        report["steps"]["inference"] = ensure_inference_ready(
-            env=env,
-            model_ttl_seconds=args.model_ttl_seconds,
-            timeout_seconds=args.inference_timeout_seconds,
-        )
-    except Exception as exc:
-        report["status"] = "failed"
-        report["failed_step"] = "inference"
-        report["error"] = str(exc)
-        path = _write_report(report)
-        raise SystemExit(f"Daily cycle could not start inference; report: {path}") from exc
-
-    report["steps"]["enrichment"] = _run(worker, env=env)
-    if report["steps"]["enrichment"]["returncode"] != 0:
-        report["status"] = "failed"
-        report["failed_step"] = "enrichment"
-        path = _write_report(report)
-        raise SystemExit(f"Daily cycle failed during enrichment; report: {path}")
-
-    report["status"] = "complete"
+    failure = run_inference_stages(
+        report,
+        env=env,
+        embeddings=embeddings,
+        worker=worker,
+        model_ttl_seconds=args.model_ttl_seconds,
+        timeout_seconds=args.inference_timeout_seconds,
+    )
     report["finished_at"] = datetime.now().astimezone().isoformat()
     path = _write_report(report)
-    print(f"Daily poll + job embeddings + enrichment cycle complete; report: {path}")
-
+    if failure:
+        raise SystemExit(f"{failure}; report: {path}")
+    print(f"Daily cycle {report['status']}; report: {path}")
 
 if __name__ == "__main__":
     main()

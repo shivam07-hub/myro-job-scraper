@@ -17,7 +17,10 @@ from lifecycle_writer import apply_missing as _apply_missing
 from lifecycle_writer import apply_seen as _apply_seen
 
 
-MIN_SAFE_COVERAGE = 0.25
+# Below half the last complete count, assume the scrape broke and demote
+# nothing (decided 2026-10-03; 0.25 let a 1,300/2,523 EY half-list demote
+# 1,129 open jobs).
+MIN_SAFE_COVERAGE = 0.50
 QUARANTINE_AFTER_CLOSE = timedelta(hours=1)
 AGE_STALE_DAYS = 30
 _BATCH_SIZE = 200

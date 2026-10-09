@@ -20,7 +20,7 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 import requests
 
 from config import REQUEST_TIMEOUT
-from providers.base import ProviderResult, ScrapeReason
+from providers.base import PartialSnapshot, ProviderResult, ScrapeReason
 from schema import Portal
 from utils import is_india, strip_html
 
@@ -46,7 +46,10 @@ class GoogleCareersProvider:
         max_jobs: int | None = None,
         validate_mode: bool = False,
     ) -> ProviderResult:
-        jobs = _scrape_google_careers(portal, max_jobs=max_jobs)
+        try:
+            jobs = _scrape_google_careers(portal, max_jobs=max_jobs)
+        except PartialSnapshot as partial:
+            return ProviderResult.partial(partial.jobs, partial.note)
         if jobs is None:
             return ProviderResult.error(ScrapeReason.API_BLOCKED)
         return ProviderResult.success(jobs)
@@ -228,7 +231,9 @@ def _scrape_google_careers(portal: Portal, max_jobs: int | None = None) -> list[
             r.raise_for_status()
         except Exception as e:
             _log.error(f"    [ERROR] Google Careers page {page} failed ({company}): {e}")
-            return None if page == 1 else jobs
+            if page == 1:
+                return None
+            raise PartialSnapshot(jobs, f"page {page} failed: {e}")
 
         page_jobs = parse_google_careers_html(r.text, portal, source_url=page_url)
         added = 0

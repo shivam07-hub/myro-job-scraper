@@ -32,6 +32,8 @@ from pathlib import Path
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from portal_reader import parse_portals
+import network_guard
+from environment import scrapling_fetcher_problem
 from providers import dispatch_scrape_result
 from providers.base import ProviderResult, ScrapeReason
 from enricher import InferenceQuotaExceeded, enrich_job, has_terminal_core_enrichment
@@ -191,6 +193,15 @@ def run(portals: list[dict], skip_enrich: bool, log: logging.Logger,
     for idx, portal in enumerate(portals, 1):
         company = portal["company"]
         ats     = portal["ats"]
+        # A sleeping laptop has no network; waiting here keeps the companies
+        # after the outage from being recorded as empty (network_guard.py).
+        if not network_guard.wait_for_network(log):
+            summary["errors"].append({
+                "company": company,
+                "stage": "network",
+                "error": "network unavailable; run stopped before this company",
+            })
+            break
         js_flag = "  [JS/Firecrawl extract]" if portal.get("js_required") else ""
         log.info(f"[{idx}/{total}] {company}  ({ats}){js_flag}")
 
@@ -198,18 +209,37 @@ def run(portals: list[dict], skip_enrich: bool, log: logging.Logger,
             checkpoint.start(company, ats)
 
         # ── Scrape ────────────────────────────────────────────────────────────
-        page_cb = _make_page_callback(
-            company, output_base, checkpoint, log, run_date
-        )
-        try:
-            scrape_result = scrape_portal(
-                portal,
-                log,
-                max_jobs=max_jobs,
-                validate_mode=validate_mode,
-                on_page_complete=page_cb,
+        for attempt in (1, 2):
+            page_cb = _make_page_callback(
+                company, output_base, checkpoint, log, run_date
             )
-        except Exception as e:
+            scrape_error: Exception | None = None
+            try:
+                scrape_result = scrape_portal(
+                    portal,
+                    log,
+                    max_jobs=max_jobs,
+                    validate_mode=validate_mode,
+                    on_page_complete=page_cb,
+                )
+            except Exception as e:
+                scrape_error = e
+            failed = (
+                scrape_error is not None
+                or scrape_result.reason == ScrapeReason.PARTIAL
+                or not scrape_result.jobs
+            )
+            # Providers often report a dropped connection as "no jobs". If the
+            # network is down right now, the failure says nothing about the
+            # source: wait for it and try this company once more.
+            if attempt == 1 and failed and not network_guard.network_available():
+                log.warning(f"  {company} failed while the network was down — retrying once it returns")
+                if network_guard.wait_for_network(log):
+                    continue
+            break
+
+        if scrape_error is not None:
+            e = scrape_error
             log.error(f"  FATAL scrape error — {company}: {e}")
             if checkpoint:
                 checkpoint.mark_failed(company, reason=f"scrape_exception: {e}")
@@ -680,11 +710,22 @@ def main():
 
     log.info(f"Scope: {args.scope}")
     log.info(f"Portals to process: {len(portals)}")
+    fallback_portals = [p for p in portals if p.get("js_required")]
+    if fallback_portals:
+        problem = scrapling_fetcher_problem()
+        if problem:
+            log.error(
+                f"Scrapling fetcher unavailable ({problem}): {len(fallback_portals)} "
+                "fallback portals will return nothing. Run: pip install -r requirements.txt"
+            )
     for p in portals:
         flag = "🌐" if p["js_required"] else "⚡"
         log.info(f"  {flag}  {p['company']:<30} [{p['ats']}]")
 
     if args.dry_run:
+        # Say so: a plan-only log otherwise reads like a run that died after
+        # planning (the 2026-09 ingestion incident was misread this way).
+        log.info(f"DRY RUN — planned {len(portals)} portals; nothing scraped or saved.")
         return
 
     # Create checkpoint for this run (always — not only on --resume)

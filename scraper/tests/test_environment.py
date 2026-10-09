@@ -83,3 +83,36 @@ def test_load_environment_reads_the_file(tmp_path, monkeypatch):
     import os
 
     assert os.environ["TEST_ENVIRONMENT_SEAM_KEY"] == "loaded"
+
+
+# ── Scrapling fetcher (decided 2026-10-03: required, checked at startup) ──────
+# Without curl_cffi, `from scrapling.fetchers import Fetcher` fails, and every
+# fallback portal silently fell through to a Firecrawl stack that no longer runs.
+
+import builtins
+
+import environment as environment_module
+
+
+def _block_import(monkeypatch, blocked: str) -> None:
+    real_import = builtins.__import__
+
+    def fake_import(name, *args, **kwargs):
+        if name == blocked or name.startswith(blocked + "."):
+            raise ImportError("No module named 'curl_cffi'")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", fake_import)
+
+
+def test_scrapling_fetcher_ready_reports_the_import_failure(monkeypatch):
+    _block_import(monkeypatch, "scrapling.fetchers")
+
+    assert "curl_cffi" in environment_module.scrapling_fetcher_problem()
+    assert "scrapling fetcher: MISSING" in environment_module.report(env={})
+
+
+def test_scrapling_fetcher_ready_when_importable(monkeypatch):
+    monkeypatch.setattr(environment_module, "scrapling_fetcher_problem", lambda: None)
+
+    assert "scrapling fetcher: ready" in environment_module.report(env={})

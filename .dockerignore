@@ -1,0 +1,19 @@
+# Secrets never enter the image; Railway injects them as service variables.
+.env
+**/.env
+**/.env.*
+
+# Run artifacts live on the Railway volume (/data), not in the image.
+All_CSV_Outputs/
+logs/
+outputs/
+validation_outputs/
+scraper/question_bank_inputs/
+
+# Local-only material.
+.git/
+.claude/
+_local/
+graphify-out/
+**/__pycache__/
+**/*.pyc

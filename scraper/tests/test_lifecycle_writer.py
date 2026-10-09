@@ -92,3 +92,89 @@ def test_later_missing_run_does_not_extend_deletion_clock() -> None:
     assert update["last_source_run_id"] == "run-1"
     assert "deletion_eligible_at" not in update
     assert all(call[0] != "job_listing_observations" for call in db.calls)
+
+
+# ── Statement timeouts under contention (2026-10-01) ──────────────────────────
+# Republishing EY India Experienced while another importer and both inference
+# workers were writing to jobs made a 200-id lifecycle UPDATE hit the statement
+# timeout. The source upsert had already landed, so the run stopped half
+# written: rows active again but still marked closed, and no source run row.
+
+import pytest
+
+import lifecycle_writer
+
+
+class StatementTimeout(Exception):
+    code = "57014"
+
+
+class SlowDB(DB):
+    """Times out any jobs UPDATE over `limit` ids, plus `extra` more times."""
+
+    def __init__(self, limit: int, extra: int = 0):
+        super().__init__()
+        self.limit = limit
+        self.extra = extra
+
+    def table(self, name):
+        db = self
+
+        class SlowQuery(Query):
+            def execute(self):
+                if self.table == "jobs" and isinstance(self.payload, dict) and self.ids:
+                    if len(self.ids) > db.limit:
+                        raise StatementTimeout("canceling statement due to statement timeout")
+                    if db.extra:
+                        db.extra -= 1
+                        raise StatementTimeout("canceling statement due to statement timeout")
+                return super().execute()
+
+        return SlowQuery(self, name)
+
+
+def _updated_ids(db):
+    return sorted(i for table, payload, ids in db.calls if table == "jobs" and "listing_confidence" in payload for i in ids)
+
+
+def test_timed_out_chunks_are_split_until_they_fit(monkeypatch) -> None:
+    monkeypatch.setattr(lifecycle_writer, "_sleep", lambda _: None)
+    db = SlowDB(limit=30)
+    ids = {f"j{i:03d}" for i in range(200)}
+
+    apply_seen(db, [], ids, company_id="c", source_run_id="r", now=datetime(2026, 10, 1, tzinfo=timezone.utc))
+
+    assert _updated_ids(db) == sorted(ids)
+
+
+def test_small_chunk_timeouts_back_off_and_retry(monkeypatch) -> None:
+    sleeps = []
+    monkeypatch.setattr(lifecycle_writer, "_sleep", sleeps.append)
+    db = SlowDB(limit=1000, extra=2)
+
+    apply_seen(db, [], {"a", "b"}, company_id="c", source_run_id="r", now=datetime(2026, 10, 1, tzinfo=timezone.utc))
+
+    assert _updated_ids(db) == ["a", "b"]
+    assert len(sleeps) == 2
+
+
+def test_persistent_timeouts_still_raise(monkeypatch) -> None:
+    monkeypatch.setattr(lifecycle_writer, "_sleep", lambda _: None)
+    db = SlowDB(limit=0)
+
+    with pytest.raises(StatementTimeout):
+        apply_seen(db, [], {"a"}, company_id="c", source_run_id="r", now=datetime(2026, 10, 1, tzinfo=timezone.utc))
+
+
+def test_other_errors_are_not_retried(monkeypatch) -> None:
+    monkeypatch.setattr(lifecycle_writer, "_sleep", lambda _: (_ for _ in ()).throw(AssertionError("no retry")))
+
+    class Broken(DB):
+        def table(self, name):
+            class Q(Query):
+                def execute(self):
+                    raise PermissionError("permission denied for table jobs")
+            return Q(self, name)
+
+    with pytest.raises(PermissionError):
+        apply_seen(Broken(), [], {"a"}, company_id="c", source_run_id="r", now=datetime(2026, 10, 1, tzinfo=timezone.utc))

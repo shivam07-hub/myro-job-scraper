@@ -35,9 +35,11 @@ from job_seniority import normalize_job_seniority
 from normalizer import clean_jd_for_llm, parse_json_response
 from schema import CANONICAL_FIELDS
 from writer import _skills_to_csv
+from utils import company_slug
 
 
 log = logging.getLogger("source_matching_facts")
+LOG_DIR = Path(__file__).resolve().parent.parent / "logs"
 
 _GENERIC_EVIDENCE = re.compile(
     r"^(?:senior|junior|lead|principal|staff|associate|analyst|specialist|"
@@ -302,10 +304,11 @@ def _find_run_files(run_date: str, company: str | None) -> list[Path]:
         Path(OUTPUT_BASE).glob(f"*/Outputs/{normalized_date}/jobs.json")
     )
     if company:
-        needle = company.casefold()
+        # The writer names the folder company_slug(company); match it exactly.
+        folder = company_slug(company).casefold()
         files = [
             path for path in files
-            if needle in path.parent.parent.parent.name.casefold()
+            if path.parent.parent.parent.name.casefold() == folder
         ]
     return [
         path for path in files
@@ -416,9 +419,8 @@ def resolve_run(
         "accepted_classifications": audit,
     }
     if not dry_run:
-        logs_dir = Path(__file__).resolve().parent.parent / "logs"
-        logs_dir.mkdir(exist_ok=True)
-        report_path = logs_dir / (
+        LOG_DIR.mkdir(exist_ok=True)
+        report_path = LOG_DIR / (
             "source_matching_facts_"
             + datetime.now().strftime("%Y%m%d_%H%M%S")
             + ".json"

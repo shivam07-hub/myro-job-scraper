@@ -3,10 +3,16 @@ from __future__ import annotations
 
 from collections import defaultdict
 from datetime import datetime
+import time
 from typing import Any, Iterable
 
 
 _BATCH_SIZE = 200
+# A jobs UPDATE that hits the statement timeout (57014) under contention is
+# split until it fits; at this size it backs off and retries instead.
+_MIN_SPLIT = 25
+_RETRY_DELAYS = (5, 15, 45)
+_sleep = time.sleep
 
 
 def apply_seen(
@@ -37,7 +43,7 @@ def apply_seen(
         "lifecycle_updated_at": timestamp,
     }
     for chunk in _chunks(sorted(current_ids)):
-        sb.table("jobs").update(payload).in_("job_id", chunk).execute()
+        _update_jobs(sb, payload, chunk)
 
     reactivated = [
         str(row["job_id"])
@@ -46,9 +52,7 @@ def apply_seen(
         and row.get("listing_confidence") != "active"
     ]
     for chunk in _chunks(reactivated):
-        sb.table("jobs").update({"reactivated_at": timestamp}).in_(
-            "job_id", chunk
-        ).execute()
+        _update_jobs(sb, {"reactivated_at": timestamp}, chunk)
     # Live presence lives on jobs.last_verified_live_at. A seen_live row per
     # poll was the 230k-row diary; Ghost Index keeps the latest historical ping
     # plus a freeze at retire.
@@ -122,8 +126,30 @@ def apply_missing(
                 }
             )
         for chunk in _chunks(job_ids):
-            sb.table("jobs").update(payload).in_("job_id", chunk).execute()
+            _update_jobs(sb, payload, chunk)
     _write_observations(sb, observations)
+
+
+def _update_jobs(sb: Any, payload: dict[str, Any], job_ids: list[str], attempt: int = 0) -> None:
+    """UPDATE jobs for these ids; the payload is idempotent, so retrying is safe."""
+    try:
+        sb.table("jobs").update(payload).in_("job_id", job_ids).execute()
+    except Exception as exc:
+        if not _is_statement_timeout(exc):
+            raise
+        if len(job_ids) > _MIN_SPLIT:
+            middle = len(job_ids) // 2
+            _update_jobs(sb, payload, job_ids[:middle])
+            _update_jobs(sb, payload, job_ids[middle:])
+            return
+        if attempt >= len(_RETRY_DELAYS):
+            raise
+        _sleep(_RETRY_DELAYS[attempt])
+        _update_jobs(sb, payload, job_ids, attempt + 1)
+
+
+def _is_statement_timeout(exc: Exception) -> bool:
+    return getattr(exc, "code", None) == "57014" or "statement timeout" in str(exc)
 
 
 def _write_observations(sb: Any, rows: list[dict[str, Any]]) -> None:

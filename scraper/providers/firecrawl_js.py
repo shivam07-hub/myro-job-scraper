@@ -13,6 +13,7 @@ from utils import is_india, job_hash
 _log = logging.getLogger("mirror")
 
 _NOISE_EXT   = ('.svg', '.png', '.jpg', '.css', '.js', '.ico', '.woff', '.gif', '.webp')
+_LOCATION_WINDOW = 400
 _NOISE_WORDS = ('menu', 'search', 'home', 'cookie', 'nav', 'sign in', 'log in', 'privacy', 'about us')
 
 # Cookie consent click actions — run before scraping to dismiss modal
@@ -171,17 +172,28 @@ def scrape_extract(portal: Portal, max_jobs: int | None = None) -> list[dict] | 
     pending_firecrawl: list[tuple[str, str]] = []
     for link_title, job_url in job_links:
         jd_md = ""
+        page_title = ""
         if listing_via == "scrapling":
-            jd_md = scrapling.fetch_text(job_url) or ""
+            page = scrapling.fetch_job_page(job_url)
+            if page:
+                jd_md, page_title = page.text, page.title
         if not jd_md or len(jd_md) < 100:
             pending_firecrawl.append((link_title, job_url))
             continue
-        if india_only and not is_india(link_title + ' ' + jd_md[:1500]):
+        if page_title:
+            # The page's own heading beats link text like "Apply Now", and the
+            # location line sits just under it; a wider window reaches footers
+            # such as "offices in Bengaluru" on non-India postings.
+            title = page_title
+            india_window = jd_md[:len(page_title) + _LOCATION_WINDOW]
+        else:
+            title = link_title if (
+                len(link_title) > 5 and
+                not any(w in link_title.lower() for w in _NOISE_WORDS)
+            ) else company
+            india_window = link_title + ' ' + jd_md[:1500]
+        if india_only and not is_india(india_window):
             continue
-        title = link_title if (
-            len(link_title) > 5 and
-            not any(w in link_title.lower() for w in _NOISE_WORDS)
-        ) else company
         jobs.append({
             'job_id':          job_hash(title, job_url),
             'title':           title,

@@ -14,7 +14,8 @@ import json
 import logging
 import math
 import os
-from typing import Protocol
+import time
+from typing import Callable, Protocol
 
 import requests  # type: ignore[import-untyped]
 from supabase import Client, create_client
@@ -38,6 +39,12 @@ from environment import load_environment
 
 load_environment()
 log = logging.getLogger("job_embedding_worker")
+
+MAX_CONSECUTIVE_FAILURES = 3
+FAILURE_BACKOFF_SECONDS = 30
+# Every applied vector is an HNSW insert, so apply time grows with the batch.
+MIN_BATCH_SIZE = 4
+SHRINK_BACKOFF_SECONDS = 5
 
 
 class EmbeddingUnavailable(RuntimeError):
@@ -297,10 +304,40 @@ def run_worker(
     batch_size: int,
     max_jobs: int,
     max_attempts: int,
+    sleep: Callable[[float], object] = time.sleep,
 ) -> dict[str, int]:
-    counts = {"claimed": 0, "applied": 0, "rejected": 0, "retryable": 0}
+    counts = {"claimed": 0, "applied": 0, "rejected": 0, "retryable": 0, "aborted": 0}
+    consecutive_failures = 0
+    current_batch = batch_size
+
+    def keep_going(stage: str, exc: Exception) -> bool:
+        # One failure is usually contention: the post-publish analytics
+        # refresh and True_Yodha's unload made apply and claim time out on
+        # 2026-09-30/10-01. Back off and continue; only a run of failures
+        # means the model or database is really down. Rows a failed batch
+        # claimed are already back in the queue, and a claim lost in transit
+        # is reclaimed after its 30-minute lease.
+        nonlocal consecutive_failures
+        consecutive_failures += 1
+        if consecutive_failures >= MAX_CONSECUTIVE_FAILURES:
+            counts["aborted"] = 1
+            log.error(
+                "Embedding %s failed %s times in a row; stopping: %s",
+                stage, consecutive_failures, exc,
+            )
+            return False
+        delay = FAILURE_BACKOFF_SECONDS * consecutive_failures
+        log.warning("Embedding %s failed; backing off %ss: %s", stage, delay, exc)
+        sleep(delay)
+        return True
+
     while counts["claimed"] < max_jobs:
-        jobs = store.claim(min(batch_size, max_jobs - counts["claimed"]), max_attempts)
+        try:
+            jobs = store.claim(min(current_batch, max_jobs - counts["claimed"]), max_attempts)
+        except Exception as exc:
+            if keep_going("claim", exc):
+                continue
+            break
         if not jobs:
             break
         counts["claimed"] += len(jobs)
@@ -313,8 +350,22 @@ def run_worker(
             )
         except Exception as exc:
             counts["retryable"] += len(jobs)
-            log.error("Embedding batch failed; claimed rows returned for retry: %s", exc)
+            if len(jobs) > MIN_BATCH_SIZE:
+                # A smaller apply does fewer HNSW inserts, so it can fit the 8s
+                # statement timeout on a busy database (2026-10-01). Stay small
+                # for the rest of the run: growing back would oscillate, and
+                # every failed attempt counts against the rows' max_attempts.
+                current_batch = max(MIN_BATCH_SIZE, len(jobs) // 2)
+                log.warning(
+                    "Embedding batch of %s failed; continuing with batches of %s: %s",
+                    len(jobs), current_batch, exc,
+                )
+                sleep(SHRINK_BACKOFF_SECONDS)
+                continue
+            if keep_going("batch", exc):
+                continue
             break
+        consecutive_failures = 0
         counts["applied"] += applied
         counts["rejected"] += rejected
         log.info(
@@ -404,7 +455,7 @@ def main() -> None:
         log.error("%s", exc)
         raise SystemExit(BUSY_EXIT_CODE) from exc
     log.info("Job embedding worker complete: %s", counts)
-    if counts["retryable"]:
+    if counts["aborted"]:
         raise SystemExit(4)
 
 

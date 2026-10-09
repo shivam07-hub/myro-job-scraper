@@ -117,7 +117,173 @@ def test_run_worker_drains_claimed_batches() -> None:
         max_attempts=5,
     )
 
-    assert counts == {"claimed": 2, "applied": 2, "rejected": 0, "retryable": 0}
+    assert counts == {"claimed": 2, "applied": 2, "rejected": 0, "retryable": 0, "aborted": 0}
+
+
+class FlakyStore(FakeStore):
+    """apply() raises the queued errors first, then succeeds."""
+
+    def __init__(self, batches: list[list[EmbeddingJob]], errors: list[Exception]) -> None:
+        super().__init__(batches)
+        self.errors = list(errors)
+
+    def apply(self, items: list[dict]) -> tuple[int, int]:
+        if self.errors:
+            raise self.errors.pop(0)
+        return super().apply(items)
+
+
+def test_run_worker_rides_out_a_transient_failure() -> None:
+    # 2026-09-30: one statement timeout while the post-publish analytics
+    # refresh ran aborted the whole stage, and enrichment never started.
+    timeout = RuntimeError("canceling statement due to statement timeout")
+    store = FlakyStore([[_job("a")], [_job("a")], [_job("b")]], [timeout])
+    sleeps: list[float] = []
+
+    counts = run_worker(
+        store,
+        FakeClient(),  # type: ignore[arg-type]
+        batch_size=1,
+        max_jobs=10,
+        max_attempts=5,
+        sleep=sleeps.append,
+    )
+
+    assert counts["applied"] == 2
+    assert counts["retryable"] == 1
+    assert counts["aborted"] == 0
+    assert len(store.retried) == 1
+    assert len(sleeps) == 1
+
+
+def test_run_worker_stops_after_repeated_failures() -> None:
+    down = RuntimeError("database unavailable")
+    store = FlakyStore([[_job(str(i))] for i in range(10)], [down] * 10)
+    sleeps: list[float] = []
+
+    counts = run_worker(
+        store,
+        FakeClient(),  # type: ignore[arg-type]
+        batch_size=1,
+        max_jobs=10,
+        max_attempts=5,
+        sleep=sleeps.append,
+    )
+
+    assert counts["aborted"] == 1
+    assert counts["applied"] == 0
+    assert counts["claimed"] == 3
+    assert len(store.retried) == 3
+    assert sleeps == sorted(sleeps) and len(sleeps) == 2
+
+
+class FlakyClaimStore(FakeStore):
+    """claim() raises the queued errors first, then hands out batches."""
+
+    def __init__(self, batches: list[list[EmbeddingJob]], errors: list[Exception]) -> None:
+        super().__init__(batches)
+        self.errors = list(errors)
+
+    def claim(self, quantity: int, max_attempts: int) -> list[EmbeddingJob]:
+        if self.errors:
+            raise self.errors.pop(0)
+        return super().claim(quantity, max_attempts)
+
+
+def test_run_worker_rides_out_a_failed_claim() -> None:
+    # 2026-10-01: the claim RPC timed out reading its response and crashed
+    # the worker with 1,093 rows still queued.
+    store = FlakyClaimStore([[_job("a")], [_job("b")]], [TimeoutError("read timed out")])
+    sleeps: list[float] = []
+
+    counts = run_worker(
+        store,
+        FakeClient(),  # type: ignore[arg-type]
+        batch_size=1,
+        max_jobs=10,
+        max_attempts=5,
+        sleep=sleeps.append,
+    )
+
+    assert counts["applied"] == 2
+    assert counts["aborted"] == 0
+    assert len(sleeps) == 1
+
+
+def test_run_worker_stops_after_repeated_failed_claims() -> None:
+    store = FlakyClaimStore([[_job("a")]], [TimeoutError("read timed out")] * 5)
+
+    counts = run_worker(
+        store,
+        FakeClient(),  # type: ignore[arg-type]
+        batch_size=1,
+        max_jobs=10,
+        max_attempts=5,
+        sleep=lambda _: None,
+    )
+
+    assert counts["aborted"] == 1
+    assert counts["claimed"] == 0
+
+
+class SizeLimitedStore(FakeStore):
+    """apply() times out for any batch larger than `limit`, like a busy HNSW index."""
+
+    def __init__(self, jobs: list[EmbeddingJob], limit: int) -> None:
+        super().__init__()
+        self.queue = list(jobs)
+        self.limit = limit
+        self.claim_sizes: list[int] = []
+
+    def claim(self, quantity: int, max_attempts: int) -> list[EmbeddingJob]:
+        self.claim_sizes.append(quantity)
+        batch, self.queue = self.queue[:quantity], self.queue[quantity:]
+        return batch
+
+    def apply(self, items: list[dict]) -> tuple[int, int]:
+        if len(items) > self.limit:
+            raise RuntimeError("canceling statement due to statement timeout")
+        return super().apply(items)
+
+    def retry(self, jobs: list[EmbeddingJob], error: str, max_attempts: int) -> int:
+        self.queue = list(jobs) + self.queue
+        return super().retry(jobs, error, max_attempts)
+
+
+def test_run_worker_shrinks_the_batch_until_apply_fits() -> None:
+    # 2026-10-01: with importers writing to jobs, 32 HNSW inserts no longer
+    # fit the 8s statement timeout and the worker aborted with nothing applied.
+    store = SizeLimitedStore([_job(str(i)) for i in range(40)], limit=8)
+
+    counts = run_worker(
+        store,
+        FakeClient(),  # type: ignore[arg-type]
+        batch_size=32,
+        max_jobs=1000,
+        max_attempts=5,
+        sleep=lambda _: None,
+    )
+
+    assert counts["aborted"] == 0
+    assert counts["applied"] == 40
+    assert store.claim_sizes[:3] == [32, 16, 8]
+    assert max(store.claim_sizes[3:]) == 8  # stays small for the rest of the run
+
+
+def test_run_worker_still_stops_when_even_the_smallest_batch_fails() -> None:
+    store = SizeLimitedStore([_job(str(i)) for i in range(40)], limit=0)
+
+    counts = run_worker(
+        store,
+        FakeClient(),  # type: ignore[arg-type]
+        batch_size=32,
+        max_jobs=1000,
+        max_attempts=5,
+        sleep=lambda _: None,
+    )
+
+    assert counts["aborted"] == 1
+    assert counts["applied"] == 0
 
 
 class FakeResponse:

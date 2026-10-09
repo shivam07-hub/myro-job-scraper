@@ -250,5 +250,12 @@
   },
   "ThoughtSpot": {
     "search_text": "India"
+  },
+  "Postman": {
+    "india_facet_param": "locations",
+    "india_uuids": [
+      "7760d87eb31d1000b5b6a68f8e750000",
+      "7760d87eb31d1000b5b6b29394320000"
+    ]
   }
 }

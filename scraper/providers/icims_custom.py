@@ -7,7 +7,7 @@ import logging
 import requests
 
 from config import REQUEST_TIMEOUT
-from providers.base import ProviderResult, ScrapeReason
+from providers.base import PartialSnapshot, ProviderResult, ScrapeReason, is_transport_failure
 from utils import is_india, job_hash, strip_html
 
 _log = logging.getLogger("mirror")
@@ -74,6 +74,8 @@ def _scrape_icims(portal: Portal, max_jobs: int | None = None) -> list[dict] | N
             data = r.json()
         except Exception as e:
             _log.error(f"    [ERROR] iCIMS {company} page={page}: {e}")
+            if page > 1 and is_transport_failure(e):
+                raise PartialSnapshot(jobs, f"page {page} failed: {e}")
             break
 
         raw = data.get("jobs", [])

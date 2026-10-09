@@ -56,6 +56,7 @@ Each entry: Company | Human Careers URL | ATS Platform | Scraping API / Endpoint
 | Company | Careers URL | Tenant | Instance | Career Site | India Jobs | Status |
 |---------|-------------|--------|----------|-------------|-----------|--------|
 | Accenture | https://www.accenture.com/us-en/careers | accenture | wd103 | AccentureCareers | ~800+ | ✅ working |
+| Postman | https://www.postman.com/company/careers/open-positions/ | postman | wd108 | careers | 11 | ✅ RECRACKED 2026-09-30 — moved from Greenhouse to Workday (link found on careers page); 35 global, 11 India (Bangalore/Hyderabad) |
 | Airbus | https://www.airbus.com/en/careers | ag | wd3 | Airbus | ~150 | ✅ working |
 | Chanel | https://cc.wd3.myworkdayjobs.com/ChanelCareers | cc | wd3 | ChanelCareers | 1 | ✅ working (1 India job only) |
 | CrowdStrike | https://crowdstrike.wd5.myworkdayjobs.com/crowdstrikecareers | crowdstrike | wd5 | crowdstrikecareers | 66 | ✅ CRACKED 2026-05-21 — Workday CXS works cookie-free at `/wday/cxs/crowdstrike/crowdstrikecareers/jobs`; provider fetched 66 India jobs with full JDs |
@@ -126,6 +127,7 @@ Each entry: Company | Human Careers URL | ATS Platform | Scraping API / Endpoint
 |---------|-------------|-------------------|-----------|--------|
 | Continental | https://www.continental.com/en/career/ | continental | ~400+ | ✅ working |
 | LDC (Louis Dreyfus) | https://www.ldc.com/global/en/careers/ | LouisDreyfusCompany | ~100+ | ✅ working |
+| PhonePe | https://www.phonepe.com/careers/job-openings/ | PHONEPELIMITED | 86 | ✅ RECRACKED 2026-09-30 — moved from Greenhouse to SmartRecruiters (job links on careers page); 86 with `country=in` |
 | ServiceNow | https://careers.servicenow.com/locations/apj/india/ | servicenow | ~200+ | ✅ working |
 | Zomato | https://careers.smartrecruiters.com/Zomato1 | Zomato1 | 1 | ⬇️ low-priority — `totalFound: 1` confirmed via API 2026-04-19; genuine single India role, not a scraper failure |
 | Bosch | https://jobs.bosch.com/en?pages=1&country=in | BoschGroup | 100 | ✅ working — 100 India jobs, 100% JD; scraped 2026-04-19 |
@@ -165,7 +167,7 @@ Each entry: Company | Human Careers URL | ATS Platform | Scraping API / Endpoint
 | InMobi | https://www.inmobi.com/company/careers/ | inmobi | 50 | ✅ CRACKED 2026-05-20 — careers pages expose Greenhouse links; direct API `https://boards-api.greenhouse.io/v1/boards/inmobi/jobs?content=true`; live probe returned 85 global jobs, 50 India-filtered through the existing Greenhouse provider |
 | Databricks | https://www.databricks.com/company/careers/open-positions | databricks | 80 | ✅ CRACKED 2026-05-21 — direct Greenhouse API works (`boards-api.greenhouse.io/v1/boards/databricks/jobs?content=true`); Gatsby page data also embeds Greenhouse jobs/offices; 80 India jobs with full JDs |
 | Anthropic | https://www.anthropic.com/careers | anthropic | 5 | ✅ CRACKED 2026-05-21 — direct Greenhouse API works; India roles visible in `location.name`; full JDs in `content` |
-| Postman | https://www.postman.com/company/careers/ | postman | 12 | ✅ CRACKED 2026-05-21 — direct Greenhouse API works; India roles visible in `location.name`; full JDs in `content` |
+| Postman | https://www.postman.com/company/careers/ | postman | 0 | ↪️ moved 2026-09-30 — Greenhouse board now 404; use the active Workday row |
 | Zuora | https://www.zuora.com/about/careers/ | zuora | 13 | ✅ CRACKED 2026-05-21 — direct Greenhouse API works; India roles visible in `location.name`; full JDs in `content` |
 | Cloudflare | https://www.cloudflare.com/careers/jobs/ | cloudflare | 12 | ✅ CRACKED 2026-05-21 — direct Greenhouse API works; board uses generic location labels, so provider enables content/title India matching and infers India city from JD text |
 | Point72 | https://point72.com/careers/ | point72 | 38 | ✅ CRACKED 2026-05-21 — direct Greenhouse API works; India roles visible in `location.name`; full JDs in `content` |
@@ -176,7 +178,7 @@ Each entry: Company | Human Careers URL | ATS Platform | Scraping API / Endpoint
 | Netskope | https://www.netskope.com/company/careers | netskope | 16 | ✅ CRACKED 2026-05-22 — direct Greenhouse API works; India roles visible in `location.name`; full JDs in `content` |
 | HackerRank | https://www.hackerrank.com/careers/ | hackerrank | 20 | ✅ CRACKED 2026-05-22 — direct Greenhouse API works; Bangalore/India roles visible in `location.name`; full JDs in `content` |
 | Observe.ai | https://www.observe.ai/careers | observeai | 10 | ✅ CRACKED 2026-05-22 — direct Greenhouse API works; Bengaluru roles visible in `location.name`; full JDs in `content` |
-| ClickHouse | https://clickhouse.com/company/careers | clickhouse | 10 | ✅ CRACKED 2026-05-22 — direct Greenhouse API works; India remote roles visible in `location.name`; full JDs in `content` |
+| ClickHouse | https://clickhouse.com/company/careers | clickhouse | 0 | ↪️ moved 2026-09-30 — Greenhouse board now 404; use the active Ashby row |
 | DAT Freight & Analytics | https://www.dat.com/company/careers | datsolutions | 3 | ✅ CRACKED 2026-05-22 — direct Greenhouse API works; Bengaluru engineering roles visible in `location.name`; full JDs in `content` |
 | Energy Exemplar | https://www.energyexemplar.com/careers | energyexemplarllc | 18 | ✅ CRACKED 2026-05-22 — direct Greenhouse API works; Bengaluru/Pune India roles with full JDs |
 | AlphaSense India | https://www.alpha-sense.com/careers/ | alphasenseindia | 44 | ✅ CRACKED 2026-05-22 — direct Greenhouse API works; India board uses city-only locations, existing `is_india()` city filter handles them; full JDs in `content` |
@@ -195,7 +197,7 @@ Each entry: Company | Human Careers URL | ATS Platform | Scraping API / Endpoint
 | Elastic | https://www.elastic.co/careers | elastic | 7 | ✅ CRACKED 2026-05-21 — direct Greenhouse API works; 7 India jobs with full JDs |
 | Airbnb | https://careers.airbnb.com | airbnb | 15 | ✅ working — 15 India jobs, 100% JD; scraped 2026-04-19 |
 | Razorpay | https://razorpay.com/jobs/ | razorpaysoftwareprivatelimited | 46 | ✅ working — 46 India jobs, 100% JD; scraped 2026-04-19 |
-| PhonePe | https://www.phonepe.com/careers/ | phonepe | 43 | ✅ working — 43 India jobs, 100% JD; scraped 2026-04-19 |
+| PhonePe | https://www.phonepe.com/careers/ | phonepe | 0 | ↪️ moved 2026-09-30 — Greenhouse board now 404; use the active SmartRecruiters row |
 | Thoughtworks | https://www.thoughtworks.com/careers | thoughtworks | 2 | ✅ working — 2 India jobs, 100% JD; scraped 2026-04-19 |
 | Mozilla | https://www.mozilla.org/en-US/careers/listings/ | mozilla | 0 | 🔴 0 India jobs — 47 global Greenhouse jobs confirmed (boards.greenhouse.io/mozilla) but none India-located; probed 2026-04-26 |
 | Groww | https://groww.in/careers | groww | 15 | ✅ CRACKED 2026-06-04 — direct Greenhouse API works; India-only board (Bengaluru); full JDs in `content` |
@@ -205,7 +207,7 @@ Each entry: Company | Human Careers URL | ATS Platform | Scraping API / Endpoint
 | WorldQuant | https://boards.greenhouse.io/worldquant | worldquant | 6 | ✅ DISCOVERED 2026-06-13 via college Phase 0 → resolve_ats; direct Greenhouse API, 6 India jobs; board name confirmed "WorldQuant"; full JDs in `content` |
 | Da Vinci Derivatives | https://boards.greenhouse.io/davinciderivatives | davinciderivatives | 1 | ✅ DISCOVERED 2026-06-13 via resolve_ats; Greenhouse board confirmed "Da Vinci"; 1 India job; full JD in `content` |
 | Verve | https://boards.greenhouse.io/verve | verve | 3 | ⚠️ DISCOVERED 2026-06-13 — Greenhouse board "Verve" (3 India); seed labeled "Verve Consulting" but board identity ambiguous (may be Verve Group ad-tech); verify owner before trusting |
-| Atomicwork | https://boards.greenhouse.io/atomicwork | atomicwork | 21 | ✅ HARVESTED 2026-06-13 (board-directory harvest) — Greenhouse API, 21 India jobs; board "Atomicwork Inc"; full JDs in `content` |
+| Atomicwork | https://www.atomicwork.com/company/careers | atomicwork | 0 | ↪️ moved 2026-10-04 — Greenhouse board deleted; use the OTHER PLATFORMS row (Scrapling fallback) |
 | 6sense | https://boards.greenhouse.io/6sense | 6sense | 17 | ✅ HARVESTED 2026-06-13 — Greenhouse API, 17 India jobs; full JDs in `content` |
 | Meltplan | https://boards.greenhouse.io/meltplan | meltplan | 6 | ✅ HARVESTED 2026-06-13 — Greenhouse API, 6 India jobs; full JDs in `content` |
 | Redpin (Currencies Direct) | https://boards.greenhouse.io/currenciesdirect | currenciesdirect | 4 | ✅ HARVESTED 2026-06-13 — Greenhouse API, board "Redpin", 4 India jobs; full JDs in `content` |
@@ -227,6 +229,7 @@ Each entry: Company | Human Careers URL | ATS Platform | Scraping API / Endpoint
 | Deepgram | https://deepgram.com/careers | deepgram | 2 | ✅ VALIDATED 2026-07-12 via career-ops audit — direct Ashby Posting API; India roles with full JDs |
 | Zapier | https://zapier.com/jobs | zapier | 3 | ✅ VALIDATED 2026-07-12 via career-ops audit — direct Ashby Posting API; India roles with full JDs |
 | Tekion | https://tekion.com/careers | tekion | 79 global | ✅ RECRACKED 2026-08-13 — public Ashby Posting API replaces retired Greenhouse board; India filter and full `descriptionPlain` handled by the shared provider |
+| ClickHouse | https://clickhouse.com/company/careers | clickhouse | 9 | ✅ RECRACKED 2026-09-30 — moved from Greenhouse to Ashby; 186 global, 9 India; full `descriptionPlain` |
 | ElevenLabs | https://elevenlabs.io/careers | elevenlabs | 16 | ⚠️ REVIEW — India appears mainly in secondary/multi-location eligibility; do not promote until location semantics are manually confirmed |
 
 ---
@@ -249,7 +252,7 @@ Each entry: Company | Human Careers URL | ATS Platform | Scraping API / Endpoint
 | Hevo Data | https://hevodata.com/careers/ | hevodata | 34 | ✅ CRACKED 2026-05-22 — direct Lever API works; India roles visible in `categories.location`; full JDs in `descriptionPlain`; no Firecrawl needed |
 | Acceldata | https://www.acceldata.io/careers | acceldata | 22 | ✅ CRACKED 2026-05-22 — direct Lever API works; India roles visible in `categories.location`; full JDs in `descriptionPlain`; no Firecrawl needed |
 | Onehouse | https://www.onehouse.ai/careers | Onehouse | 5 | ✅ CRACKED 2026-05-22 — direct Lever API works; India roles visible in `categories.location`; full JDs in `descriptionPlain`; no Firecrawl needed |
-| Dream Sports (Dream11) | https://www.dreamsports.group/careers/ | dreamsports | 22 | ✅ CRACKED 2026-06-04 — direct Lever API works; India-only (Mumbai/Bengaluru/Delhi); full JDs in `descriptionPlain` |
+| Dream Sports (Dream11) | https://www.dreamsports.group/careers/ | dreamsports | 0 | ⏸ parked 2026-09-30 — Lever board 404 (US and EU APIs); careers page still links the dead board; no public ATS found (Greenhouse/Ashby/SmartRecruiters/Workable/Keka probed). Jobs now appear only on aggregators |
 | FamPay | https://fampay.in/careers | fampay | 18 | ✅ CRACKED 2026-06-04 — direct Lever API works; all Bengaluru; full JDs in `descriptionPlain` |
 | Fi Money (Epifi) | https://fi.money/careers | epifi | 4 | ✅ CRACKED 2026-06-04 — direct Lever API works; all Bangalore; full JDs in `descriptionPlain`; low volume but India-only |
 | Safe Security | https://jobs.lever.co/safe | safe | 13 | ✅ DISCOVERED 2026-06-13 via college Phase 0 → resolve_ats; direct Lever API, 13 India roles in `categories.location`; full JDs in `descriptionPlain` |
@@ -350,6 +353,7 @@ Each entry: Company | Human Careers URL | ATS Platform | Scraping API / Endpoint
 | Mphasis | https://careers.mphasis.com | mphasis.ripplehire.com | ty4DfyWddnOrtpclQeia | 500+ | ✅ CRACKED 2026-05-14 — POST /candidatejobsearch; JSESSIONID acquired via GET; India filtered client-side; ats=ripplehire |
 | Axis Bank | https://www.axis.bank.in/careers | axisbank.ripplehire.com | WIXhCuz0XRZ7H0GZCwjJ | 10570 | ✅ CRACKED 2026-05-21 — discovery promoted; `jobVoList` listing plus `/candidate/candidatejobdetail` full JD supported |
 | Tata Steel | https://www.tatasteel.com/careers/work-with-us/tata-steel-india-careers/ | tatasteel.ripplehire.com | kYAz91uy1lFDi6FeSiRZ | 31 | ✅ CRACKED 2026-05-21 — discovery promoted; `jobVoList` listing plus `/candidate/candidatejobdetail` full JD supported |
+| LTIMindtree | https://www.ltm.com/careers | ltimindtree.ripplehire.com | xviyQvbnyYZdGtozXoNm | 892 | ✅ RECRACKED 2026-10-01 — rebranded to LTM; its careers page links this RippleHire board with an India geo token; was SAP Jobs2Web (~2 jobs, domain since retired) |
 
 ---
 
@@ -586,13 +590,14 @@ Each entry: Company | Human Careers URL | ATS Platform | Scraping API / Endpoint
 | Mondee Holdings | https://jobs.ashbyhq.com/mondee | Ashby (expired board) | Ashby posting API returns `organization: null` / 404 | 🔴 CLOSED 2026-06-11 — expired board with no active public portal |
 | Nutanix | https://careers.nutanix.com/en/locations/india/ | DirectEmployers / JobSyndicate RSS | `GET https://nutanix.dejobs.org/jobs/feed/rss?location=India` | RSS title prefix `(IND-...)` / India feed | 82 | ✅ CRACKED 2026-05-21 — careers.nutanix.com is Cloudflare-blocked to direct HTTP, but dejobs RSS is public, contains full descriptions and stable detail URLs; routed to `ats=dejobs_rss`; no Firecrawl needed |
 | Syneriq Global | https://www.syneriqglobal.com | Custom | No dedicated careers page found — small company; check LinkedIn or main site footer | 🟡 js-required — no careers page detected; probed 2026-04-19 |
+| Atomicwork | https://www.atomicwork.com/company/careers | Custom (Webflow CMS) | Greenhouse board deleted; site lists jobs as Webflow pages (`/careers/<id>`); Scrapling HTTP fetch, title from the page heading, India from the line under it | 🟡 js-required — RECRACKED 2026-10-04 via Scrapling fallback; 2 India jobs |
 | ZF Lifetec | https://www.zf.com/global/en/careers | SAP SuccessFactors (suspected) | zf.com antibot-blocked; zf-lifetec.com/career.html is 404 — parent ZF Group uses SAP SF | ⚠️ blocked — antibot on zf.com; zf-lifetec.com has no careers page; re-probe via zf.com direct browser visit |
 | HMIE | https://hmie.in | Custom | hmie.in/careers and hmie.in/jobs both 404 — no independent career portal found | 🔴 no career portal — Hyundai Motor India Engineering hires via parent or LinkedIn; skip |
 | Meta | https://www.metacareers.com/jobs | Custom (Relay GraphQL) | `GET /jobs` → page `lsd` token → `POST /api/graphql/` `doc_id=29615178951461218` `variables={"search_input":{}}` → `data.job_search_with_featured_jobs.all_jobs[]` (full global list, 457 in snapshot, no pagination); India filtered in Python on `locations[]` (`offices=["India"]` returns 0). Full JD from detail page `GET /jobs/{id}/` JobPosting JSON-LD. No auth/Docker/Firecrawl. | ✅ CRACKED 2026-06-07 — routed to `ats=meta_graphql` (`providers/meta_graphql.py`); smoke-verified 10 India jobs with full JDs |
 | Walmart | https://careers.walmart.com/results?q=india | Custom Next.js SPA | Direct/Firecrawl listing is a JS shell; cloud map returns US detail pages despite `q=india` | ⚠️ PARKED 2026-06-11 — needs durable browser listing XHR; no guessed route promoted |
 | DE Shaw | https://www.deshawindia.com/careers | D.E. Shaw Next.js SSR | Embedded `__NEXT_DATA__.props.pageProps.regularJobs`; full JD in `jobDescription`; apply redirect via `/recruit/jobs/Ads/Link/{jobUrl}` | ✅ CRACKED 2026-05-08 — routed to `ats=deshaw_india`; 76 public India roles in live probe; no Firecrawl needed |
 | Adidas | https://jobs.adidas-group.com/search/?q=&optionsFacetsDD_country=IN | SAP SuccessFactors / Jobs2Web (HTML) | `GET https://jobs.adidas-group.com/search/?q=&optionsFacetsDD_country=IN&startrow=N` | `optionsFacetsDD_country=IN` | 7 | ✅ CRACKED 2026-05-13 — SAP Jobs2Web HTML at jobs.adidas-group.com; 7 India jobs; routed to `ats=sap_jobs2web_html` |
-| LTIMindtree | https://careers.ltimindtree.com/search/?createNewAlert=false&q=&locationsearch=india | SAP Jobs2Web HTML | India-filtered URL returns ~2 India jobs; parse direct table cards and detail pages | ✅ CRACKED 2026-05-08 — routed to `ats=sap_jobs2web_html`; no Firecrawl needed |
+| LTIMindtree | https://careers.ltimindtree.com/search/?createNewAlert=false&q=&locationsearch=india | SAP Jobs2Web HTML | Domain gone (NXDOMAIN) after the rebrand to LTM; careers.ltm.com/search now redirect-loops | ↪️ moved 2026-10-01 — use the RippleHire row (892 India jobs vs ~2 here) |
 | Genpact | https://careers.genpact.com | Workday | Active route recorded in WORKDAY COMPANIES section | ↪️ moved 2026-05-22 — use Workday row above |
 | Amdocs | https://jobs.amdocs.com/careers?domain=amdocs.com&location=India | Phenom CX / PCSX | Active direct route recorded in PHENOM CX (PCSX) section | ↪️ moved 2026-08-21 — use PCSX row above |
 | Zoho | https://careers.zohocorp.com/jobs/careers | Zoho Recruit (self-hosted) | `https://careers.zohocorp.com/jobs/careers` — Zoho uses own Zoho Recruit product; Chennai HQ | ⬇️ deprioritized — only 2 India jobs visible 2026-04-30 |

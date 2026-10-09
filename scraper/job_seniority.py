@@ -32,10 +32,12 @@ _TITLE_LEVELS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("intern", ("intern", "internship", "apprentice", "trainee")),
 )
 
+_YEAR_UNIT = r"(?:year\(s\)|years?|yrs?)"
+# Accepts "5+ years", "3-5 yrs", "5 to 10yrs" and "6 years to 10 years".
 _YEARS_RANGE = (
     r"(?P<minimum>\d{1,2})\s*"
-    r"(?:(?:[-–—]\s*|\s+to\s+)(?P<maximum>\d{1,2})|\+)?\s*"
-    r"(?:years?|yrs?)"
+    r"(?:(?:" + _YEAR_UNIT + r"\s*)?(?:[-–—]\s*|to\s+)(?P<maximum>\d{1,2})|\+)?\s*"
+    + _YEAR_UNIT
 )
 _EXPERIENCE_PATTERNS = (
     re.compile(
@@ -51,6 +53,16 @@ _EXPERIENCE_PATTERNS = (
         rf"\b(?:requirements?\s*:?\s*|minimum(?:\s+period\s+of)?\s+|"
         rf"at\s+least\s+){_YEARS_RANGE}\s*[’']?\s*"
         r"(?:of|in|handling|working|developing|leading)\b",
+        re.IGNORECASE,
+    ),
+    # Labelled form: "Experience: 8-10 Years", "Exp - 10 - 15 years",
+    # "Work Experience (Range of years): 10-12 Years". The label may carry a
+    # few words but no digits or sentence punctuation, and a separator must
+    # follow it, so the years stay inside the experience clause.
+    re.compile(
+        r"\b(?:experience|exp)\b[a-z \t()]{0,25}?[:\-–—][ \t:\-–—]*"
+        r"(?:(?:more\s+than|over|minimum|min\.?|at\s+least)\s+)?"
+        + _YEARS_RANGE,
         re.IGNORECASE,
     ),
 )
@@ -72,7 +84,13 @@ def normalize_job_seniority(job: dict[str, Any]) -> NormalizedSeniority:
     """
     title = str(job.get("job_title") or job.get("title") or "")
     description = str(job.get("job_description") or job.get("raw_jd_text") or "")
-    provider_level = _level_from_text(str(job.get("seniority_level") or ""))
+    provider_value = str(job.get("seniority_level") or "").strip().casefold()
+    # A canonical level is already normalized: source_matching_facts re-runs
+    # this on rows the writer stamped, and "mid"/"executive" match no signal.
+    provider_level = (
+        provider_value if provider_value in _LEVEL_RANK
+        else _level_from_text(provider_value)
+    )
     title_level = _level_from_text(title)
 
     source_min = _coerce_year(job.get("min_years_experience"))
@@ -80,6 +98,9 @@ def normalize_job_seniority(job: dict[str, Any]) -> NormalizedSeniority:
     description_min, description_max = _experience_bounds(description)
     minimum = _highest_year(source_min, description_min)
     maximum = _highest_year(source_max, description_max)
+    if minimum is not None and maximum is not None and maximum < minimum:
+        # Bounds from different sentences disagree; keep the minimum only.
+        maximum = None
     experience_level = _level_from_years(minimum)
 
     return NormalizedSeniority(

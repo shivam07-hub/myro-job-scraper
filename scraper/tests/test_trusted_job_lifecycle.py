@@ -140,3 +140,12 @@ def test_sync_import_run_does_not_call_retire_rpc(monkeypatch, tmp_path) -> None
     )
     assert summary["complete"] == 1
     assert "retired" not in summary
+
+
+def test_coverage_floor_is_half_the_last_complete_run() -> None:
+    # Decided 2026-10-03: below half the last complete count, assume the scrape
+    # broke and demote nothing (EY India Experienced: a 1,300/2,523 half-list
+    # demoted 1,129 open jobs under the old 25% floor).
+    assert assess_source_run(current_count=49, prior_good_count=100).status == "partial"
+    assert assess_source_run(current_count=50, prior_good_count=100).status == "complete"
+    assert assess_source_run(current_count=30, prior_good_count=100).status == "partial"

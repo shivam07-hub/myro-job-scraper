@@ -12,6 +12,38 @@ from typing import Protocol
 FALLBACK_FIRECRAWL_EXTRACT = "firecrawl_extract"
 
 
+class PartialSnapshot(Exception):
+    """A later page failed after earlier pages succeeded.
+
+    Raised inside a provider's pagination loop; the provider's scrape()
+    turns it into ProviderResult.partial so the rows stay evidence, never a
+    publishable snapshot.
+    """
+
+    def __init__(self, jobs: list[dict], note: str) -> None:
+        super().__init__(note)
+        self.jobs = jobs
+        self.note = note
+
+
+def is_transport_failure(exc: BaseException) -> bool:
+    """True when a page exists but we failed to read it.
+
+    Timeouts, DNS and connection errors, 429 and 5xx. A 4xx is left out
+    because some boards answer past their last page with one.
+    """
+    import requests
+
+    if isinstance(exc, requests.HTTPError):
+        status = getattr(exc.response, "status_code", None)
+        return status is None or status == 429 or status >= 500
+    return isinstance(exc, (requests.ConnectionError, requests.Timeout, TimeoutError, ConnectionError))
+
+
+def is_transport_status(status_code: int) -> bool:
+    return status_code == 429 or status_code >= 500
+
+
 class ScrapeReason(str, Enum):
     """Typed outcome reason for every ProviderResult."""
     SUCCESS       = "success"        # jobs returned (may be empty list = genuinely 0)

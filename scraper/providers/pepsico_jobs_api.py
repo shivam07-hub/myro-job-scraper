@@ -9,7 +9,7 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 import requests
 
 from config import REQUEST_TIMEOUT
-from providers.base import ProviderResult, ScrapeReason
+from providers.base import PartialSnapshot, ProviderResult, ScrapeReason
 from utils import is_india, job_hash, strip_html
 
 _log = logging.getLogger("mirror")
@@ -32,7 +32,10 @@ class PepsiCoJobsAPIProvider:
         max_jobs: int | None = None,
         validate_mode: bool = False,
     ) -> ProviderResult:
-        jobs = _scrape_pepsico_api(portal, max_jobs=max_jobs)
+        try:
+            jobs = _scrape_pepsico_api(portal, max_jobs=max_jobs)
+        except PartialSnapshot as partial:
+            return ProviderResult.partial(partial.jobs, partial.note)
         if jobs is None:
             return ProviderResult.error(ScrapeReason.API_BLOCKED)
         if not jobs:
@@ -72,7 +75,9 @@ def _scrape_pepsico_api(portal: Portal, max_jobs: int | None = None) -> list[dic
             payload = r.json()
         except Exception as e:
             _log.error(f"    [ERROR] PepsiCo API page {page} failed ({company}): {e}")
-            return None if page == 1 else jobs
+            if page == 1:
+                return None
+            raise PartialSnapshot(jobs, f"page {page} failed: {e}")
 
         batch = payload.get("jobs") or []
         total_count = int(payload.get("count") or payload.get("totalCount") or total_count or 0)
