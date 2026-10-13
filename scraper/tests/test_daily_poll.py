@@ -76,3 +76,35 @@ def test_one_logical_run_date_owns_scrape_resolve_and_publish() -> None:
         command[command.index("--run-date") + 1]
         for _, command in commands
     ] == ["2026_07_12", "2026_07_12", "2026_07_12"]
+
+
+def test_publication_does_not_wait_for_local_inference(monkeypatch, tmp_path) -> None:
+    """Railway has no LM Studio. The resolver runs with --skip-model, so the
+    publish lane must reach publish with no inference available at all."""
+    import json
+    import sys
+
+    import daily_cycle
+    import daily_poll
+
+    def unavailable(**_kwargs):
+        raise RuntimeError("LM Studio is not installed here")
+
+    monkeypatch.setattr(daily_cycle, "ensure_inference_ready", unavailable)
+    monkeypatch.setattr(daily_poll, "ensure_inference_ready", unavailable, raising=False)
+    monkeypatch.setattr(daily_poll, "LOG_DIR", tmp_path)
+    ran: list[str] = []
+    monkeypatch.setattr(
+        daily_poll,
+        "_run_step",
+        lambda name, command, *, env: ran.append(name) or {"name": name, "returncode": 0},
+    )
+    monkeypatch.setattr(sys, "argv", ["daily_poll.py", "--scope", "india"])
+
+    daily_poll.main()
+
+    assert [name.split(":")[0] for name in ran] == ["scrape", "resolve", "publish"]
+    [report_path] = tmp_path.glob("daily_poll_*.json")
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    assert report["status"] == "complete"
+    assert "inference" not in report

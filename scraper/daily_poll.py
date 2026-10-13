@@ -18,8 +18,6 @@ import sys
 import time
 from zoneinfo import ZoneInfo
 
-from daily_cycle import ensure_inference_ready
-
 
 ROOT = Path(__file__).resolve().parent
 REPO_ROOT = ROOT.parent
@@ -167,23 +165,9 @@ def main() -> None:
         # when wall-clock midnight passes during the scrape.
         report["publish_dates"] = [run_date]
 
-        # The resolver classifies leftover jobs with the local generative model,
-        # so the model has to be up before it runs — but only now, after the
-        # scrape has released its memory, never alongside it.
-        try:
-            report["inference"] = ensure_inference_ready(
-                env=env,
-                model_ttl_seconds=int(os.getenv("POLL_MODEL_TTL_SECONDS", "3600")),
-                timeout_seconds=int(os.getenv("POLL_INFERENCE_TIMEOUT_SECONDS", "180")),
-            )
-        except Exception as exc:
-            report["status"] = "failed"
-            report["failed_step"] = "inference"
-            report["error"] = str(exc)
-            path = _write_report(report)
-            print(f"Daily poll could not start inference; report: {path}", file=sys.stderr)
-            raise SystemExit(4) from exc
-
+        # No inference gate here: the resolver runs --skip-model, and this lane
+        # runs on Railway, which has no LM Studio. Embeddings and enrichment are
+        # drained separately by `daily_cycle.py --inference-only` on the laptop.
         for step_label, command in commands[1:]:
             step_name = f"{step_label}:{run_date}"
             step = _run_step(step_name, command, env=env)
