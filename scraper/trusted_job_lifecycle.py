@@ -301,9 +301,23 @@ def _resolve_company(sb: Any, company: str) -> str:
 
 
 def _fetch_company_jobs(sb: Any, company_id: str) -> list[dict[str, Any]]:
-    return sb.table("jobs").select(
-        "job_id,is_active,listing_confidence,consecutive_complete_misses"
-    ).eq("company_id", company_id).execute().data or []
+    # PostgREST caps one response at 1,000 rows. Unpaged, every row past that
+    # was never compared, so big companies never closed their missing jobs.
+    rows: list[dict[str, Any]] = []
+    page = 0
+    while True:
+        batch = (
+            sb.table("jobs")
+            .select("job_id,is_active,listing_confidence,consecutive_complete_misses")
+            .eq("company_id", company_id)
+            .order("job_id")
+            .range(page * _PAGE_SIZE, (page + 1) * _PAGE_SIZE - 1)
+            .execute()
+        ).data or []
+        rows.extend(batch)
+        if len(batch) < _PAGE_SIZE:
+            return rows
+        page += 1
 
 
 def _prior_good_count(sb: Any, company_id: str) -> int | None:

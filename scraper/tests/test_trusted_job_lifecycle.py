@@ -149,3 +149,53 @@ def test_coverage_floor_is_half_the_last_complete_run() -> None:
     assert assess_source_run(current_count=49, prior_good_count=100).status == "partial"
     assert assess_source_run(current_count=50, prior_good_count=100).status == "complete"
     assert assess_source_run(current_count=30, prior_good_count=100).status == "partial"
+
+
+class _CappedJobsTable:
+    """PostgREST returns at most 1,000 rows per response, whatever was asked."""
+
+    MAX_ROWS = 1000
+
+    def __init__(self, rows):
+        self._rows = rows
+        self._start, self._end = 0, None
+
+    def select(self, _columns):
+        return self
+
+    def eq(self, column, value):
+        self._rows = [row for row in self._rows if row[column] == value]
+        return self
+
+    def order(self, column):
+        self._rows = sorted(self._rows, key=lambda row: row[column])
+        return self
+
+    def range(self, start, end):
+        self._start, self._end = start, end
+        return self
+
+    def execute(self):
+        end = len(self._rows) if self._end is None else self._end + 1
+        page = self._rows[self._start:end][: self.MAX_ROWS]
+        return type("Response", (), {"data": page})()
+
+
+def test_company_jobs_are_read_past_the_1000_row_response_cap() -> None:
+    """A company with more rows than one response holds must be read in full,
+    or every job past row 1,000 is never compared and never closes."""
+    rows = [
+        {"job_id": f"{i:05d}", "company_id": "big", "is_active": True,
+         "listing_confidence": "active", "consecutive_complete_misses": 0}
+        for i in range(2500)
+    ] + [{"job_id": "x", "company_id": "other", "is_active": True,
+          "listing_confidence": "active", "consecutive_complete_misses": 0}]
+
+    class _Sb:
+        def table(self, _name):
+            return _CappedJobsTable(list(rows))
+
+    fetched = lifecycle._fetch_company_jobs(_Sb(), "big")
+
+    assert len(fetched) == 2500
+    assert {row["job_id"] for row in fetched} == {f"{i:05d}" for i in range(2500)}
