@@ -156,15 +156,20 @@ class _CappedJobsTable:
 
     MAX_ROWS = 1000
 
-    def __init__(self, rows):
+    def __init__(self, rows, *, fail_first=0):
         self._rows = rows
         self._start, self._end = 0, None
+        self._fail = fail_first
 
     def select(self, _columns):
         return self
 
     def eq(self, column, value):
         self._rows = [row for row in self._rows if row[column] == value]
+        return self
+
+    def gt(self, column, value):
+        self._rows = [row for row in self._rows if row[column] > value]
         return self
 
     def order(self, column):
@@ -175,21 +180,31 @@ class _CappedJobsTable:
         self._start, self._end = start, end
         return self
 
+    def limit(self, count):
+        self._start, self._end = 0, count - 1
+        return self
+
     def execute(self):
+        if self._fail:
+            raise RuntimeError("canceling statement due to statement timeout")
         end = len(self._rows) if self._end is None else self._end + 1
         page = self._rows[self._start:end][: self.MAX_ROWS]
         return type("Response", (), {"data": page})()
 
 
+def _company_rows(count):
+    return [
+        {"job_id": f"{i:05d}", "company_id": "big", "is_active": True,
+         "listing_confidence": "active", "consecutive_complete_misses": 0}
+        for i in range(count)
+    ] + [{"job_id": "x", "company_id": "other", "is_active": True,
+          "listing_confidence": "active", "consecutive_complete_misses": 0}]
+
+
 def test_company_jobs_are_read_past_the_1000_row_response_cap() -> None:
     """A company with more rows than one response holds must be read in full,
     or every job past row 1,000 is never compared and never closes."""
-    rows = [
-        {"job_id": f"{i:05d}", "company_id": "big", "is_active": True,
-         "listing_confidence": "active", "consecutive_complete_misses": 0}
-        for i in range(2500)
-    ] + [{"job_id": "x", "company_id": "other", "is_active": True,
-          "listing_confidence": "active", "consecutive_complete_misses": 0}]
+    rows = _company_rows(2500)
 
     class _Sb:
         def table(self, _name):
@@ -199,3 +214,17 @@ def test_company_jobs_are_read_past_the_1000_row_response_cap() -> None:
 
     assert len(fetched) == 2500
     assert {row["job_id"] for row in fetched} == {f"{i:05d}" for i in range(2500)}
+
+
+def test_company_job_page_retries_a_statement_timeout(monkeypatch) -> None:
+    """A slow page under load must not fail the whole publication."""
+    rows = _company_rows(1500)
+    pages = iter([1, 0, 0])  # the first request times out once
+
+    class _Sb:
+        def table(self, _name):
+            return _CappedJobsTable(list(rows), fail_first=next(pages))
+
+    monkeypatch.setattr(lifecycle, "_sleep", lambda _seconds: None)
+
+    assert len(lifecycle._fetch_company_jobs(_Sb(), "big")) == 1500

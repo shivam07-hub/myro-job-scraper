@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, timezone
 import json
 import logging
 from pathlib import Path
+import time
 from typing import Any
 
 from company_skill_rollup import (
@@ -13,6 +14,7 @@ from company_skill_rollup import (
     build_company_skill_facts,
     write_company_skill_facts,
 )
+from lifecycle_writer import _RETRY_DELAYS, _is_statement_timeout
 from lifecycle_writer import apply_missing as _apply_missing
 from lifecycle_writer import apply_seen as _apply_seen
 
@@ -25,6 +27,7 @@ QUARANTINE_AFTER_CLOSE = timedelta(hours=1)
 AGE_STALE_DAYS = 30
 _BATCH_SIZE = 200
 _PAGE_SIZE = 1000
+_sleep = time.sleep
 log = logging.getLogger("trusted_job_lifecycle")
 
 
@@ -303,21 +306,33 @@ def _resolve_company(sb: Any, company: str) -> str:
 def _fetch_company_jobs(sb: Any, company_id: str) -> list[dict[str, Any]]:
     # PostgREST caps one response at 1,000 rows. Unpaged, every row past that
     # was never compared, so big companies never closed their missing jobs.
+    # Keyset pages ride idx_jobs_company_id_job_id
+    # (sql/add_jobs_company_id_job_id_index.sql).
     rows: list[dict[str, Any]] = []
-    page = 0
+    after: str | None = None
     while True:
-        batch = (
-            sb.table("jobs")
-            .select("job_id,is_active,listing_confidence,consecutive_complete_misses")
-            .eq("company_id", company_id)
-            .order("job_id")
-            .range(page * _PAGE_SIZE, (page + 1) * _PAGE_SIZE - 1)
-            .execute()
-        ).data or []
+        batch = _company_jobs_page(sb, company_id, after=after)
         rows.extend(batch)
         if len(batch) < _PAGE_SIZE:
             return rows
-        page += 1
+        after = str(batch[-1]["job_id"])
+
+
+def _company_jobs_page(
+    sb: Any, company_id: str, *, after: str | None, attempt: int = 0
+) -> list[dict[str, Any]]:
+    query = sb.table("jobs").select(
+        "job_id,is_active,listing_confidence,consecutive_complete_misses"
+    ).eq("company_id", company_id)
+    if after is not None:
+        query = query.gt("job_id", after)
+    try:
+        return query.order("job_id").limit(_PAGE_SIZE).execute().data or []
+    except Exception as exc:
+        if not _is_statement_timeout(exc) or attempt >= len(_RETRY_DELAYS):
+            raise
+        _sleep(_RETRY_DELAYS[attempt])
+        return _company_jobs_page(sb, company_id, after=after, attempt=attempt + 1)
 
 
 def _prior_good_count(sb: Any, company_id: str) -> int | None:
