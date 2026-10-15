@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 import json
 
+import postgrest_pages
 import trusted_job_lifecycle as lifecycle
 from trusted_job_lifecycle import assess_source_run, missing_transition
 
@@ -225,6 +226,34 @@ def test_company_job_page_retries_a_statement_timeout(monkeypatch) -> None:
         def table(self, _name):
             return _CappedJobsTable(list(rows), fail_first=next(pages))
 
-    monkeypatch.setattr(lifecycle, "_sleep", lambda _seconds: None)
+    monkeypatch.setattr(postgrest_pages, "_sleep", lambda _seconds: None)
 
     assert len(lifecycle._fetch_company_jobs(_Sb(), "big")) == 1500
+
+
+def test_known_skill_ids_are_read_past_the_1000_row_response_cap() -> None:
+    """Siemens has 2,870 skill rows. One reply holds 1,000, so the rest never
+    become dormant when a full import refreshes company skill demand."""
+    rows = [{"company_id": "big", "skill_id": i} for i in range(1, 1501)]
+    rows.append({"company_id": "other", "skill_id": 9999})
+
+    class _Sb:
+        def table(self, _name):
+            return _CappedJobsTable(list(rows))
+
+    found = lifecycle._known_company_skill_ids(_Sb(), "big")
+
+    assert found == set(range(1, 1501))
+
+
+def test_known_skill_id_page_retries_a_statement_timeout(monkeypatch) -> None:
+    rows = [{"company_id": "big", "skill_id": i} for i in range(1, 1501)]
+    pages = iter([1, 0, 0])
+
+    class _Sb:
+        def table(self, _name):
+            return _CappedJobsTable(list(rows), fail_first=next(pages))
+
+    monkeypatch.setattr(postgrest_pages, "_sleep", lambda _seconds: None)
+
+    assert lifecycle._known_company_skill_ids(_Sb(), "big") == set(range(1, 1501))

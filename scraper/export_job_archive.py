@@ -21,6 +21,8 @@ from typing import Any, Iterable
 
 from supabase import Client, create_client
 
+from postgrest_pages import read_all_rows
+
 
 HERE = Path(__file__).resolve().parent
 from environment import load_environment
@@ -110,6 +112,12 @@ def client() -> Client:
 
 
 def fetch_all(query: Any) -> list[dict[str, Any]]:
+    """Offset-page a query whose order column may repeat.
+
+    user_job_matches has many rows per job_id. A job_id cursor would keep one
+    and drop the rest. Wide job rows do not use this; they keyset in
+    fetch_candidates.
+    """
     rows: list[dict[str, Any]] = []
     page = 0
     while True:
@@ -122,14 +130,21 @@ def fetch_all(query: Any) -> list[dict[str, Any]]:
 
 
 def fetch_candidates(sb: Client, cutoff: int) -> list[dict[str, Any]]:
+    """Inactive or stale jobs, including the full description.
+
+    Offset pages of these wide rows timed out under load on 2026-10-14.
+    job_id is unique, so a keyset of PAGE_SIZE rows completes.
+    """
     select_fields = ",".join(ARCHIVE_JOB_FIELDS)
-    query = (
-        sb.table("jobs")
-        .select(select_fields)
-        .or_(f"is_active.eq.false,last_seen.lt.{cutoff}")
-        .order("job_id")
+    return read_all_rows(
+        lambda: (
+            sb.table("jobs")
+            .select(select_fields)
+            .or_(f"is_active.eq.false,last_seen.lt.{cutoff}")
+        ),
+        order_column="job_id",
+        page_size=PAGE_SIZE,
     )
-    return fetch_all(query)
 
 
 def fetch_protection_reasons(sb: Client, job_ids: list[str]) -> dict[str, set[str]]:

@@ -13,10 +13,16 @@ from typing import Any
 from postgrest.exceptions import APIError
 
 from job_summary import extractive_job_summary
+from postgrest_pages import read_all_rows
 from schema import MIN_JOB_DESCRIPTION_LEN
 from trusted_job_lifecycle import AGE_STALE_DAYS, delist_stale_jobs, sync_import_run
 
 log = logging.getLogger("source_snapshot")
+
+# Each row carries the job description. 200 stays under the 1,000-row cap
+# and under the statement timeout that wide pages hit at 1,000.
+_SUMMARY_PAGE = 200
+_SUMMARY_COLUMNS = "job_id,job_title,job_description,job_summary"
 
 
 def is_statement_timeout(exc: Exception) -> bool:
@@ -154,14 +160,7 @@ def fill_blank_summaries(
     Does not touch role_domain or other model-owned columns. LLM wording
     already lost cannot be restored here.
     """
-    query = (
-        sb.table("jobs")
-        .select("job_id,job_title,job_description,job_summary")
-        .eq("company_name", company)
-    )
-    if job_ids:
-        query = query.in_("job_id", job_ids)
-    rows = query.execute().data or []
+    rows = _summary_rows(sb, company=company, job_ids=job_ids)
     changed = 0
     for row in rows:
         if str(row.get("job_summary") or "").strip():
@@ -180,3 +179,38 @@ def fill_blank_summaries(
         sb.table("jobs").update({"job_summary": summary}).eq("job_id", job_id).execute()
         changed += 1
     return changed
+
+
+def _summary_rows(
+    sb: Any,
+    *,
+    company: str,
+    job_ids: list[str] | None,
+) -> list[dict[str, Any]]:
+    """Every job for this company name.
+
+    Company name and company id are different sets (Axis Bank is 17,657 by
+    name and 16,759 by id), so this read cannot use idx_jobs_company_id_job_id.
+    Keyset pages need idx_jobs_company_name_job_id
+    (sql/add_jobs_company_name_job_id_index.sql). A caller that already has
+    ids is chunked, because one ``in`` list is still capped at 1,000 rows.
+    """
+    if job_ids:
+        rows: list[dict[str, Any]] = []
+        for start in range(0, len(job_ids), _SUMMARY_PAGE):
+            chunk = job_ids[start:start + _SUMMARY_PAGE]
+            rows.extend(
+                sb.table("jobs")
+                .select(_SUMMARY_COLUMNS)
+                .eq("company_name", company)
+                .in_("job_id", chunk)
+                .execute()
+                .data
+                or []
+            )
+        return rows
+    return read_all_rows(
+        lambda: sb.table("jobs").select(_SUMMARY_COLUMNS).eq("company_name", company),
+        order_column="job_id",
+        page_size=_SUMMARY_PAGE,
+    )

@@ -287,6 +287,128 @@ def test_fill_blank_summaries_skips_existing_and_writes_extractive() -> None:
     assert "LLM" not in sb.jobs.updates[0]["job_summary"]
 
 
+class _CappedSummaryTable:
+    """One PostgREST reply holds at most 1,000 rows."""
+
+    MAX_ROWS = 1000
+
+    def __init__(self, rows, sink):
+        self._rows = [dict(row) for row in rows]
+        self._sink = sink
+        self._start, self._end = 0, None
+        self._pending = None
+        self._pending_id = None
+
+    def select(self, *_args, **_kwargs):
+        return self
+
+    def eq(self, column, value):
+        if self._pending is not None:
+            self._pending_id = value
+            return self
+        self._rows = [row for row in self._rows if row.get(column) == value]
+        return self
+
+    def in_(self, column, values):
+        wanted = set(values)
+        self._rows = [row for row in self._rows if row.get(column) in wanted]
+        return self
+
+    def gt(self, column, value):
+        self._rows = [row for row in self._rows if row[column] > value]
+        return self
+
+    def order(self, column):
+        self._rows = sorted(self._rows, key=lambda row: row[column])
+        return self
+
+    def limit(self, count):
+        self._start, self._end = 0, count - 1
+        return self
+
+    def update(self, payload):
+        self._pending = payload
+        return self
+
+    def execute(self):
+        if self._pending is not None:
+            self._sink.append((self._pending_id, self._pending))
+            self._pending = None
+            return type("Response", (), {"data": []})()
+        end = len(self._rows) if self._end is None else self._end + 1
+        page = self._rows[self._start:end][: self.MAX_ROWS]
+        return type("Response", (), {"data": page})()
+
+
+def _summary_rows(count):
+    rows = [
+        {
+            "job_id": f"{i:05d}",
+            "company_name": "Wipro",
+            "job_title": "Engineer",
+            "job_description": "Build reliable data platforms using Python and SQL every day.",
+            "job_summary": "already filled",
+        }
+        for i in range(count - 1)
+    ]
+    rows.append(
+        {
+            "job_id": f"{count - 1:05d}",
+            "company_name": "Wipro",
+            "job_title": "Late Engineer",
+            "job_description": "Build reliable data platforms using Python and SQL every day.",
+            "job_summary": "",
+        }
+    )
+    rows.append(
+        {
+            "job_id": "other",
+            "company_name": "Stripe",
+            "job_title": "Engineer",
+            "job_description": "Build reliable data platforms using Python and SQL every day.",
+            "job_summary": "",
+        }
+    )
+    return rows
+
+
+def test_fill_blank_summaries_reads_every_job_when_no_ids_are_passed() -> None:
+    """Wipro has 6,765 jobs. One reply holds 1,000, so a company-wide repair
+    never sees empty card text past that row."""
+    master = _summary_rows(1001)
+
+    class _Sb:
+        def __init__(self):
+            self.updates = []
+
+        def table(self, _name):
+            return _CappedSummaryTable(master, self.updates)
+
+    sb = _Sb()
+    changed = fill_blank_summaries(sb, company="Wipro")
+
+    assert changed == 1
+    assert sb.updates[0][0] == "01000"
+
+
+def test_fill_blank_summaries_chunks_a_long_job_id_list() -> None:
+    master = _summary_rows(1001)
+    ids = [row["job_id"] for row in master if row["company_name"] == "Wipro"]
+
+    class _Sb:
+        def __init__(self):
+            self.updates = []
+
+        def table(self, _name):
+            return _CappedSummaryTable(master, self.updates)
+
+    sb = _Sb()
+    changed = fill_blank_summaries(sb, company="Wipro", job_ids=ids)
+
+    assert changed == 1
+    assert sb.updates[0][0] == "01000"
+
+
 def test_upsert_rows_still_splits_on_statement_timeout() -> None:
     class TimeoutTable:
         def __init__(self) -> None:
