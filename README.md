@@ -4,7 +4,9 @@ The job-discovery pipeline behind [Myro](https://himyro.com). It scrapes 300+ co
 career portals worldwide, pulls **full job descriptions**, normalizes them into one
 canonical schema, and publishes them to Supabase where the Myro product reads them.
 
-**Current scale:** ~53k jobs tracked, ~46k active, 316 portal parsers, 414k skill links.
+**Current scale (2026-10-26):** ~63k jobs tracked, ~55k active, 318 portals, 573k skill links.
+Railway runs the daily poll at 01:00 IST; the maintainer's laptop drains enrichment and
+embeddings. See `docs/RAILWAY.md`.
 
 ---
 
@@ -99,7 +101,7 @@ Start read-only. Nothing here writes to Supabase.
 ```bash
 cd scraper
 
-# 1. Does every portal in KNOWN_PORTALS.md still parse? (~316 rows, no network)
+# 1. Does every portal in KNOWN_PORTALS.md still parse? (~318 rows, no network)
 python main.py --dry-run
 
 # 2. What routes do we have, and what state are they in? (no Docker, no Firecrawl)

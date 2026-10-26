@@ -7,7 +7,19 @@ Every item below is either **measured** or **reproduced**. Where a number appear
 it came from a query against prod, not an estimate. Items are ordered by what
 costs the user most, not by effort.
 
-Two repos are involved. `FC` = `firecrawl_Supabase`, `TY` = `True_Yodha`.
+Two repos are involved. `FC` = `firecrawl_Supabase` (this repo, renamed
+`myro-job-scraper` on 2026-09-15), `TY` = `True_Yodha`.
+
+> **Status 2026-10-26 — this backlog is closed for this repo.** Live open work is
+> in `CLAUDE.md` → PENDING WORK.
+> - **P0 and P1 (items 1–6):** all done.
+> - **P2 (items 7–12):** True_Yodha dashboard design. Tracked there; not checked from this repo.
+> - **P3 #13 (Supabase degraded):** partly addressed. Paid plan since 2026-10-10; the
+>   2026-10-10/11 retention purge took the database from 1,784 MB to 1,467 MB (1,486 MB on
+>   2026-10-26); lifecycle, embedding, skill-demand, summary-repair and archive reads now
+>   keyset-page and retry on timeout. Still open: the 8 s `statement_timeout` inherited from
+>   `authenticator` applies to batch workers.
+> - **P3 #14 (uncommitted TY migration):** lives in True_Yodha; not checked from this repo.
 
 ---
 

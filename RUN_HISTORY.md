@@ -5,6 +5,21 @@ Current architecture and run commands live in `CLAUDE.md`. Portal config lives i
 
 ---
 
+## 2026-09-30 → 2026-10-26 — Recovery, Railway cutover, retention purge, volume outage
+
+Back-filled 2026-10-26 from git history, the CLAUDE.md incident record and read-only prod queries.
+
+- **2026-09-30/10-01 — recovery from the 09-09 → 09-30 silence.** Stripe canary green, then a full `daily_cycle.py` from the new repo path: 35,440 jobs published, 7,600 aged out, Stage A accepted. Sleep/DNS, partial-page, `--company` matching and DB-contention failures found in that run were fixed on `fix/first-seen-is-discovery-not-last-crawl` (PR #1, merged as `2e127cb2`).
+- **2026-10-03 — decisions locked** (CLAUDE.md → PENDING WORK → 00a): Railway runs the daily poll; the laptop only runs inference.
+- **2026-10-07 — location rule** applied to the database (`jobs.location_states[]`); code branch `claude/blissful-mclean-a9f285` not yet merged.
+- **2026-10-10 — Railway cutover** (cron 01:00 IST, 5 GB volume at `/data`) and the laptop launchd inference agent.
+- **2026-10-10/11 — retention purge.** Archived to `outputs/job_archive_20261010_inactive/`; deleted 19,318 inactive jobs with no user history and 257,787 stale verifier observations; database 1,784 → 1,467 MB.
+- **2026-10-11 → 10-13 — Railway runs published nothing.** Taxonomy symlink crash (`386a596b`), then exit 4 waiting for LM Studio (`84c6567f`).
+- **2026-10-14 — first Railway publish.** Lifecycle reads stopped at PostgREST's 1,000-row cap and left 6,797 gone jobs visible across 7 large companies; fixed by keyset paging (`c7bc4e27`, `7ecd0652`, `cc2b0a2c`). Daily publishes followed through 2026-10-20 (~252 complete, ~10 partial companies each).
+- **2026-10-21 — Railway volume full.** Every run since dies on `ENOSPC` before publishing; last `job_source_runs` row 2026-10-20. Fix `0e130607` on `feat/railway-volume-retention`, not merged as of 2026-10-26.
+
+---
+
 ## Session 2026-09-07 — Job-feed architecture (uncap, extractive summary, 30-day delist, Scrapling fetch)
 
 **Closed without an E2E import.** Next session runs the canary → source-only publish path.

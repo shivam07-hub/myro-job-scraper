@@ -3,6 +3,17 @@
 Read `CLAUDE.md` first (especially SCOPE, CHANGE DISCIPLINE, and PENDING WORK → 00a, the
 14 locked decisions). This file is the operating checklist for the days after the cutover.
 
+> **Status 2026-10-26**
+> - **Steps 1–2 (first green run):** first publish 2026-10-14 IST. The 10-11 poll crashed on a
+>   taxonomy symlink (`386a596b`); runs through 10-13 exited 4 waiting for LM Studio
+>   (`84c6567f`). Railway then published daily 2026-10-14 → 10-20.
+> - **🔴 Down since 2026-10-21:** the 5 GB volume filled and every run dies on `ENOSPC` before
+>   publishing. The fix is on `feat/railway-volume-retention`, not merged. See `CLAUDE.md` →
+>   PENDING WORK → 0.
+> - **Step 3 (geo-block check):** not done.
+> - **Step 4 (pause Codex):** its condition is met; not yet recorded as done.
+> - **2026-10-17 enrichment checkpoint:** checked 2026-10-26, backlog 96, so enrichment stays local.
+
 ## What is live
 
 | Piece | Where | Schedule |
