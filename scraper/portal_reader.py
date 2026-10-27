@@ -162,7 +162,7 @@ def _section_portals(header: str, lines: list[str]) -> list[dict]:
     if 'PCSX' in h or 'PHENOM CX' in h:
         return _pcsx(rows)
     if 'PHENOM' in h:
-        return _phenom_api(rows, india_only=False)
+        return _phenom_api(rows, india_only=True)
     if 'PINPOINT' in h:
         return _pinpoint(rows)
     # Industry-organised sections (CONSULTING, BFSI, CONGLOMERATES, CONSUMER, IT, RETAIL, etc.)
@@ -220,6 +220,8 @@ def _workday(rows) -> list[Portal]:
             )
             portal['workday_it_facet_param'] = reg.get('it_facet_param', '')
             portal['workday_it_uuids']       = reg.get('it_uuids', [])
+            # india_site=true: the career site lists only India jobs (no country facet).
+            portal['workday_india_site']     = bool(reg.get('india_site'))
             # blocked=true: Cloudflare blocks all POSTs — skip API, go straight to Firecrawl
             if reg.get('blocked'):
                 portal['workday_blocked'] = True
@@ -428,7 +430,7 @@ def _custom(rows) -> list[Portal]:
     }
     endpoint_overrides: dict[str, str] = {
         "Confluent": "https://api.ashbyhq.com/posting-api/job-board/confluent",
-        "Rippling": "https://www.rippling.com/careers/open-roles",
+        "Rippling": "https://ats.rippling.com/api/v2/board/rippling/jobs",
         "Snowflake": "https://api.ashbyhq.com/posting-api/job-board/snowflake",
         "UiPath": "https://api.ashbyhq.com/posting-api/job-board/uipath",
         "Costco Wholesale": "https://prod-warmachine.talent500.co/api/jobs/?company_slug=costco",
@@ -687,7 +689,7 @@ _ATS_OVERRIDES: dict[str, str] = {
     'Unilever': 'talentbrew',
     'ITC Limited': 'zoho_recruit',
     "Moody's": 'talentbrew',
-    'Mastercard': 'talentbrew',
+    'Mastercard': 'phenom_ssr',
     'Boeing': 'talentbrew',
     'MSCI': 'msci_algolia',
     'Nutanix': 'dejobs_rss',
@@ -721,8 +723,9 @@ _OTHER_ENDPOINT_OVERRIDES: dict[str, str] = {
     "Moody's": "https://careers.moodys.com/en/search-jobs/India/49841/2/1269750/22/79/50/2",
     # ARM Holdings: TalentBrew/Radancy search-jobs — orgIds=33099, alp=1269750 (India)
     "ARM Holdings": "https://careers.arm.com/search-jobs/India?orgIds=33099&alp=1269750&alt=2",
-    # Mastercard: TalentBrew — LocationPath=1269750 is India filter
-    "Mastercard": "https://careers.mastercard.com/us/en/search-results?LocationPath=1269750",
+    # Mastercard: Phenom SSR since 2026-10 (was TalentBrew). LocationPath is
+    # ignored (1,155 global hits); qcountry=India returns the India set.
+    "Mastercard": "https://careers.mastercard.com/us/en/search-results?qcountry=India",
     # Palo Alto Networks: TalentBrew/Radancy India location page.
     "Palo Alto Networks": "https://jobs.paloaltonetworks.com/en/location/india-jobs/47263/1269750/2",
     # Nutanix: careers site blocks direct HTTP, but DirectEmployers RSS is public and complete.
