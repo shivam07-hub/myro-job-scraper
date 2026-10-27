@@ -7,7 +7,7 @@ import re
 import requests
 
 from config import REQUEST_TIMEOUT
-from providers.base import ProviderResult, ScrapeReason
+from providers.base import PartialSnapshot, ProviderResult, ScrapeReason, is_transport_failure
 from schema import Portal
 from utils import is_india, job_hash, strip_html
 
@@ -24,6 +24,10 @@ _NEXT_DATA_RE = re.compile(
     re.IGNORECASE | re.DOTALL,
 )
 
+# Public board API: GET .../api/v2/board/{slug}/jobs?page=N&pageSize=M (0-indexed).
+_API_MARKER = "/api/v2/board/"
+_API_PAGE_SIZE = 100
+
 
 class RipplingProvider:
     key = "rippling"
@@ -35,14 +39,18 @@ class RipplingProvider:
         max_jobs: int | None = None,
         validate_mode: bool = False,
     ) -> ProviderResult:
-        try:
-            r = requests.get(portal["endpoint"], headers=_HEADERS, timeout=REQUEST_TIMEOUT)
-            r.raise_for_status()
-        except Exception as e:
-            _log.error(f"    [ERROR] Rippling listing {portal['company']}: {e}")
-            return ProviderResult.error(ScrapeReason.API_BLOCKED)
-
-        jobs = parse_rippling_listing_page(r.text, portal)
+        if _API_MARKER in portal["endpoint"]:
+            jobs = _fetch_api_jobs(portal)
+            if jobs is None:
+                return ProviderResult.error(ScrapeReason.API_BLOCKED)
+        else:
+            try:
+                r = requests.get(portal["endpoint"], headers=_HEADERS, timeout=REQUEST_TIMEOUT)
+                r.raise_for_status()
+            except Exception as e:
+                _log.error(f"    [ERROR] Rippling listing {portal['company']}: {e}")
+                return ProviderResult.error(ScrapeReason.API_BLOCKED)
+            jobs = parse_rippling_listing_page(r.text, portal)
         if max_jobs:
             jobs = jobs[:max_jobs]
 
@@ -95,6 +103,41 @@ def parse_rippling_listing_page(html: str, portal: Portal, max_jobs: int | None 
         query_items = query_data.get("items", []) if isinstance(query_data, dict) else []
         if isinstance(query_items, list):
             items.extend(query_items)
+    return _items_to_jobs(items, portal, max_jobs)
+
+
+def _fetch_api_jobs(portal: Portal) -> list[dict] | None:
+    """Page the public board API. None when the first page fails."""
+    items: list = []
+    page = 0
+    while True:
+        try:
+            r = requests.get(
+                portal["endpoint"],
+                params={"page": page, "pageSize": _API_PAGE_SIZE},
+                headers={**_HEADERS, "Accept": "application/json"},
+                timeout=REQUEST_TIMEOUT,
+            )
+            r.raise_for_status()
+            data = r.json()
+        except Exception as e:
+            _log.error(f"    [ERROR] Rippling board API {portal['company']} page={page}: {e}")
+            if page > 0 and is_transport_failure(e):
+                raise PartialSnapshot(_items_to_jobs(items, portal), f"page {page} failed: {e}")
+            if page == 0:
+                return None
+            break
+        page_items = data.get("items") or []
+        if not page_items:
+            break
+        items.extend(page_items)
+        page += 1
+        if page >= int(data.get("totalPages") or 0):
+            break
+    return _items_to_jobs(items, portal)
+
+
+def _items_to_jobs(items: list, portal: Portal, max_jobs: int | None = None) -> list[dict]:
     out: list[dict] = []
     seen: set[str] = set()
     for item in items:

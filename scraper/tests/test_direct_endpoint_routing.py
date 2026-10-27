@@ -150,11 +150,14 @@ def test_direct_endpoint_routes() -> None:
         "S&P Global": "jibe",
         "Elevation Capital": "workable",
         "Yubi": "yubi_careers",
+        "Mastercard": "phenom_ssr",
     }
     for company, ats in expected.items():
         portal = _portal(company)
         check(f"{company} ats", portal["ats"] == ats)
         check(f"{company} no firecrawl", not portal.get("js_required"))
+    # Mastercard's Phenom site ignores LocationPath and returns every country.
+    check("Mastercard India query", "qcountry=India" in _portal("Mastercard")["endpoint"])
 
 
 def main() -> None:
