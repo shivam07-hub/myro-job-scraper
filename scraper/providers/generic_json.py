@@ -140,8 +140,8 @@ def _oracle_total_count(data: dict) -> int:
 # the postings exactly (verified 2026-10-27: 8 + 760 = 768, 943 + 10,919 = 11,862).
 ORACLE_OFFSET_CEILING = 10_000
 _ORACLE_EARLIEST = date(2000, 1, 1)
-# A windowed read fails closed on any lost page, so one slow page (Oracle can
-# exceed the 30s timeout) gets a few tries before it voids the run.
+# A read fails closed on any lost page, so one slow page (Oracle can exceed
+# the 30s timeout) gets a few tries before it voids the run.
 _ORACLE_ATTEMPTS = 3
 
 
@@ -220,10 +220,6 @@ def _scrape_oracle_windows(portal: Portal, headers: dict, total: int) -> list[di
 
 def _scrape_oracle_nested(portal: Portal, headers: dict, max_jobs: int | None = None) -> list[dict] | None:
     base_url = portal['endpoint']
-    if not max_jobs:
-        total = _oracle_count(base_url, headers)
-        if total and total > ORACLE_OFFSET_CEILING:
-            return _scrape_oracle_windows(portal, headers, total)
     page_limit = min(max_jobs or 100, 100)
     offset = 0
     total = None
@@ -232,10 +228,14 @@ def _scrape_oracle_nested(portal: Portal, headers: dict, max_jobs: int | None = 
 
     while True:
         page_url = _oracle_page_url(base_url, limit=page_limit, offset=offset)
-        r = _fetch_response(page_url, headers)
+        r = _fetch_oracle(page_url, headers)
         if r is None:
-            return jobs if jobs else None
+            if offset:
+                raise PartialSnapshot(jobs, f"offset {offset} failed")
+            return None
         if not _is_json_response(r):
+            if offset:
+                raise PartialSnapshot(jobs, f"offset {offset} returned non-JSON")
             return [{'_needs_firecrawl': True, '_url': page_url, '_company': portal['company'],
                      '_platform': portal.get('ats', 'Custom')}]
 
@@ -243,9 +243,22 @@ def _scrape_oracle_nested(portal: Portal, headers: dict, max_jobs: int | None = 
             data = r.json()
         except Exception:
             _log.error(f"    [ERROR] Oracle JSON decode failed: {page_url}")
-            return jobs if jobs else None
+            if offset:
+                raise PartialSnapshot(jobs, f"offset {offset} JSON decode failed")
+            return None
 
         total = total or _oracle_total_count(data)
+        if not max_jobs and total > ORACLE_OFFSET_CEILING:
+            return _scrape_oracle_windows(portal, headers, total)
+
+        if not _extract_oracle_nested(data):
+            # TotalJobsCount can drift during a read (Oracle's own site: 319 reported,
+            # 318 served, then 319 next read), so only a full page still reported
+            # is a truncated read.
+            if offset and offset + page_limit <= total:
+                raise PartialSnapshot(jobs, f"offset {offset} empty, {total} postings reported")
+            break
+
         page_jobs = _parse_json_response(data, portal, page_url, max_jobs=None, headers=headers)
         for job in page_jobs:
             jid = job.get('job_id') or job_hash(job.get('title', ''), job.get('job_url', ''))
@@ -256,8 +269,6 @@ def _scrape_oracle_nested(portal: Portal, headers: dict, max_jobs: int | None = 
             if max_jobs and len(jobs) >= max_jobs:
                 return jobs[:max_jobs]
 
-        if not page_jobs:
-            break
         offset += page_limit
         if total and offset >= total:
             break
