@@ -667,7 +667,6 @@ _ATS_OVERRIDES: dict[str, str] = {
     'Aditya Birla Group':    'aditya_birla',
     'McKinsey & Company':    'mckinsey',
     'Standard Chartered Bank': 'taleo',
-    'Deloitte India (BrassRing)': 'deloitte_usi',
     'Deloitte India': 'deloitte_usi',
     'ADP': 'talentbrew',
     'Intuit': 'talentbrew',
@@ -769,7 +768,6 @@ _OTHER_ENDPOINT_OVERRIDES: dict[str, str] = {
 _TALEO_V1: set[str] = {'Standard Chartered Bank', 'Wipro'}
 _TALEO_USE_LOCATION: set[str] = {'Wipro'}  # use location=india instead of keywords=india
 _INDIA_ONLY_OVERRIDES: dict[str, bool] = {
-    'Deloitte India (BrassRing)': True,
     'Deloitte India': True,
     'ADP': True,
     'Intuit': True,
