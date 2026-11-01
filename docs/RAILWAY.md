@@ -42,5 +42,11 @@ longer depends on the Mac being awake.
   rebuilt during runs; commit learned entries from the laptop when they matter.
 - A run takes ~10 hours. Railway skips a cron fire while the previous run is
   still going.
+- Each full poll writes ~380 MB to the volume. `railway_poll.sh` passes
+  `--keep-runs 3 --keep-log-days 14`, so a run first deletes output folders
+  outside the newest three run dates and log files older than two weeks. The
+  volume filled on 2026-10-21 without this, and every run then failed with
+  `No space left on device` before publishing. The laptop passes neither flag
+  and keeps its full history.
 - Silence detection (no run at all) is True_Yodha's 36-hour staleness alert,
   not Railway's (decision 7).

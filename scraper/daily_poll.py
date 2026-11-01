@@ -18,6 +18,9 @@ import sys
 import time
 from zoneinfo import ZoneInfo
 
+from config import OUTPUT_BASE
+from run_retention import prune_logs, prune_run_outputs
+
 
 ROOT = Path(__file__).resolve().parent
 REPO_ROOT = ROOT.parent
@@ -107,6 +110,10 @@ def main() -> None:
     parser.add_argument("--company", help="Run one company only (operational canary)")
     parser.add_argument("--timezone", default=os.getenv("POLL_TIMEZONE", DEFAULT_TIMEZONE))
     parser.add_argument("--dry-run", action="store_true", help="Print the execution plan without running it")
+    parser.add_argument("--keep-runs", type=int, default=0,
+                        help="Keep output folders for only the newest N run dates (default: 0 = keep all).")
+    parser.add_argument("--keep-log-days", type=int, default=0,
+                        help="Delete log files older than N days (default: 0 = keep all).")
     args = parser.parse_args()
     if args.company_cap < 0:
         parser.error("--company-cap cannot be negative")
@@ -126,6 +133,13 @@ def main() -> None:
         return
 
     LOG_DIR.mkdir(parents=True, exist_ok=True)
+    # Prune before taking the lock: on a full volume even the lock write fails.
+    # Safe without the lock, since a concurrent poll writes only today's folder
+    # (always kept) and fresh logs (younger than any cutoff).
+    retention = {
+        "outputs": prune_run_outputs(Path(OUTPUT_BASE), keep_runs=args.keep_runs, protect=run_date),
+        "logs": prune_logs(LOG_DIR, keep_days=args.keep_log_days),
+    }
     lock_path = LOG_DIR / "daily_poll.lock"
     with lock_path.open("w", encoding="utf-8") as lock:
         try:
@@ -148,6 +162,7 @@ def main() -> None:
             "scope": args.scope,
             "company": args.company,
             "status": "running",
+            "retention": retention,
             "steps": [],
         }
         scrape_name, scrape_command = commands[0]
