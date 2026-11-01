@@ -1883,23 +1883,32 @@ def main() -> None:
     imported_company_batch_dates: dict[str, int] = {}
     total_jobs = total_withheld = total_unclassified = total_duplicates = 0
     total_drift = total_unknown_location_rows = 0
+    failed_imports: list[str] = []
     t0 = time.time()
 
     for json_path in json_files:
-        result = import_file(
-            sb,
-            json_path,
-            skill_id_map,
-            drift_counter,
-            unknown_location_counter,
-            args.dry_run,
-            run_id,
-            source_only=args.source_only,
-            supports_forward_enrichment=supports_forward_enrichment,
-            publish_unclassified=args.publish_unclassified,
-        )
+        # Audit, lifecycle and Stage A all run after this loop and belong to the
+        # whole run, so one company must not take them down (2026-10-21).
+        try:
+            result = import_file(
+                sb,
+                json_path,
+                skill_id_map,
+                drift_counter,
+                unknown_location_counter,
+                args.dry_run,
+                run_id,
+                source_only=args.source_only,
+                supports_forward_enrichment=supports_forward_enrichment,
+                publish_unclassified=args.publish_unclassified,
+            )
+        except Exception:
+            log.exception(f"  {json_path}: import failed")
+            failed_imports.append(str(json_path))
+            continue
         if "error" in result:
             log.warning(f"  {result['path']}: {result['error']}")
+            failed_imports.append(result["path"])
             continue
 
         enriched = result.get("enriched", 0)
@@ -1965,6 +1974,7 @@ def main() -> None:
         write_skill_facts=not args.source_only,
         eligible_job_ids=imported_company_job_ids,
         company_scope=args.company,
+        failed_imports=failed_imports,
     )
     log.info(
         "Trusted lifecycle: complete=%s partial=%s failed=%s age_delist=%s",
@@ -2054,6 +2064,15 @@ def main() -> None:
         if blocked_deactivation:
             log.error("Decommissioning blocked for %s companies; no inactive writes were made for those companies.", blocked_deactivation)
 
+    if failed_imports:
+        log.error(
+            "%s of %s companies failed to import and skipped lifecycle; none of "
+            "their listings closed. Re-run this publish, its upserts are idempotent: %s",
+            len(failed_imports),
+            len(json_files),
+            ", ".join(failed_imports),
+        )
+
     if status == "blocked" or blocked_deactivation:
         raise SystemExit(2)
 
@@ -2064,6 +2083,10 @@ def main() -> None:
         # queues immediately; user matching remains pull-driven.
         if total_jobs > 0:
             _notify_scrape_landed(run_id)
+
+    # Last, so the companies that did land still reach Stage A.
+    if failed_imports:
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":
