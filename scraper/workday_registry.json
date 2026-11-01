@@ -1,6 +1,10 @@
 {
   "_comment": "Workday tenant overrides — edit here, no Python change needed. See portal_reader.py:_load_workday_registry(). Keys must match Company column in KNOWN_PORTALS.md exactly.",
   "_blocked_comment": "blocked=true: Cloudflare rejects ALL POSTs even with valid India UUID. Scraper skips API immediately, falls straight to Firecrawl on careers_url. Verified 2026-04-29.",
+  "_india_site_comment": "india_site=true: the career site lists only India jobs and has no country facet, so the scraper takes every posting unfiltered. Added 2026-10-27.",
+  "Carelon Global Solutions": {
+    "india_site": true
+  },
   "Coca-Cola": {
     "search_text": "india"
   },

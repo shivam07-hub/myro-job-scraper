@@ -8,7 +8,7 @@ import requests
 
 from config import REQUEST_TIMEOUT
 from providers.base import PartialSnapshot, ProviderResult, ScrapeReason, is_transport_failure
-from utils import job_hash, strip_html
+from utils import is_india, job_hash, strip_html
 
 _log = logging.getLogger("mirror")
 
@@ -74,11 +74,16 @@ def scrape_phenom_api(portal: Portal, max_jobs: int | None = None) -> list[dict]
             ]
             raw_jd = strip_html('\n\n'.join(p for p in jd_parts if p).strip())
 
-            loc_raw = job_data.get('location_name') or job_data.get('full_location') or job_data.get('location') or {}
+            # full_location ("Hyderabad, India; Bangalore, India") normalizes cleanly;
+            # location_name ("India-Telangana-Hyderabad") leaves small cities unparsed.
+            loc_raw = job_data.get('full_location') or job_data.get('location_name') or job_data.get('location') or {}
             if isinstance(loc_raw, dict):
                 city = loc_raw.get('city') or loc_raw.get('name') or ''
             else:
                 city = str(loc_raw)
+            # location=India ranks India first but still returns other countries.
+            if india_only and not is_india(f"{city} {job_data.get('country') or ''}"):
+                continue
 
             job_url = (job_data.get('apply_url') or job_data.get('jobUrl') or
                        job_data.get('applyUrl') or '')
@@ -98,7 +103,7 @@ def scrape_phenom_api(portal: Portal, max_jobs: int | None = None) -> list[dict]
                 'industry':        portal.get('industry', ''),
             })
 
-        total = data.get('total', 0)
+        total = data.get('totalCount') or data.get('total', 0)
         page_size = len(raw_jobs)
         if not total or page * page_size >= total:
             break
