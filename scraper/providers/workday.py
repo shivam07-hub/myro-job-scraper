@@ -152,6 +152,10 @@ def scrape_workday(
     india_only = portal.get('india_only', True)
 
     company = portal.get('company', '')
+    if india_only and portal.get('workday_india_site'):
+        # The whole career site is India-only, so it has no country facet to apply.
+        _log.info(f"    [REGISTRY] India-only career site for {company}; no facet filter")
+        india_only = False
     if india_only:
         use_search_text = bool(portal.get('workday_search_text'))
         if use_search_text:
