@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from enrichment_state import source_content_hash
 from source_matching_facts import (
     _normalize_source_facts,
     _parse_accepted_classifications,
+    _write_jobs,
 )
 
 
@@ -179,3 +182,12 @@ def test_fully_deterministic_run_still_persists_provenance(tmp_path, monkeypatch
     assert written[0]["career_band"] == "engineering_data"
     assert written[0]["career_band_source"] == "deterministic_title_or_role_domain"
     assert written[0]["career_band_source_hash"]
+
+
+def test_write_jobs_rewrites_json_and_adds_no_csv(tmp_path) -> None:
+    json_path = tmp_path / "jobs.json"
+
+    _write_jobs(json_path, [{"job_id": "req-1", "career_band": "engineering_data"}])
+
+    assert [job["job_id"] for job in json.loads(json_path.read_text(encoding="utf-8"))] == ["req-1"]
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["jobs.json"]

@@ -123,7 +123,7 @@ Client → POST /v1/scrape (or /v2/*)
 
 Current scraper architecture and state are maintained in `CLAUDE.md`, `KNOWN_PORTALS.md`, `RUN_HISTORY.md`, and `scraper/schema.py`. Treat older dump/session notes in this file as historical context only.
 
-The scraper reads `KNOWN_PORTALS.md`, routes each portal through `scraper/providers/`, writes canonical JSON/CSV output, enriches with LM Studio, and loads to Supabase.
+The scraper reads `KNOWN_PORTALS.md`, routes each portal through `scraper/providers/`, writes canonical JSON output, enriches with LM Studio, and loads to Supabase.
 
 ### Files
 
@@ -140,7 +140,7 @@ The scraper reads `KNOWN_PORTALS.md`, routes each portal through `scraper/provid
 | `enrichment_worker.py` | Lazy Supabase queue worker for post-cutover jobs only |
 | `job_embedding_state.py` | Stable source-document and query prefix/hash contract for semantic retrieval |
 | `job_embedding_worker.py` | Local LM Studio Nomic embedding worker and semantic-search diagnostic |
-| `writer.py` | `to_canonical()` → canonical schema; `save_jobs()` → deduplicated JSON + CSV |
+| `writer.py` | `to_canonical()` → canonical schema; `save_jobs()` → deduplicated JSON |
 | `main.py` | Orchestrator: `--company`, `--ats`, `--dry-run`, `--skip-enrich`, `--resume`, `--enrich-only` |
 | `csv_importer.py` | Source-only immediate publish or legacy full upsert; lifecycle + diagnostics |
 | `test_llm.py` / `test_pipeline.py` | Test scripts |
@@ -546,7 +546,7 @@ Low/broken: Engie (2), Baker Hughes (2), Morgan Stanley (2), AmEx (3), Google (3
 - **15 companies fully scraped** before interruption:
   Accenture, Airbus, Amazon, American Express, Chanel, Continental, Fidelity Investments,
   LDC (Louis Dreyfus), Morgan Stanley, STMicroelectronics, Sanofi, ServiceNow, Shell, Stripe, Wells Fargo
-- Output location: `All_CSV_Outputs/{Company}/Outputs/YYYY_MM_DD/jobs.json` + `jobs.csv`
+- Output location: `All_CSV_Outputs/{Company}/Outputs/YYYY_MM_DD/jobs.json`
 
 ### Session 2026-04-11 — Phase 1 + Phase 2 COMPLETE ✅
 

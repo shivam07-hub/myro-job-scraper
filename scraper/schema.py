@@ -75,7 +75,7 @@ class Portal(TypedDict, total=False):
 
     # Phenom-specific (no extra fields beyond endpoint)
 
-# Ordered canonical field list — the schema of the written jobs.json / jobs.csv.
+# Ordered canonical field list — the schema of the written jobs.json.
 # Mirrors the Supabase `jobs` table columns EXCEPT JSON-only enrichment fields:
 # `skills` (consumed for job_skills) and `candidate_profile*` (consumed for
 # job_candidate_profiles). Lifecycle columns (first_seen, last_seen, is_active,

@@ -1,6 +1,6 @@
 """
 Normalize raw scraper dicts to the 10-field canonical schema and
-persist to All_CSV_Outputs/{Company}/Outputs/YYYY_MM_DD/jobs.json (+ CSV).
+persist to All_CSV_Outputs/{Company}/Outputs/YYYY_MM_DD/jobs.json.
 
 Schema (v2, Dump 4+):
   job_id, job_title, job_description,
@@ -10,12 +10,11 @@ Schema (v2, Dump 4+):
   batch_date                      ← auto-stamped integer YYYYMMDD
 
 Completion contract:
-  jobs.complete is written ONLY after both jobs.json and jobs.csv succeed.
+  jobs.complete is written ONLY after jobs.json succeeds.
   already_scraped() in main.py uses this marker as the canonical signal.
   Legacy runs (no marker) are detected via date-folder comparison.
 """
 import json
-import csv
 import hashlib
 from datetime import datetime
 from pathlib import Path
@@ -26,24 +25,14 @@ from job_seniority import normalize_job_seniority
 from job_summary import extractive_job_summary
 from schema import CANONICAL_FIELDS, MIN_JOB_DESCRIPTION_LEN, MISSING_JD_NOTE
 
-# SCHEMA kept as alias for backward-compat imports (e.g. main.py: from writer import SCHEMA)
+# SCHEMA kept as alias for backward-compat imports (e.g. test_pipeline.py: from writer import SCHEMA)
 SCHEMA = CANONICAL_FIELDS
-
-
-def _skills_to_csv(skills) -> str:
-    """Serialize the structured skills list to a human-readable CSV cell: 'name:level | …'.
-    JSON remains the importer's source of truth; this is only for the human-facing CSV."""
-    out = []
-    for s in skills or []:
-        if isinstance(s, dict) and s.get('name'):
-            out.append(f"{s['name']}:{s.get('required_level', 2)}")
-    return ' | '.join(out)
 
 COMPLETE_MARKER_NAME = "jobs.complete"
 
 
 def write_complete_marker(folder: Path, job_count: int, new_count: int, run_id: str = "") -> None:
-    """Write jobs.complete after both JSON and CSV are confirmed written."""
+    """Write jobs.complete after jobs.json is confirmed written."""
     payload: dict = {
         "completed_at": datetime.now().isoformat(),
         "job_count":    job_count,
@@ -184,16 +173,15 @@ def to_canonical(raw: dict, company_name: str) -> dict:
 def save_jobs(
     company_name: str,
     jobs: list[dict],
-    write_csv: bool = True,
     output_base: str = OUTPUT_BASE,
     write_marker: bool = True,
     run_id: str = "",
     run_date: str | None = None,
 ) -> tuple[str, int]:
     """
-    Write jobs to All_CSV_Outputs/{Company}/Outputs/YYYY_MM_DD/jobs.json (+ CSV).
+    Write jobs to All_CSV_Outputs/{Company}/Outputs/YYYY_MM_DD/jobs.json.
     Deduplicates by job_id within the same date folder.
-    write_marker=True (default): writes jobs.complete after both JSON and CSV succeed.
+    write_marker=True (default): writes jobs.complete after jobs.json succeeds.
     write_marker=False: intermediate/page-level save — no marker (run still in progress).
     Returns (json_path, new_jobs_count).
     """
@@ -254,20 +242,7 @@ def save_jobs(
     tmp_path.write_text(json.dumps(all_jobs, indent=2, ensure_ascii=False), encoding='utf-8')
     tmp_path.rename(json_path)
 
-    if write_csv and all_jobs:
-        csv_path = folder / "jobs.csv"
-        with csv_path.open('w', newline='', encoding='utf-8') as f:
-            w = csv.DictWriter(f, fieldnames=SCHEMA, extrasaction='ignore')
-            w.writeheader()
-            for job in all_jobs:
-                row = dict(job)
-                row['skills'] = _skills_to_csv(job.get('skills'))
-                row['main_skills'] = ', '.join(job.get('main_skills') or [])
-                row['side_skills'] = ''
-                row['locations'] = ' | '.join(job.get('locations') or [])
-                w.writerow(row)
-
-    # Marker written only after BOTH JSON and CSV succeed (skipped for page-level saves)
+    # Marker written only after jobs.json succeeds (skipped for page-level saves)
     if write_marker:
         write_complete_marker(folder, len(all_jobs), len(new_jobs), run_id=run_id)
 

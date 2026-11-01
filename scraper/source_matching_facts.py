@@ -9,7 +9,6 @@ high-confidence source phrase.
 from __future__ import annotations
 
 import argparse
-import csv
 import json
 import logging
 import os
@@ -33,8 +32,6 @@ from enrichment_state import source_content_hash
 from job_career_band import VALID_CAREER_BANDS, normalize_job_career_band
 from job_seniority import normalize_job_seniority
 from normalizer import clean_jd_for_llm, parse_json_response
-from schema import CANONICAL_FIELDS
-from writer import _skills_to_csv
 from utils import company_slug
 
 
@@ -275,20 +272,6 @@ def _write_jobs(json_path: Path, jobs: list[dict[str, Any]]) -> None:
         encoding="utf-8",
     )
     tmp_path.replace(json_path)
-
-    csv_path = json_path.with_name("jobs.csv")
-    with csv_path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=CANONICAL_FIELDS, extrasaction="ignore")
-        writer.writeheader()
-        for job in jobs:
-            row = dict(job)
-            row["skills"] = _skills_to_csv(job.get("skills"))
-            row["main_skills"] = ", ".join(job.get("main_skills") or [])
-            row["side_skills"] = ""
-            # Match writer.save_jobs — without this the human-facing CSV gets a
-            # Python list repr, and this pass now rewrites every company's CSV.
-            row["locations"] = " | ".join(job.get("locations") or [])
-            writer.writerow(row)
 
 
 def _find_run_files(run_date: str, company: str | None) -> list[Path]:

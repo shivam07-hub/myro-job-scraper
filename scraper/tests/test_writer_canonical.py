@@ -146,3 +146,21 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
+def test_save_jobs_writes_no_csv_copy(tmp_path) -> None:
+    """jobs.csv took 45% of each run's disk and nothing read it (2026-11-01)."""
+    job = to_canonical(
+        {
+            "job_id": "req-1",
+            "title": "Software Engineer",
+            "raw_jd_text": "Build reliable software systems for production users.",
+        },
+        "Example Co",
+    )
+
+    json_path, _ = save_jobs("Example Co", [job], output_base=str(tmp_path), run_date="2026_11_01")
+
+    folder = tmp_path / "Example_Co" / "Outputs" / "2026_11_01"
+    assert str(folder / "jobs.json") == json_path
+    assert sorted(p.name for p in folder.iterdir()) == ["jobs.complete", "jobs.json"]
