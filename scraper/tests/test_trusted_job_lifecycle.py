@@ -108,7 +108,7 @@ def test_import_run_excludes_rows_not_accepted_by_importer(monkeypatch, tmp_path
         eligible_companies={"Example"},
         quality_status="ok",
         dry_run=True,
-        eligible_job_ids={"Example": {"published"}},
+        eligible_job_ids={"Example": {"published": "published"}},
     )
 
     assert seen == ["published"]
@@ -137,7 +137,7 @@ def test_sync_import_run_does_not_call_retire_rpc(monkeypatch, tmp_path) -> None
         eligible_companies={"Example"},
         quality_status="ok",
         dry_run=False,
-        eligible_job_ids={"Example": {"published"}},
+        eligible_job_ids={"Example": {"published": "published"}},
     )
     assert summary["complete"] == 1
     assert "retired" not in summary

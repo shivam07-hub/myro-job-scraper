@@ -22,7 +22,7 @@ def test_empty_jobs_file_returns_complete_zero_result(tmp_path) -> None:
         "company": "Visa",
         "date": "2026_06_04",
         "batch_date": 20260604,
-        "job_ids": set(),
+        "job_ids": {},
         "jobs": 0,
         "withheld": 0,
         "unclassified": 0,
