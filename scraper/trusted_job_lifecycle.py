@@ -213,6 +213,11 @@ def sync_company_run(
         assessment = SourceRunAssessment(
             "partial", assessment.coverage_ratio, "global import quality gate blocked"
         )
+    # What the listing showed is open. What it did not reach proves nothing.
+    if assessment.status == "complete" and any(job.get("listing_truncated") for job in jobs):
+        assessment = SourceRunAssessment(
+            "partial", assessment.coverage_ratio, "source listing stopped before its end"
+        )
     now = datetime.now(timezone.utc)
     source_key = _source_key(jobs)
     source_run_id = _write_source_run(

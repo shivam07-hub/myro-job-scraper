@@ -189,6 +189,7 @@ def scrape_workday(
 
     jobs, offset, page_num = [], 0, 0
     seen_ids: set[str] = set()
+    truncated = False
     while True:
         if not india_only:
             facets = {}
@@ -254,6 +255,11 @@ def scrape_workday(
         # (Phase B) so a big tenant does not fetch JDs for roles the cap will drop.
         page_num += 1
 
+        # Past its ceiling (about 2,000 postings) Workday repeats a full page, and
+        # `total` reads as if the list ended there. A real end is a short page.
+        if new_on_page == 0 and len(postings) >= WORKDAY_PAGE_SIZE:
+            _log.warning(f"    [WORKDAY] {company}: listing stopped at offset {offset} before its end")
+            truncated = True
         if new_on_page == 0 or len(postings) < WORKDAY_PAGE_SIZE:
             break
         # Only validate mode early-stops at the cap. A real run pages the full India
@@ -263,8 +269,13 @@ def scrape_workday(
             break
         if len(jobs) >= WORKDAY_MAX_JOBS:
             _log.info(f"    [WORKDAY] Listing ceiling reached ({WORKDAY_MAX_JOBS}) — stopping pagination")
+            truncated = True
             break
         offset += WORKDAY_PAGE_SIZE
+
+    if truncated:
+        for job in jobs:
+            job['listing_truncated'] = True
 
     # ── Cap + JD fetch (Phase B) ──────────────────────────────────────────────
     # The loop above listed metadata only. Choose the roles to keep, then fetch JDs

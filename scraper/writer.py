@@ -178,7 +178,11 @@ def to_canonical(raw: dict, company_name: str) -> dict:
         "batch_date":       raw.get('batch_date') or _today(),
     }
     row["job_content_hash"] = row.get("job_content_hash") or job_content_hash(row)
-    return {field: row.get(field, '') for field in CANONICAL_FIELDS}
+    canonical = {field: row.get(field, '') for field in CANONICAL_FIELDS}
+    # Not a jobs column: it tells the lifecycle this run proves nothing closed.
+    if raw.get('listing_truncated'):
+        canonical['listing_truncated'] = True
+    return canonical
 
 
 def save_jobs(
