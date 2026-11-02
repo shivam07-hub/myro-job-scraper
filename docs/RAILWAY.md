@@ -48,5 +48,14 @@ longer depends on the Mac being awake.
   volume filled on 2026-10-21 without this, and every run then failed with
   `No space left on device` before publishing. The laptop passes neither flag
   and keeps its full history.
+- Railway keeps container logs for about a week, and `csv_importer.py` logs only
+  to stdout. `railway_poll.sh` copies each run to
+  `/data/logs/railway_poll_<UTC stamp>.log`, which the two-week log retention
+  also covers. Read it with `railway ssh` or `railway volume files`, which need
+  a key from `railway ssh keys add`.
+- One company failing to import no longer stops a publish. The others finish,
+  the failed company skips lifecycle so none of its listings close, the age
+  delist is skipped for that run, and publish exits 1 after the Stage A hand-off,
+  so the Railway run still shows as failed. Re-run the publish for that date.
 - Silence detection (no run at all) is True_Yodha's 36-hour staleness alert,
   not Railway's (decision 7).

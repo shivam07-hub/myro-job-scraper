@@ -117,11 +117,14 @@ def finalize_source_snapshot(
     write_skill_facts: bool = True,
     eligible_job_ids: dict[str, set[str]] | None = None,
     company_scope: str | None = None,
+    failed_imports: list[str] | None = None,
 ) -> dict[str, Any]:
     """Seen/missing lifecycle, then full-scope age delist.
 
     Physical delete is True_Yodha's archive-then-retire after one hour.
     ``company_scope`` (a ``--company`` canary) skips the 30-day age backstop.
+    So do ``failed_imports``: those rows are old only because this run could
+    not refresh them, so age proves nothing about the listing.
     """
     summary: dict[str, Any] = sync_import_run(
         sb,
@@ -136,6 +139,8 @@ def finalize_source_snapshot(
     )
     if company_scope:
         summary["age_delist"] = {"skipped": True, "reason": "company_scope"}
+    elif failed_imports:
+        summary["age_delist"] = {"skipped": True, "reason": "failed_imports"}
     else:
         stale = delist_stale_jobs(sb, dry_run=dry_run)
         summary["age_delist"] = stale

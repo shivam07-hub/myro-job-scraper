@@ -206,6 +206,35 @@ def test_finalize_company_scope_skips_age_delist(monkeypatch) -> None:
     assert "retired" not in summary
 
 
+def test_finalize_failed_imports_skip_age_delist(monkeypatch) -> None:
+    """A failed company's rows are old only because this run could not refresh
+    them, so age proves nothing about those listings."""
+    sb = PostgrestSb()
+    monkeypatch.setattr(
+        "source_snapshot.sync_import_run",
+        lambda *args, **kwargs: {"complete": 1, "partial": 0, "failed": 0},
+    )
+    age_calls = []
+    monkeypatch.setattr(
+        "source_snapshot.delist_stale_jobs",
+        lambda *args, **kwargs: age_calls.append(kwargs) or {"cutoff": 1, "candidates": 0, "changed": 0},
+    )
+
+    summary = finalize_source_snapshot(
+        sb,
+        feed_run_id="run-1",
+        json_files=[],
+        skill_id_map={},
+        eligible_companies={"Stripe"},
+        quality_status="ok",
+        dry_run=False,
+        failed_imports=["Axis Bank/Outputs/2026_10_21/jobs.json"],
+    )
+
+    assert summary["age_delist"] == {"skipped": True, "reason": "failed_imports"}
+    assert age_calls == []
+
+
 def test_finalize_full_scope_runs_age_delist(monkeypatch) -> None:
     sb = PostgrestSb()
     sb.rpc_pages = [[]]
