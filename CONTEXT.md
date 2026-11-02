@@ -20,6 +20,10 @@ _Avoid_: enrichment payload, LLM columns
 After a complete source write: presence evidence (seen / missing), and on a full-scope run the 30-day age backstop. Closed listings wait one hour; True_Yodha archives them to disk then deletes.
 _Avoid_: delist, deactivate, retire (age-delist closes the card; unload is a later True_Yodha step)
 
+**Truncated listing**:
+A provider listing that stopped before its end, like Workday past about 2,000 postings. What it showed is open; what it did not reach proves nothing. The run publishes and stamps what it saw, records `partial`, and closes nothing.
+_Avoid_: capped run (a company cap is a choice; this is the source stopping)
+
 **Company skill demand**:
 One company's current hiring skills, one row per skill, including a skill that has fallen to zero jobs.
 _Avoid_: skill profile, job_skills, taxonomy
