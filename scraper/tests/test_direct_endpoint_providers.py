@@ -1426,6 +1426,39 @@ def test_sap_jobs2web_accepts_bare_in_country_token() -> None:
     check("sap Indiana is not India", not _is_india_listing_location("Indianapolis, Indiana, United States"))
 
 
+def test_sap_jobs2web_stores_the_job_page_not_the_apply_button_href(monkeypatch) -> None:
+    from types import SimpleNamespace
+
+    import providers.sap_jobs2web_html as sap
+
+    job_page = "https://careers.ey.com/ey/job/Bengaluru-Tax-Analyst-KA-560016/1448723233/"
+    listing = (
+        '<table id="searchresults"><tbody><tr class="data-row"><td>'
+        '<a class="jobTitle-link" href="/ey/job/Bengaluru-Tax-Analyst-KA-560016/1448723233/">Tax Analyst</a>'
+        '<span class="jobLocation">Bengaluru, IN</span></td></tr></tbody></table>'
+    )
+    detail = (
+        '<span data-careersite-propertyid="title">Tax Analyst</span>'
+        '<a class="btn apply dialogApplyBtn" href="/talentcommunity/apply/1448723233/?locale=en_US">Apply now</a>'
+    )
+
+    class _Session:
+        headers: dict = {}
+
+        def get(self, url: str, timeout: float | None = None) -> SimpleNamespace:
+            return SimpleNamespace(status_code=200, url=url, text=detail if url == job_page else listing)
+
+    monkeypatch.setattr(sap.requests, "Session", _Session)
+    jobs = sap._scrape_sap_jobs2web_html({
+        "company": "EY India Experienced",
+        "india_only": True,
+        "endpoint": "https://careers.ey.com/ey/search/?q=india",
+    })
+
+    check("sap keeps one job", len(jobs) == 1)
+    check("sap job_url is the job page", jobs[0]["job_url"] == job_page)
+
+
 def test_ripplehire_jobvolist_and_detail_payload_map_to_job() -> None:
     from providers.ripplehire import _extract_listing_docs, _merge_detail_payload, _doc_to_job
 

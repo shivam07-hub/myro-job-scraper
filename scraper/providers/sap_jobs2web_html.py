@@ -121,7 +121,6 @@ def _extract_detail(session: requests.Session, detail_url: str, fallback_title: 
         "title": fallback_title,
         "job_id": "",
         "location": fallback_loc or "India",
-        "apply_url": detail_url,
         "raw_jd_text": "",
         "date_posted": "",
     }
@@ -161,11 +160,6 @@ def _extract_detail(session: requests.Session, detail_url: str, fallback_title: 
     d = soup.select_one('[data-careersite-propertyid="date"]')
     if d:
         out["date_posted"] = strip_html(_unescape(d.get_text(" ", strip=True)))
-
-    # Apply URL
-    apply = soup.select_one("a.dialogApplyBtn.apply[href]")
-    if apply:
-        out["apply_url"] = urljoin(detail_url, apply.get("href") or "")
 
     # Full JD
     jd = soup.select_one('[data-careersite-propertyid="description"]') or soup.select_one('[itemprop="description"]')
@@ -239,7 +233,6 @@ def _scrape_sap_jobs2web_html(portal: Portal, max_jobs: int | None = None) -> li
             title = (detail.get("title") or row["title"]).strip()
             loc = (row.get("listing_location") or detail.get("location") or "India").strip()
             raw_jd = (detail.get("raw_jd_text") or "").strip()
-            apply_url = (detail.get("apply_url") or detail_url).strip()
 
             if india_only:
                 loc_check = f"{loc} {detail.get('location','')}"
@@ -259,7 +252,10 @@ def _scrape_sap_jobs2web_html(portal: Portal, max_jobs: int | None = None) -> li
                 {
                     "job_id": jid,
                     "title": title,
-                    "job_url": apply_url,
+                    # The job page, not its Apply button's href: a script on this
+                    # page drives /talentcommunity/apply/{id}/. Opened on its own
+                    # that link 301s to the site root for every posting.
+                    "job_url": detail_url,
                     "source_api_url": listing_url,
                     "business_unit": row.get("business_unit", ""),
                     "raw_jd_text": raw_jd,
