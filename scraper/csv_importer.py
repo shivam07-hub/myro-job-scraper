@@ -67,7 +67,7 @@ from utils import company_slug  # noqa: E402
 from job_career_band import VALID_CAREER_BANDS  # noqa: E402
 from job_summary import extractive_job_summary  # noqa: E402
 from schema import MIN_JOB_DESCRIPTION_LEN  # noqa: E402
-from source_snapshot import finalize_source_snapshot, upsert_rows  # noqa: E402
+from source_snapshot import finalize_source_snapshot, ingest_jobs, upsert_rows  # noqa: E402
 
 _VALID_SENIORITY_LEVELS = frozenset({
     "intern", "entry", "mid", "senior", "lead", "executive",
@@ -1125,22 +1125,21 @@ def _upsert_jobs(
 
         # Lifecycle. `first_seen` records DISCOVERY, `last_seen` this sighting.
         #
-        # Both are sent on every row, including re-observations, and the upsert
-        # below is PostgREST merge-duplicates — it updates every column in the
-        # payload. This block used to claim `first_seen` was "ignored on
-        # conflict". It never was, and by 2026-09-19 that had restamped 34,022
-        # of 38,824 active listings with the date of the last full crawl, so the
-        # column read as "when did we last crawl this". True_Yodha's feed picked
-        # its candidate pool by ordering on it, and with 88% of the corpus tied
-        # the pool was an arbitrary slice.
+        # Both are sent on every row, including re-observations. The PostgREST
+        # upsert this used to go through updated every column in the payload,
+        # and by 2026-09-19 that had restamped 34,022 of 38,824 active listings'
+        # `first_seen` with the date of the last full crawl. True_Yodha's feed
+        # picked its candidate pool by ordering on it, and with 88% of the
+        # corpus tied the pool was an arbitrary slice.
         #
-        # The invariant now lives where both repositories meet it: a BEFORE
-        # UPDATE trigger on public.jobs (True_Yodha migration
-        # 20260920090000_first_seen_is_written_once.sql) keeps the stored value.
-        # Sending it here stays correct for INSERT (a genuinely new listing) and
-        # is a no-op on UPDATE. Do not "optimise" that by pre-reading which
-        # job_ids exist — that is a 34k-row read per batch to save a write the
-        # database already discards.
+        # `ingest_job_observations` (below) writes `first_seen` on INSERT only,
+        # and a BEFORE UPDATE trigger on public.jobs (True_Yodha migration
+        # 20260920090000_first_seen_is_written_once.sql) still holds it. On a
+        # re-observation `last_seen` and `is_active` are the sighting stamps:
+        # the 30-day age close reads `last_seen`, and `is_active = True` reopens
+        # a listing after a presence close. Do not "optimise" by pre-reading
+        # which job_ids exist — the RPC already decides insert, rewrite, stamp
+        # or skip per row inside one statement.
         effective_date = batch_date or job.get("batch_date")
         if effective_date:
             row["last_seen"]  = effective_date
@@ -1158,23 +1157,22 @@ def _upsert_jobs(
     if not rows:
         return 0, 0
 
+    # A changed row is rewritten in full, an unchanged one gets only its
+    # sighting stamps, a current one is not written (see `ingest_jobs`). A
+    # re-observation still sets `is_active = True` on a listing the verifier
+    # closed; it stays off every surface, because live also needs
+    # `listing_confidence = 'active'`, which only the verifier sets.
+    written: Counter[str] = Counter()
     for i in range(0, len(rows), _BATCH_SIZE):
-        batch = rows[i:i + _BATCH_SIZE]
-        # On conflict this updates EVERY column in the payload — PostgREST
-        # merge-duplicates has no per-column exclusion. It previously claimed to
-        # spare `first_seen` and `is_active`; it spares neither. `first_seen` is
-        # now held by a DB trigger (see the lifecycle block above). `is_active`
-        # is still forced True by any re-observation, which is right when the
-        # source still lists the role and wrong when the verifier has concluded
-        # it is closed — an open question for True_Yodha's listing-trust owner,
-        # not something to change quietly from here.
-        upsert_rows(
-            sb,
-            "jobs",
-            batch,
-            on_conflict="job_id",
-            ignore_duplicates=False,
-        )
+        written.update(ingest_jobs(sb, rows[i:i + _BATCH_SIZE]))
+    log.info(
+        "jobs ingest: %s rows, %s inserted, %s rewritten, %s stamped, %s unchanged",
+        written["rows"],
+        written["inserted"],
+        written["updated"],
+        written["stamped"],
+        written["unchanged"],
+    )
 
     return len(rows), unknown_location_rows
 

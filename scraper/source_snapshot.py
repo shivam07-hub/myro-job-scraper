@@ -8,7 +8,8 @@ archive-then-delete after a one-hour quarantine.
 from __future__ import annotations
 
 import logging
-from typing import Any
+from collections import Counter
+from typing import Any, Callable
 
 from postgrest.exceptions import APIError
 
@@ -29,6 +30,33 @@ def is_statement_timeout(exc: Exception) -> bool:
     return isinstance(exc, APIError) and getattr(exc, "code", None) == "57014"
 
 
+def _key_set_groups(rows: list[dict]) -> list[list[dict]]:
+    groups: dict[frozenset[str], list[dict]] = {}
+    for row in rows:
+        groups.setdefault(frozenset(row.keys()), []).append(row)
+    return list(groups.values())
+
+
+def _split_on_timeout(rows: list[dict], write: Callable[[list[dict]], None], label: str) -> None:
+    if not rows:
+        return
+    try:
+        write(rows)
+    except Exception as exc:
+        if not is_statement_timeout(exc) or len(rows) == 1:
+            raise
+        mid = max(1, len(rows) // 2)
+        log.warning(
+            "%s timed out for %s rows; retrying as %s + %s",
+            label,
+            len(rows),
+            mid,
+            len(rows) - mid,
+        )
+        _split_on_timeout(rows[:mid], write, label)
+        _split_on_timeout(rows[mid:], write, label)
+
+
 def upsert_rows(
     sb: Any,
     table_name: str,
@@ -42,67 +70,37 @@ def upsert_rows(
     Groups by key-set so each PostgREST request is homogeneous, then
     timeout-splits each group.
     """
-    if not rows:
-        return
-    groups: dict[frozenset[str], list[dict]] = {}
-    order: list[frozenset[str]] = []
-    for row in rows:
-        key = frozenset(row.keys())
-        if key not in groups:
-            order.append(key)
-            groups[key] = []
-        groups[key].append(row)
-    for key in order:
-        _upsert_with_timeout_split(
-            sb,
-            table_name,
-            groups[key],
-            on_conflict=on_conflict,
-            ignore_duplicates=ignore_duplicates,
-        )
 
-
-def _upsert_with_timeout_split(
-    sb: Any,
-    table_name: str,
-    rows: list[dict],
-    *,
-    on_conflict: str,
-    ignore_duplicates: bool = False,
-) -> None:
-    if not rows:
-        return
-    try:
+    def write(batch: list[dict]) -> None:
         sb.table(table_name).upsert(
-            rows,
+            batch,
             on_conflict=on_conflict,
             ignore_duplicates=ignore_duplicates,
         ).execute()
-    except Exception as exc:
-        if not is_statement_timeout(exc) or len(rows) == 1:
-            raise
-        mid = max(1, len(rows) // 2)
-        log.warning(
-            "%s upsert timed out for %s rows; retrying as %s + %s",
-            table_name,
-            len(rows),
-            mid,
-            len(rows) - mid,
-        )
-        _upsert_with_timeout_split(
-            sb,
-            table_name,
-            rows[:mid],
-            on_conflict=on_conflict,
-            ignore_duplicates=ignore_duplicates,
-        )
-        _upsert_with_timeout_split(
-            sb,
-            table_name,
-            rows[mid:],
-            on_conflict=on_conflict,
-            ignore_duplicates=ignore_duplicates,
-        )
+
+    for group in _key_set_groups(rows):
+        _split_on_timeout(group, write, f"{table_name} upsert")
+
+
+def ingest_jobs(sb: Any, rows: list[dict]) -> Counter[str]:
+    """Write source rows to `jobs` through True_Yodha's `ingest_job_observations`.
+
+    A PostgREST upsert rewrote every re-observed row: the description again,
+    an entry in every index, three triggers. On 2026-11-02 that was ~58k rows,
+    about nine in ten unchanged, and it drained the database's disk IO budget.
+    The RPC writes a changed row in full, gives an unchanged row only its
+    sighting stamps (`last_seen`, `batch_date`, `is_active`), and leaves a row
+    that is already current alone. Same key-set rule and timeout split as
+    `upsert_rows`. Returns the RPC's counts summed over every call.
+    """
+    totals: Counter[str] = Counter()
+
+    def write(batch: list[dict]) -> None:
+        totals.update(sb.rpc("ingest_job_observations", {"p_rows": batch}).execute().data or {})
+
+    for group in _key_set_groups(rows):
+        _split_on_timeout(group, write, "jobs ingest")
+    return totals
 
 
 def finalize_source_snapshot(
