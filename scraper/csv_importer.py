@@ -980,11 +980,15 @@ def _namespace_cross_company_collisions(sb: Client, jobs: list[dict]) -> int:
     raw_ids = [str(job.get("job_id")) for job in jobs if job.get("job_id")]
     owners = _existing_job_companies(sb, raw_ids)
     changed = 0
+    unowned: dict[str, dict] = {}
     for job in jobs:
         raw_job_id = str(job.get("job_id") or "").strip()
         company = str(job.get("company_name") or "").strip()
         existing_company = owners.get(raw_job_id, "").strip()
-        if not raw_job_id or not company or not existing_company:
+        if not raw_job_id or not company:
+            continue
+        if not existing_company:
+            unowned[_collision_safe_job_id(company, raw_job_id)] = job
             continue
         if existing_company.casefold() == company.casefold():
             continue
@@ -998,6 +1002,13 @@ def _namespace_cross_company_collisions(sb: Client, jobs: list[dict]) -> int:
         )
         job["job_id"] = safe_id
         changed += 1
+    # The owner's row can be unloaded while this company's renamed row lives on.
+    # Keep that id, or one posting splits into two rows on the next publish.
+    for safe_id, owner in _existing_job_companies(sb, list(unowned)).items():
+        job = unowned[safe_id]
+        if owner.strip().casefold() == str(job["company_name"]).strip().casefold():
+            job["job_id"] = safe_id
+            changed += 1
     return changed
 
 
@@ -1040,7 +1051,6 @@ def _upsert_jobs(
     source_only: bool = False,
     supports_forward_enrichment: bool = False,
 ) -> tuple[int, int]:
-    _namespace_cross_company_collisions(sb, jobs)
     rows = []
     unknown_location_rows = 0
     existing_summaries: dict[str, str] = {}
@@ -1384,7 +1394,7 @@ def import_file(
             "company": json_path.parent.parent.parent.name,
             "date": date_str,
             "batch_date": _parse_batch_date(date_str),
-            "job_ids": set(),
+            "job_ids": {},
             "jobs": 0,
             "withheld": 0,
             "unclassified": 0,
@@ -1432,7 +1442,7 @@ def import_file(
             "company": company,
             "date": date_str,
             "batch_date": batch_date,
-            "job_ids": set(),
+            "job_ids": {},
             "jobs": 0,
             "withheld": withheld,
             "unclassified": unclassified,
@@ -1444,6 +1454,9 @@ def import_file(
         }
     enriched   = 0 if source_only else sum(1 for j in jobs if j.get("main_skills"))
 
+    source_job_ids = [str(job.get("job_id") or "") for job in jobs]
+    # Read-only, so a dry run sees the ids a real run would publish.
+    _namespace_cross_company_collisions(sb, jobs)
     local_unknown = 0
     if not dry_run:
         jobs_written, local_unknown = _upsert_jobs(
@@ -1481,7 +1494,13 @@ def import_file(
         "company": company,
         "date": date_str,
         "batch_date": batch_date,
-        "job_ids": {j.get("job_id") for j in jobs if j.get("job_id")},
+        # Source id -> published id. jobs.json keeps the source id, so anything
+        # that re-reads it needs this map to find a renamed row.
+        "job_ids": {
+            source_id: str(job["job_id"])
+            for source_id, job in zip(source_job_ids, jobs)
+            if job.get("job_id")
+        },
         "jobs": jobs_written,
         "withheld": withheld,
         "unclassified": unclassified,
@@ -1877,7 +1896,7 @@ def main() -> None:
 
     drift_counter: Counter = Counter()
     unknown_location_counter: Counter[str] = Counter()
-    imported_company_job_ids: dict[str, set[str]] = {}
+    imported_company_job_ids: dict[str, dict[str, str]] = {}
     imported_company_batch_dates: dict[str, int] = {}
     total_jobs = total_withheld = total_unclassified = total_duplicates = 0
     total_drift = total_unknown_location_rows = 0
@@ -1929,7 +1948,7 @@ def main() -> None:
         total_unknown_location_rows += result.get("unknown_location_rows", 0)
         if result.get("company") and result.get("jobs"):
             company = result["company"]
-            imported_company_job_ids.setdefault(company, set()).update(result.get("job_ids", set()))
+            imported_company_job_ids.setdefault(company, {}).update(result.get("job_ids", {}))
             if result.get("batch_date"):
                 imported_company_batch_dates[company] = result["batch_date"]
 
@@ -1992,7 +2011,7 @@ def main() -> None:
                 result = _deactivate_missing_jobs(
                     sb,
                     company=company,
-                    current_job_ids=job_ids,
+                    current_job_ids=set(job_ids.values()),
                     batch_date=batch_date,
                     dry_run=args.dry_run,
                     allow_large_deactivation=args.allow_large_deactivation,

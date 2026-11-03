@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 import json
 import logging
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterator
 
 from company_skill_rollup import (
     add_dormant_skill_facts,
@@ -165,7 +165,7 @@ def sync_import_run(
     quality_status: str,
     dry_run: bool,
     write_skill_facts: bool = True,
-    eligible_job_ids: dict[str, set[str]] | None = None,
+    eligible_job_ids: dict[str, dict[str, str]] | None = None,
 ) -> dict[str, int]:
     grouped = _load_company_jobs(
         json_files,
@@ -271,7 +271,7 @@ def _load_company_jobs(
     json_files: list[Path],
     eligible_companies: set[str],
     *,
-    eligible_job_ids: dict[str, set[str]] | None = None,
+    eligible_job_ids: dict[str, dict[str, str]] | None = None,
 ) -> dict[str, list[dict[str, Any]]]:
     grouped: dict[str, list[dict[str, Any]]] = {}
     for path in json_files:
@@ -286,13 +286,27 @@ def _load_company_jobs(
         if company not in eligible_companies:
             continue
         allowed = eligible_job_ids.get(company) if eligible_job_ids is not None else None
-        grouped.setdefault(company, []).extend(
-            row
-            for row in rows
-            if isinstance(row, dict)
-            and (allowed is None or str(row.get("job_id") or "") in allowed)
-        )
+        grouped.setdefault(company, []).extend(_published_rows(rows, allowed))
     return grouped
+
+
+def _published_rows(
+    rows: list[Any], published: dict[str, str] | None
+) -> Iterator[dict[str, Any]]:
+    """Rows under the ids the importer published.
+
+    jobs.json keeps the source id, and the importer renames a cross-company
+    collision only in memory. ``published`` maps one to the other; a row it
+    omits was withheld. Comparing the file's id directly drops every renamed
+    row, which is why they never got a company_id or closed.
+    """
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        if published is None:
+            yield row
+        elif job_id := published.get(str(row.get("job_id") or "")):
+            yield {**row, "job_id": job_id}
 
 
 def _resolve_company(sb: Any, company: str) -> str:

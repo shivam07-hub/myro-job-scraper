@@ -113,7 +113,7 @@ def finalize_source_snapshot(
     quality_status: str,
     dry_run: bool,
     write_skill_facts: bool = True,
-    eligible_job_ids: dict[str, set[str]] | None = None,
+    eligible_job_ids: dict[str, dict[str, str]] | None = None,
     company_scope: str | None = None,
     failed_imports: list[str] | None = None,
 ) -> dict[str, Any]:
