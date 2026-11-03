@@ -16,6 +16,17 @@ def test_missing_location_uses_non_null_unknown_placeholder() -> None:
     assert normalized.location_mode == "unknown"
 
 
+class IngestCall:
+    """`ingest_job_observations`: the rows land in the fake table, the RPC answers counts."""
+
+    def __init__(self, table) -> None:
+        self._table = table
+
+    def execute(self):
+        self._table.execute()
+        return type("Response", (), {"data": {}})()
+
+
 class FakeTable:
     def __init__(self) -> None:
         self.batches: list[list[dict]] = []
@@ -35,6 +46,10 @@ class FakeSupabase:
     def table(self, name: str) -> FakeTable:
         assert name == "jobs"
         return self.jobs
+
+    def rpc(self, name: str, params: dict) -> IngestCall:
+        assert name == "ingest_job_observations"
+        return IngestCall(self.jobs.upsert(params["p_rows"]))
 
 
 class TimeoutThenSplitTable:
@@ -66,6 +81,10 @@ class TimeoutThenSplitSupabase:
     def table(self, name: str) -> TimeoutThenSplitTable:
         assert name == "jobs"
         return self.jobs
+
+    def rpc(self, name: str, params: dict) -> IngestCall:
+        assert name == "ingest_job_observations"
+        return IngestCall(self.jobs.upsert(params["p_rows"]))
 
 
 def test_upsert_jobs_sends_non_null_quality_status_for_every_row(monkeypatch) -> None:

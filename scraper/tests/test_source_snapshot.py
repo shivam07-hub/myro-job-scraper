@@ -8,6 +8,7 @@ from csv_importer import _upsert_jobs
 from source_snapshot import (
     fill_blank_summaries,
     finalize_source_snapshot,
+    ingest_jobs,
     upsert_rows,
 )
 
@@ -53,6 +54,17 @@ class PostgrestTable:
         return type("Response", (), {"data": list(self.select_data)})()
 
 
+class IngestCall:
+    """`ingest_job_observations`: the rows land in the fake table, the RPC answers counts."""
+
+    def __init__(self, table) -> None:
+        self._table = table
+
+    def execute(self):
+        self._table.execute()
+        return type("Response", (), {"data": {}})()
+
+
 class PostgrestSb:
     def __init__(self) -> None:
         self.jobs = PostgrestTable()
@@ -64,6 +76,8 @@ class PostgrestSb:
         return self.jobs
 
     def rpc(self, name: str, params: dict):
+        if name == "ingest_job_observations":
+            return IngestCall(self.jobs.upsert(params["p_rows"]))
         self.rpc_calls.append((name, params))
         page = self.rpc_pages.pop(0) if self.rpc_pages else []
         return type("Rpc", (), {"execute": lambda self: type("Response", (), {"data": page})()})()
@@ -475,3 +489,58 @@ def test_upsert_rows_still_splits_on_statement_timeout() -> None:
         on_conflict="job_id",
     )
     assert sb.jobs.attempt_sizes == [2, 1, 1]
+
+
+class IngestSb:
+    """`ingest_job_observations` answers counts; a batch over `fail_over` times out."""
+
+    def __init__(self, fail_over: int | None = None) -> None:
+        self.calls: list[tuple[str, list[dict]]] = []
+        self.fail_over = fail_over
+
+    def rpc(self, name: str, params: dict):
+        rows = params["p_rows"]
+        self.calls.append((name, rows))
+        fail = self.fail_over is not None and len(rows) > self.fail_over
+
+        def execute(_self):
+            if fail:
+                raise APIError({
+                    "message": "canceling statement due to statement timeout",
+                    "code": "57014",
+                    "hint": None,
+                    "details": None,
+                })
+            data = {"rows": len(rows), "inserted": 0, "updated": 0, "stamped": 1, "unchanged": len(rows) - 1}
+            return type("Response", (), {"data": data})()
+
+        return type("Rpc", (), {"execute": execute})()
+
+
+def test_ingest_jobs_sends_one_key_set_per_call_and_sums_the_counts() -> None:
+    sb = IngestSb()
+
+    counts = ingest_jobs(
+        sb,
+        [
+            {"job_id": "a", "job_title": "A", "last_seen": 20261103},
+            {"job_id": "b", "job_title": "B", "last_seen": 20261103},
+            {"job_id": "c", "job_title": "C"},
+        ],
+    )
+
+    assert [name for name, _ in sb.calls] == ["ingest_job_observations", "ingest_job_observations"]
+    for _, rows in sb.calls:
+        assert len({frozenset(row) for row in rows}) == 1
+    assert counts["rows"] == 3
+    assert counts["stamped"] == 2
+    assert counts["unchanged"] == 1
+
+
+def test_ingest_jobs_splits_on_statement_timeout() -> None:
+    sb = IngestSb(fail_over=1)
+
+    counts = ingest_jobs(sb, [{"job_id": "a", "job_title": "A"}, {"job_id": "b", "job_title": "B"}])
+
+    assert [len(rows) for _, rows in sb.calls] == [2, 1, 1]
+    assert counts["rows"] == 2

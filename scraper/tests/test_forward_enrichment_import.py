@@ -46,6 +46,17 @@ class FakeTable:
         return type("Response", (), {"data": list(self.select_data)})()
 
 
+class IngestCall:
+    """`ingest_job_observations`: the rows land in the fake table, the RPC answers counts."""
+
+    def __init__(self, table) -> None:
+        self._table = table
+
+    def execute(self):
+        self._table.execute()
+        return type("Response", (), {"data": {}})()
+
+
 class FakeSupabase:
     def __init__(self) -> None:
         self.jobs = FakeTable()
@@ -53,6 +64,10 @@ class FakeSupabase:
     def table(self, name: str) -> FakeTable:
         assert name == "jobs"
         return self.jobs
+
+    def rpc(self, name: str, params: dict) -> IngestCall:
+        assert name == "ingest_job_observations"
+        return IngestCall(self.jobs.upsert(params["p_rows"]))
 
 
 def _job(**overrides) -> dict:
