@@ -21,7 +21,6 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import csv
 import json
 import logging
 import os
@@ -39,8 +38,6 @@ from providers.base import ProviderResult, ScrapeReason
 from enricher import InferenceQuotaExceeded, enrich_job, has_terminal_core_enrichment
 from writer import (
     COMPLETE_MARKER_NAME,
-    SCHEMA,
-    _skills_to_csv,
     normalize_run_date,
     save_jobs,
     stamp_job_content_hash,
@@ -588,19 +585,7 @@ def enrich_only_run(
         tmp_path.write_text(json.dumps(jobs, indent=2, ensure_ascii=False), encoding='utf-8')
         tmp_path.rename(json_path)
 
-        # Rewrite CSV
-        csv_path = json_path.with_name("jobs.csv")
-        with csv_path.open('w', newline='', encoding='utf-8') as f:
-            w = csv.DictWriter(f, fieldnames=SCHEMA, extrasaction='ignore')
-            w.writeheader()
-            for job in jobs:
-                row = dict(job)
-                row['skills'] = _skills_to_csv(job.get('skills'))
-                row['main_skills'] = ', '.join(job.get('main_skills') or [])
-                row['side_skills'] = ''
-                w.writerow(row)
-
-        # Marker after both JSON and CSV succeed
+        # Marker after jobs.json succeeds
         write_complete_marker(json_path.parent, len(jobs), ok)
         if quota_exhausted:
             log.warning("Enrich-only stopped early because inference quota was exhausted")

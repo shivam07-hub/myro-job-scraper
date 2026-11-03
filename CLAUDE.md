@@ -59,7 +59,7 @@ Weekly global scrape of 100+ company portals → full JDs → LM Studio skill ex
 ### Output folder location
 > **In-repo.** CSV/JSON outputs live inside the repo (git-ignored, not committed).
 > Path: `<repo>/All_CSV_Outputs` — the `config.py` default, so no `OUTPUT_BASE` env var is needed.
-> Structure: 136 company folders, each containing `Outputs/<YYYY_MM_DD>/jobs.json` + `jobs.csv`
+> Structure: 136 company folders, each containing `Outputs/<YYYY_MM_DD>/jobs.json` (older runs also have a `jobs.csv`; nothing reads it)
 > This folder is the source of truth for Phase 3 (`csv_importer.py`) — it reads from here to upsert to Supabase.
 > (Retired paths: `/Users/incognito/Mirror CV/...`, then `firecrawl_Supabase/All_CSV_Outputs_thru_firecrawl`.
 > Renamed 2026-09-15 when the project split out of the Firecrawl fork into its own repo.)
@@ -231,7 +231,7 @@ Official company hiring-volume and scraper-health metrics are recorded **only af
 | `company_industries.json` | Company → Industry mapping — manual |
 | `rag_skills.py` | IDF index over 35,108 Lightcast L3 skills — vocab for LLM |
 | `enricher.py` | `enrich_job()` → RAG vocab → LM Studio → structured `skills` + back-compat arrays |
-| `writer.py` | `to_canonical()` → deduped JSON+CSV saved to output folder |
+| `writer.py` | `to_canonical()` → deduped JSON saved to output folder |
 | `job_career_band.py` | Deterministic source-level normalizer for Myro's four role families; no historical rewrite |
 | `source_matching_facts.py` | Mandatory pre-publish pass: stamps `career_band` + provenance on a run's `jobs.json`. Deterministic rules first; only the remainder go to the local model, and a classification is accepted only on a grounded, high-confidence source phrase |
 | `lm_worker_lock.py` | Exclusive flock so only ONE local-inference worker runs at a time. Second worker exits **3** instead of evicting the first one's model |
