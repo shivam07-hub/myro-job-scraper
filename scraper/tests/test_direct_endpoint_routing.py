@@ -145,6 +145,8 @@ def test_direct_endpoint_routes() -> None:
         "H&M": "smartrecruiters",
         "Tekion": "ashby",
         "TVS Next": "keka",
+        "Awfis": "keka",
+        "IDFC FIRST Bank": "phenom_ssr",
         "Coforge": "zwayam",
         "Amdocs": "pcsx",
         "S&P Global": "jibe",
