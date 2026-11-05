@@ -424,6 +424,7 @@ def _custom(rows) -> list[Portal]:
         "SentiLink": "ashby",
         "Waaree Group": "waaree_static",
         "TVS Next": "keka",
+        "Awfis": "keka",
         "S&P Global": "jibe",
         "Elevation Capital": "workable",
         "Yubi": "yubi_careers",
@@ -449,6 +450,7 @@ def _custom(rows) -> list[Portal]:
         "Pebl": "https://api.ashbyhq.com/posting-api/job-board/pebl",
         "SentiLink": "https://api.ashbyhq.com/posting-api/job-board/sentilink",
         "TVS Next": "https://tvsnext.keka.com/careers/api/jobs/default/active",
+        "Awfis": "https://awfis.keka.com/careers/api/jobs/default/active",
         "S&P Global": "https://careers.spglobal.com/api/jobs",
         "Elevation Capital": "https://apply.workable.com/elevation-capital-3/",
         "Yubi": "https://go-yubi.com/careers",
@@ -872,6 +874,7 @@ def _phenom_api(rows, india_only: bool = True) -> list[Portal]:
         "Godrej Consumer Products": "https://careers.godrejindustries.com/in/en/search-results?qcountry=India",
         "Philip Morris International": "https://join.pmicareers.com/gb/en/search-results",
         "Oliver Wyman": "https://careers.marsh.com/global/en/oliver-wyman-search",
+        "IDFC FIRST Bank": "https://careers.idfcfirst.bank.in/in/en/search-results",
     }
     out = []
     for r in rows:
