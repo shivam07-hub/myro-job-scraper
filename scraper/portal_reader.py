@@ -517,6 +517,8 @@ _SAP_ATS_OVERRIDES: dict[str, str] = {
     "Tata Consumer Products": "sap_jobs2web_html",
     "Sun Pharma": "sap_jobs2web_html",
     "Syngene": "sap_jobs2web_html",
+    # Career Site Builder tile layout (ul#job-tile-list), not the results table.
+    "Cipla": "sap_jobs2web_html",
 }
 
 _SAP_ENDPOINT_OVERRIDES: dict[str, str] = {

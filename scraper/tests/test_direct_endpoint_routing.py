@@ -146,6 +146,7 @@ def test_direct_endpoint_routes() -> None:
         "Tekion": "ashby",
         "TVS Next": "keka",
         "Awfis": "keka",
+        "Cipla": "sap_jobs2web_html",
         "IDFC FIRST Bank": "phenom_ssr",
         "Coforge": "zwayam",
         "Amdocs": "pcsx",
