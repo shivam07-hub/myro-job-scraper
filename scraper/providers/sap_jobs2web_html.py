@@ -81,9 +81,46 @@ def _build_listing_url(base_url: str, startrow: int) -> str:
     return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(q, doseq=True), parts.fragment))
 
 
+_TILE_LOCATION_LABEL_RE = re.compile(r"location|city|state|country|region", re.IGNORECASE)
+
+
+def _extract_tile_rows(soup: BeautifulSoup) -> list[dict]:
+    """Career Site Builder tile layout: ``ul#job-tile-list li.job-tile``.
+
+    Each tile repeats desktop/tablet/mobile copies, so only the desktop
+    sections are read. Location fields are tenant-numbered customfields
+    (Cipla: customfield4=Country, 3=State, 2=Location), so pick them by label.
+    """
+    out: list[dict] = []
+    seen_href: set[str] = set()
+    for tile in soup.select("ul#job-tile-list li.job-tile"):
+        a = tile.select_one("a.jobTitle-link")
+        href = ((a.get("href") if a else "") or tile.get("data-url") or "").strip()
+        if not href or href in seen_href:
+            continue
+        seen_href.add(href)
+        parts: list[str] = []
+        for label in tile.select('[id*="-desktop-section-"][id$="-label"]'):
+            if not _TILE_LOCATION_LABEL_RE.search(label.get_text(" ", strip=True)):
+                continue
+            value = tile.find(id=label["id"][: -len("-label")] + "-value")
+            text = strip_html(_unescape(value.get_text(" ", strip=True))) if value else ""
+            if text and text not in parts:
+                parts.append(text)
+        out.append({
+            "href": href,
+            "title": strip_html(_unescape(a.get_text(" ", strip=True))) if a else "",
+            "listing_location": ", ".join(parts),
+            "business_unit": "",
+        })
+    return out
+
+
 def _extract_rows(list_html: str) -> list[dict]:
     soup = BeautifulSoup(list_html, "html.parser")
     rows = soup.select("table#searchresults tbody tr.data-row")
+    if not rows:
+        return _extract_tile_rows(soup)
 
     out: list[dict] = []
     seen_href: set[str] = set()
