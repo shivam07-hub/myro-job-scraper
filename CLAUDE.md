@@ -459,7 +459,7 @@ Full spec: `/Users/incognito/True_Yodha/docs/REPORT_INACTIVE_FEATURE.md`
 | `company_industries.json` | Company → Industry | Manual |
 
 **`blocked=true`** = Cloudflare blocks all POSTs. Scraper skips API, goes straight to Firecrawl.
-Confirmed blocked: Engie, GE Aerospace, Bank of America, Ford, Medtronic, Inspire Brands, Hitachi Vantara, Intuit, AMD, ANZ Bank, Keysight, Deutsche Bank, Standard Chartered Bank, Eli Lilly.
+Confirmed blocked: Engie, GE Aerospace, Ford, Medtronic, Inspire Brands, Hitachi Vantara, Intuit, AMD, ANZ Bank, Keysight, Deutsche Bank, Standard Chartered Bank, Eli Lilly. (Bank of America left this list 2026-11-05: its real tenant `ghr` answers CXS without Cloudflare — see KNOWN_PORTALS.md.)
 
 **Darwinbox CF Turnstile** (Swiggy, Flipkart, Myntra, OYO, IIFL Finance): provider built, needs `DARWINBOX_CF_BM` + `DARWINBOX_SESSION` env vars. Get from browser devtools → Network → `alljobs` POST → Copy as cURL. Cookies expire in 30 min, IP-bound.
 
