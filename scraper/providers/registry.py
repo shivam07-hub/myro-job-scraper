@@ -62,6 +62,7 @@ from providers.ubs_brassring import UBSBrassRingProvider
 from providers.virtusa_firecrawl import VirtusaFirecrawlProvider
 from providers.workline import WorklineProvider
 from providers.bdo_firecrawl import BDOFirecrawlProvider
+from providers.icici_careers import IciciCareersProvider
 from providers.keka import KekaProvider
 from providers.jibe import JibeProvider
 from providers.workable import WorkableProvider
@@ -126,6 +127,7 @@ _ATS_PROVIDERS: dict[str, Provider] = {
     "virtusa_firecrawl": VirtusaFirecrawlProvider(),
     "workline": WorklineProvider(),
     "bdo_firecrawl": BDOFirecrawlProvider(),
+    "icici_careers": IciciCareersProvider(),
     "keka": KekaProvider(),
     "jibe": JibeProvider(),
     "workable": WorkableProvider(),

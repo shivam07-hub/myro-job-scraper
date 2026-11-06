@@ -427,8 +427,11 @@ def _custom(rows) -> list[Portal]:
         "S&P Global": "jibe",
         "Elevation Capital": "workable",
         "Yubi": "yubi_careers",
+        # Listing API is encrypted in the browser; Firecrawl renders the page instead.
+        "ICICI Bank": "icici_careers",
     }
     endpoint_overrides: dict[str, str] = {
+        "ICICI Bank": "https://careers.icici.bank.in/CareerApplicant/career/job-listing/",
         "Confluent": "https://api.ashbyhq.com/posting-api/job-board/confluent",
         "Rippling": "https://ats.rippling.com/api/v2/board/rippling/jobs",
         "Snowflake": "https://api.ashbyhq.com/posting-api/job-board/snowflake",
