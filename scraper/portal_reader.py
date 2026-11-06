@@ -767,7 +767,10 @@ _OTHER_ENDPOINT_OVERRIDES: dict[str, str] = {
 
 _TALEO_V1: set[str] = {'Standard Chartered Bank', 'Wipro'}
 _TALEO_USE_LOCATION: set[str] = {'Wipro'}  # use location=india instead of keywords=india
+# The v1 API only returns postings in the tenant's own locale; en_US is the default.
+_TALEO_LOCALE: dict[str, str] = {'Standard Chartered Bank': 'en_GB'}
 _INDIA_ONLY_OVERRIDES: dict[str, bool] = {
+    'Standard Chartered Bank': True,
     'Deloitte India': True,
     'ADP': True,
     'Intuit': True,
@@ -832,6 +835,8 @@ def _other(rows, india_only: bool = True) -> list[Portal]:
         }
         if company in _TALEO_V1:
             portal['taleo_v1'] = True
+        if company in _TALEO_LOCALE:
+            portal['taleo_locale'] = _TALEO_LOCALE[company]
         out.append(portal)
     return out
 
@@ -1093,6 +1098,8 @@ def _taleo(rows) -> list[Portal]:
             portal['taleo_v1'] = True
         if company in _TALEO_USE_LOCATION:
             portal['taleo_use_location'] = True
+        if company in _TALEO_LOCALE:
+            portal['taleo_locale'] = _TALEO_LOCALE[company]
         out.append(portal)
     return out
 
