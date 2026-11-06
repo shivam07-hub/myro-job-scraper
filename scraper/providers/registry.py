@@ -66,6 +66,7 @@ from providers.keka import KekaProvider
 from providers.jibe import JibeProvider
 from providers.workable import WorkableProvider
 from providers.yubi_careers import YubiCareersProvider
+from providers.reliance_careers import RelianceCareersProvider
 
 _FIRECRAWL_PROVIDER = FirecrawlJSProvider()
 _GENERIC_PROVIDER = GenericJSONProvider()
@@ -130,6 +131,7 @@ _ATS_PROVIDERS: dict[str, Provider] = {
     "jibe": JibeProvider(),
     "workable": WorkableProvider(),
     "yubi_careers": YubiCareersProvider(),
+    "reliance_careers": RelianceCareersProvider(),
 }
 
 

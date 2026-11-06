@@ -125,6 +125,8 @@ def test_direct_endpoint_routes() -> None:
         "NPCI": "zoho_recruit",
         "Juspay": "juspay_astro",
         "Waaree Group": "waaree_static",
+        "Reliance Industries": "reliance_careers",
+        "Reliance Jio": "reliance_careers",
         "Whatfix": "trakstar",
         "Sanas": "rippling",
         "Premji Invest": "zoho_recruit",
