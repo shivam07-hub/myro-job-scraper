@@ -234,18 +234,21 @@ def scrape(url: str, actions: list[dict] | None = None) -> str:
         return ""
 
 
-def cloud_scrape_action_pages(url: str, actions: list[dict]) -> list[str]:
+def cloud_scrape_action_pages(
+    url: str, actions: list[dict], *, timeout_ms: int | None = None
+) -> list[str]:
     """Explicit paid-cloud scrape that runs browser actions (one credit per call).
 
     Returns the HTML captured by each ``{"type": "scrape"}`` action, in order —
     for listings that page in the browser without changing the URL.
+    ``timeout_ms`` raises Firecrawl's page timeout for actions that run long.
     """
     payload = {"url": url, "actions": actions, "provider": "cloud"}
     cached = _cache_get_json("scrape_actions", payload)
     if isinstance(cached, list):
         return cached
     try:
-        doc = _get_cloud_app().scrape(url, formats=["links"], actions=actions)
+        doc = _get_cloud_app().scrape(url, formats=["links"], actions=actions, timeout=timeout_ms)
     except Exception as e:
         print(f"    [FC CLOUD ACTIONS ERROR] {url}: {e}")
         return []
