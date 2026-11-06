@@ -140,10 +140,12 @@ def _scrape_taleo_v1(portal: Portal, max_jobs: int | None = None, on_page_comple
     page = 0
 
     use_location = portal.get("taleo_use_location", False)
+    # The API only returns postings in the tenant's own locale (Standard Chartered: en_GB).
+    locale = portal.get("taleo_locale") or "en_US"
 
     while True:
         body = {
-            "locale": "en_US",
+            "locale": locale,
             "pageNumber": page,
             "sortBy": "",
             "keywords": "" if use_location else ("india" if india_only else ""),
@@ -200,8 +202,8 @@ def _scrape_taleo_v1(portal: Portal, max_jobs: int | None = None, on_page_comple
                 # Try canonical URL first, then locale variants and keep the one that works.
                 variants = [
                     apply_url,
-                    f"{base}/job/{urltitle}/{jid}-en_US",
-                    f"{base}/job/{urltitle}/{jid}-en_US/",
+                    f"{base}/job/{urltitle}/{jid}-{locale}",
+                    f"{base}/job/{urltitle}/{jid}-{locale}/",
                 ]
                 for u in variants:
                     raw_jd = _fetch_jd(session, u)

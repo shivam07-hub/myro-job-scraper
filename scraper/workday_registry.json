@@ -8,6 +8,10 @@
   "Coca-Cola": {
     "search_text": "india"
   },
+  "Pfizer": {
+    "india_facet_param": "Location_Country",
+    "india_uuid": "c4f78be1a8f14da0ab49ce1162348a5e"
+  },
   "Nike": {
     "search_text": "india"
   },
