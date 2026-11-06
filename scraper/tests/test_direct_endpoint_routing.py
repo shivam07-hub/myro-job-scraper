@@ -95,6 +95,7 @@ def test_direct_endpoint_routes() -> None:
         "Cohesity": "workday",
         "BrowserStack": "workday",
         "Western Digital": "smartrecruiters",
+        "SAP": "smartrecruiters",
         "Genpact": "workday",
         "Boeing": "talentbrew",
         "Infineon Technologies": "pcsx",
