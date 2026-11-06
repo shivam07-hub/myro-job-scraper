@@ -132,6 +132,7 @@ def test_direct_endpoint_routes() -> None:
         "Lodha Group": "peoplestrong",
         "UBS": "ubs_brassring",
         "BDO India": "bdo_firecrawl",
+        "ICICI Bank": "icici_careers",
         "Simon-Kucher & Partners": "cornerstone",
         "Virtusa": "virtusa_firecrawl",
         "Kearney": "yello",
