@@ -423,6 +423,10 @@ def _custom(rows) -> list[Portal]:
         "Pebl": "ashby",
         "SentiLink": "ashby",
         "Waaree Group": "waaree_static",
+        # RIL, Jio and New Energy share one ASP.NET careers platform.
+        "Reliance Industries": "reliance_careers",
+        "Reliance Jio": "reliance_careers",
+        "Reliance New Energy": "reliance_careers",
         "TVS Next": "keka",
         "S&P Global": "jibe",
         "Elevation Capital": "workable",
