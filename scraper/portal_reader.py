@@ -399,6 +399,8 @@ def _custom(rows) -> list[Portal]:
         "Google": "google_careers",
         "IntouchCX": "intouchcx",
         "Juspay": "juspay_astro",
+        # Listing behind Akamai: one Firecrawl render; JDs from Avature.
+        "BNP Paribas": "bnp_paribas",
         "Microsoft": "microsoft_careers",
         "NPCI": "zoho_recruit",
         "Publicis Sapient": "publicis_sapient",

@@ -65,6 +65,7 @@ from providers.bdo_firecrawl import BDOFirecrawlProvider
 from providers.icici_careers import IciciCareersProvider
 from providers.keka import KekaProvider
 from providers.jibe import JibeProvider
+from providers.bnp_paribas import BnpParibasProvider
 from providers.workable import WorkableProvider
 from providers.yubi_careers import YubiCareersProvider
 
@@ -130,6 +131,7 @@ _ATS_PROVIDERS: dict[str, Provider] = {
     "icici_careers": IciciCareersProvider(),
     "keka": KekaProvider(),
     "jibe": JibeProvider(),
+    "bnp_paribas": BnpParibasProvider(),
     "workable": WorkableProvider(),
     "yubi_careers": YubiCareersProvider(),
 }
