@@ -103,6 +103,7 @@ def test_direct_endpoint_routes() -> None:
         "McDonald's GCC": "sap_jobs2web_html",
         "Vertiv": "oracle",
         "Icertis": "oracle",
+        "Kroll": "oracle",
         "Cargill": "talentbrew",
         "Mindtickle": "lever",
         "Zeta": "lever",
