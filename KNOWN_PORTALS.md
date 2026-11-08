@@ -699,6 +699,7 @@ Each entry: Company | Human Careers URL | ATS Platform | Scraping API / Endpoint
 | Company | Careers URL | ATS | Notes | Status |
 |---------|-------------|-----|-------|--------|
 | Nykaa | https://careers.nykaa.com | Skima Careers (SSR HTML) | Direct HTML listing + `?page=N` pagination + per-job UUID detail page with full JD panel | ✅ CRACKED 2026-05-02 — no auth/cookies required; 11 India jobs observed; routed to `ats=skima_careers` |
+| Thomas Cook India | https://www.thomascook.in/mycareer/career | None (CV form / LinkedIn) | Careers page is a "Submit Your CV" form (area of interest, city, resume upload) with no job list; SOTC's `sotc.in/career` is the same form; openings appear only on LinkedIn as Easy Apply, no ATS behind them | 🔴 CLOSED 2026-11-08 — no automatable public job feed |
 
 ---
 
