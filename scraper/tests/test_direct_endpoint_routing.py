@@ -42,6 +42,7 @@ def test_direct_endpoint_routes() -> None:
         "Godrej Consumer Products": "phenom_ssr",
         "Philip Morris International": "phenom_ssr",
         "Publicis Sapient": "publicis_sapient",
+        "Samvardhana Motherson": "motherson_careers",
         "InMobi": "greenhouse",
         "CRISIL": "zwayam",
         "NVIDIA": "pcsx",

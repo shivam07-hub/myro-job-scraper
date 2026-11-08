@@ -402,6 +402,8 @@ def _custom(rows) -> list[Portal]:
         "Microsoft": "microsoft_careers",
         "NPCI": "zoho_recruit",
         "Publicis Sapient": "publicis_sapient",
+        # careers.motherson.com: Next.js page data; drops postings whose apply host is gone.
+        "Samvardhana Motherson": "motherson_careers",
         "Rippling": "rippling",
         "Snowflake": "ashby",
         "UiPath": "ashby",

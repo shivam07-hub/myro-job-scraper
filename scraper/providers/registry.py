@@ -40,6 +40,7 @@ from providers.vector_consulting import VectorConsultingProvider
 from providers.waaree_static import WaareeStaticProvider
 from providers.pepsico_jobs_api import PepsiCoJobsAPIProvider
 from providers.publicis_sapient import PublicisSapientProvider
+from providers.motherson_careers import MothersonCareersProvider
 from providers.rippling import RipplingProvider
 from providers.skima_careers import SkimaCareersProvider
 from providers.hilabs_careers import HiLabsCareersProvider
@@ -111,6 +112,7 @@ _ATS_PROVIDERS: dict[str, Provider] = {
     "waaree_static": WaareeStaticProvider(),
     "pepsico_jobs_api": PepsiCoJobsAPIProvider(),
     "publicis_sapient": PublicisSapientProvider(),
+    "motherson_careers": MothersonCareersProvider(),
     "rippling": RipplingProvider(),
     "skima_careers": SkimaCareersProvider(),
     "hilabs_careers": HiLabsCareersProvider(),
