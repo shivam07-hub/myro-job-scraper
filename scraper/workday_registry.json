@@ -150,7 +150,11 @@
     "blocked": true
   },
   "Bank of America": {
-    "blocked": true
+    "india_facet_param": "locations",
+    "india_uuids": [
+      "61ad49ebbeac103ef5bf8c54646460b9",
+      "13a0897a1ccc1039061b40be7327c3b2"
+    ]
   },
   "Ford": {
     "blocked": true
@@ -261,5 +265,30 @@
       "7760d87eb31d1000b5b6a68f8e750000",
       "7760d87eb31d1000b5b6b29394320000"
     ]
+  },
+  "Blackstone": {
+    "search_text": "India"
+  },
+  "Cochlear": {
+    "search_text": "India"
+  },
+  "JioStar": {
+    "india_site": true
+  },
+  "Brookfield": {
+    "india_facet_param": "locationCountry",
+    "india_uuid": "c4f78be1a8f14da0ab49ce1162348a5e"
+  },
+  "Trafigura": {
+    "india_facet_param": "locationCountry",
+    "india_uuid": "c4f78be1a8f14da0ab49ce1162348a5e"
+  },
+  "Logitech": {
+    "india_facet_param": "locationCountry",
+    "india_uuid": "c4f78be1a8f14da0ab49ce1162348a5e"
+  },
+  "Plante Moran": {
+    "india_facet_param": "locationCountry",
+    "india_uuid": "c4f78be1a8f14da0ab49ce1162348a5e"
   }
 }
