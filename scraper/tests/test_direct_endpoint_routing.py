@@ -134,6 +134,7 @@ def test_direct_endpoint_routes() -> None:
         "ClearTax / Clear": "darwinbox",
         "Credila (HDFC Credila)": "darwinbox",
         "Avendus Capital": "darwinbox",
+        "Jindal Stainless": "darwinbox",
         "UBS": "ubs_brassring",
         "BDO India": "bdo_firecrawl",
         "Simon-Kucher & Partners": "cornerstone",

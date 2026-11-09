@@ -307,6 +307,7 @@ Each entry: Company | Human Careers URL | ATS Platform | Scraping API / Endpoint
 | ClearTax / Clear | https://clear.darwinbox.in/ms/candidatev2/main/careers/allJobs | 13 | ✅ CRACKED 2026-11-09 — API cookie-free; 13 India jobs (11 Bangalore), full JDs on 11 |
 | Credila (HDFC Credila) | https://mycredila.darwinbox.in/ms/candidatev2/main/careers/allJobs | 7 | ✅ CRACKED 2026-11-09 — API cookie-free; 7 India jobs, mostly Bangalore engineering |
 | Avendus Capital | https://avendus.darwinbox.in/ms/candidatev2/main/careers/allJobs | 1 | ✅ CRACKED 2026-11-09 — API cookie-free; 1 India job (Associate, Mumbai) |
+| Jindal Stainless | https://jslhrms.darwinbox.in/ms/candidatev2/main/careers/allJobs | 124 | ✅ CRACKED 2026-11-09 — API cookie-free; 124 India jobs, mostly plant engineering and management (Assistant/Executive/Junior Engineer, Associate Manager; blast furnace, SMS, carbon steel projects); 42 have no JD. First captured 2026-06-27 (RUN_HISTORY) but the row was never committed |
 
 ---
 
