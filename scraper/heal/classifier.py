@@ -24,7 +24,6 @@ REGRESSION = "REGRESSION"          # Bucket A: had a good baseline, now 0 / big 
 INCOMPLETE_SNAPSHOT = "INCOMPLETE_SNAPSHOT"  # provider failed after returning some pages
 PARAM_SUSPECT = "PARAM_SUSPECT"    # Bucket E: direct-API route, 0, never confirmed good
 NEEDS_CRACK = "NEEDS_CRACK"        # Bucket C: JS-opaque / ats=other, never cracked
-COOKIE_NEEDED = "COOKIE_NEEDED"    # Bucket D: Darwinbox, needs CF cookies
 BLOCKED_EXPECTED = "BLOCKED_EXPECTED"  # Bucket B: known CF-blocked Workday tenant
 LOW_COUNT = "LOW_COUNT"            # >0 but under the floor
 OK = "OK"                          # not a failure
@@ -34,7 +33,6 @@ BUCKET_ORDER = [
     INCOMPLETE_SNAPSHOT,
     REGRESSION,
     PARAM_SUSPECT,
-    COOKIE_NEEDED,
     NEEDS_CRACK,
     BLOCKED_EXPECTED,
     LOW_COUNT,
@@ -46,10 +44,9 @@ LOW_THRESHOLD = 5          # < this saved/raw == not a healthy company (matches 
 REGRESSION_MIN = 5         # baseline must have been at least this to call a drop a regression
 REGRESSION_DROP_RATIO = 0.5  # this_count < baseline*ratio counts as a regression
 
-# ATS families. Anything not JS-opaque and not cookie-gated is a single direct
+# ATS families. Anything not JS-opaque is a single direct
 # route whose 0 is most likely a per-company param/casing/id bug (param-suspect).
 JS_OPAQUE_ATS = {"other", "firecrawl_js", "avature", "eightfold"}
-COOKIE_ATS = {"darwinbox"}
 
 
 @dataclass
@@ -123,13 +120,6 @@ def _classify_one(
         return v(OK, f"{this_count} India jobs", "none")
 
     # From here: this_count is 0..4 and there is no protective baseline.
-    if ats in COOKIE_ATS:
-        return v(
-            COOKIE_NEEDED,
-            "Darwinbox — needs CF Turnstile cookies (DARWINBOX_CF_BM + DARWINBOX_SESSION)",
-            "refresh browser cookies into env; cookies expire ~30 min, IP-bound",
-        )
-
     if ats == "workday" and company in blocked_tenants:
         return v(
             BLOCKED_EXPECTED,

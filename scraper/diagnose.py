@@ -40,7 +40,6 @@ _BUCKET_BLURB = {
     "INCOMPLETE_SNAPSHOT": "Provider returned rows but did not finish; quarantine and retry.",
     "REGRESSION": "Bucket A — were cracked, now 0/dropped. Cheapest wins; re-test endpoint + diff provider.",
     "PARAM_SUSPECT": "Bucket E — single direct route returned 0; verify id/param/facet.",
-    "COOKIE_NEEDED": "Bucket D — Darwinbox; needs CF cookies in env.",
     "NEEDS_CRACK": "Bucket C — JS-opaque / ats=other; re-crack via Firecrawl Cloud, save endpoint.",
     "BLOCKED_EXPECTED": "Bucket B — known CF-blocked Workday; expected 0.",
     "LOW_COUNT": "Below the floor but non-zero; verify filter vs genuinely low hiring.",
