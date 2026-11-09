@@ -36,7 +36,7 @@ Each entry: Company | Human Careers URL | ATS Platform | Scraping API / Endpoint
 | Kotak Mahindra Bank | https://hcbt.fa.em2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/jobs | Oracle HCM Candidate Experience | `GET https://hcbt.fa.em2.oraclecloud.com/hcmRestApi/resources/latest/recruitingCEJobRequisitions?...finder=findReqs;siteNumber=CX_1001,...` | ✅ promoted 2026-05-21 — Oracle CE route works; alternate site numbers: `CX` and `CX_1` |
 | HDFC Ergo | https://hdfcergocareers.peoplestrong.com/ | PeopleStrong Candidate Portal | Rendered route `https://hdfcergocareers.peoplestrong.com/job/joblist`; likely API `POST /api/cp/rest/altone/jobs/v1?offset=N&limit=M` | 📌 parked 2026-05-21 — Firecrawl renders joblist/details with full JD; direct PeopleStrong API still returns 500/session-expired until payload/session shape is solved |
 | NPCI | https://careers.npci.org.in/jobs/Careers | Zoho Recruit SSR HTML | `GET https://careers.npci.org.in/jobs/Careers`; `page_id=190737000000336688` | ✅ promoted 2026-05-21 — Zoho provider builds company-specific apply URLs |
-| ClearTax / Clear | https://www.clear.in/s/careers | Darwinbox | `POST https://clear.darwinbox.in/ms/candidateapi/job/alljobs?companyId=main` | 📌 parked 2026-05-21 — Firecrawl rendered Darwinbox page says 27 open jobs; direct API is Cloudflare 403 without browser cookies |
+| ClearTax / Clear | https://www.clear.in/s/careers | Darwinbox | `POST https://clear.darwinbox.in/ms/candidateapi/job/alljobs?companyId=main` | ↪️ moved 2026-11-09 — use the DARWINBOX COMPANIES row (API answers without cookies) |
 | Juspay | https://juspay.io/careers | Astro SSR embedded jobs | `GET https://juspay.io/careers` | ✅ promoted 2026-05-21 — custom Astro parser extracts embedded jobs and JD text |
 | Waaree Group | https://www.waaree.com/careers/ | Static careers page | `GET https://www.waaree.com/careers/` | ✅ promoted 2026-05-21 — rendered/static provider parses 3 on-page roles |
 | Policybazaar | https://www.policybazaar.com/careers/ | Static careers form | `POST https://www.policybazaar.com/careers/submitformdetails.php` | 📌 static categories only 2026-05-21 — no discrete job API found; page exposes generic role categories and resume upload form |
@@ -297,12 +297,16 @@ Each entry: Company | Human Careers URL | ATS Platform | Scraping API / Endpoint
 ## DARWINBOX COMPANIES
 *API: `POST https://{tenant}.darwinbox.in/ms/candidateapi/job/alljobs?companyId=main`*
 *Body: `{"companyId":"main","page":N,"sort_option":"new","limit":50}`*
-*CF requirement: set `DARWINBOX_CF_BM` + `DARWINBOX_SESSION` env vars (from browser, expires 30min) → fallback Firecrawl*
+*No cookies needed (re-verified 2026-11-09: 40/40 calls answered across NSE, IIFL, ClearTax, Credila). Cloudflare blocks the odd request, so the provider retries; a tenant that stays blocked falls back to Firecrawl. Empty `jd` is real (the job page says "No job description at the moment!") and is stored as the No-JD note.*
 
 | Company | Careers URL | India Jobs | Status |
 |---------|-------------|-----------|--------|
-| IIFL Finance | https://iifl.darwinbox.in/ms/candidate/careers | 41 | ✅ cracked 2026-04-29 — API found; full JD; CF cookie required; ats=darwinbox |
-| Flipkart | https://flipkart.darwinbox.com/ms/candidate/careers | ? | 🟡 Darwinbox confirmed — CF protected; verify India job count |
+| IIFL Finance | https://iifl.darwinbox.in/ms/candidate/careers | 41 | ⬇️ parked 2026-11-09 — API answers cookie-free (124 jobs) but nearly all are gold-loan branch roles in Rajasthan towns (Gold Appraiser 52+, Branch Manager, Assistant Branch Manager, Customer Care Executive); frontline, outside the post-MBA/engineering audience (Shivam, 2026-11-09) |
+| Flipkart | https://flipkart.darwinbox.com/ms/candidate/careers | ? | 🔴 gone 2026-11-09 — API answers `Invalid subdomain: flipkart`; Flipkart no longer hires on Darwinbox |
+| National Stock Exchange (NSE) | https://nsehrms.darwinbox.in/ms/candidatev2/main/careers/allJobs | 12 | ✅ CRACKED 2026-11-09 — nseindia.com/careers-at-nse/jobs says "no active vacancies"; the real board is this Darwinbox tenant; 12 India jobs (8 Mumbai: BKC head office + Equinox), 6 with no JD on NSE's own page |
+| ClearTax / Clear | https://clear.darwinbox.in/ms/candidatev2/main/careers/allJobs | 13 | ✅ CRACKED 2026-11-09 — API cookie-free; 13 India jobs (11 Bangalore), full JDs on 11 |
+| Credila (HDFC Credila) | https://mycredila.darwinbox.in/ms/candidatev2/main/careers/allJobs | 7 | ✅ CRACKED 2026-11-09 — API cookie-free; 7 India jobs, mostly Bangalore engineering |
+| Avendus Capital | https://avendus.darwinbox.in/ms/candidatev2/main/careers/allJobs | 1 | ✅ CRACKED 2026-11-09 — API cookie-free; 1 India job (Associate, Mumbai) |
 
 ---
 
@@ -640,7 +644,7 @@ Each entry: Company | Human Careers URL | ATS Platform | Scraping API / Endpoint
 |---------|-------------|-----|-------|--------|
 | ARGA Investment Management | https://www.argainvest.com | None (email: resumes@argainvest.com) | No public portal | 🔒 email-only |
 | Arpwood Capital | https://www.arpwood.com/careers | Custom | Small boutique IB | ⬇️ low-priority — small firm, genuine low job count; deprioritised 2026-04-19 |
-| Avendus Capital | https://avendus.darwinbox.in/ms/candidatev2/main/careers/allJobs | Darwinbox | Official site resolves to Darwinbox; requests require fresh Cloudflare/session cookies | ⚠️ PARKED 2026-06-11 — ATS identified, no durable cookie-free listing route |
+| Avendus Capital | https://avendus.darwinbox.in/ms/candidatev2/main/careers/allJobs | Darwinbox | Official site resolves to Darwinbox; requests require fresh Cloudflare/session cookies | ↪️ moved 2026-11-09 — use the DARWINBOX COMPANIES row (API answers without cookies) |
 | Claypond Capital | — | None (LinkedIn / email) | Manipal Group family office | 🔒 no public portal |
 | Everstone Capital | — | None (LinkedIn) | PE firm — no dedicated portal | 🔒 no public portal |
 | O3 Capital | http://www.o3capital.com | None (email: careers@o3capital.com) | Boutique IB | 🔒 email-only |
@@ -659,7 +663,7 @@ Each entry: Company | Human Careers URL | ATS Platform | Scraping API / Endpoint
 | Company | Careers URL | ATS | Notes | Status |
 |---------|-------------|-----|-------|--------|
 | Bank of India | https://bankofindia.bank.in/career | Custom | PSU bank — limited listings | ⬇️ low-priority — PSU bank with infrequent tech openings; deprioritised 2026-04-19 |
-| Credila (HDFC Credila) | https://www.credila.com/careers | Darwinbox | Firecrawl surfaced `https://mycredila.darwinbox.in/ms/candidate/careers`; direct Darwinbox API still requires fresh Cloudflare cookies (`DARWINBOX_CF_BM` + `DARWINBOX_SESSION`) | ⚠️ ATS identified 2026-05-22 — not cleanly reachable without browser cookies |
+| Credila (HDFC Credila) | https://www.credila.com/careers | Darwinbox | Firecrawl surfaced `https://mycredila.darwinbox.in/ms/candidate/careers`; direct Darwinbox API still requires fresh Cloudflare cookies (`DARWINBOX_CF_BM` + `DARWINBOX_SESSION`) | ↪️ moved 2026-11-09 — use the DARWINBOX COMPANIES row (API answers without cookies) |
 | CRISIL | https://www.crisil.com/en/home/careers.html | Zwayam | `companyId=MTU0Mzg=`, domain `career.crisil.com`, API `https://public.zwayam.com/jobs/search`; active route recorded in ZWAYAM COMPANIES section | ↪️ moved 2026-05-20 — use Zwayam row above |
 | IndusInd Bank | https://app1100.workline.hr/careers/ | Workline | ATS identified, but public listing method returns `not authorized` | ⚠️ PARKED 2026-06-11 — needs repeatable browser token/XHR flow |
 | L&T Finance | https://www.ltfs.com/careers.html | Custom | NBFC | ⬇️ low-priority — small NBFC, limited tech roles; deprioritised 2026-04-19 |
