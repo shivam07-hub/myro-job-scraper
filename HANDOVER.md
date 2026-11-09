@@ -80,7 +80,7 @@ so scrape → enrich → load run sequentially.
   deferred.
 - A few portals have no durable route (Vehere, Godrej Industries) — Cloudflare/Akamai
   blocked; parked.
-- Darwinbox portals (Swiggy/Flipkart/Myntra…) need short-lived CF cookies in env.
+- Darwinbox portals answer without cookies since 2026-11-09 (see KNOWN_PORTALS.md DARWINBOX COMPANIES).
 
 ---
 

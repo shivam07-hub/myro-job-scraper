@@ -5,7 +5,6 @@ from __future__ import annotations
 from heal.baseline import update_ledger
 from heal.classifier import (
     BLOCKED_EXPECTED,
-    COOKIE_NEEDED,
     INCOMPLETE_SNAPSHOT,
     LOW_COUNT,
     NEEDS_CRACK,
@@ -61,10 +60,11 @@ def test_blocked_tenant_with_baseline_is_still_regression():
     assert v.bucket == REGRESSION
 
 
-def test_darwinbox_is_cookie_needed():
-    s = _summary([{"company": "Flipkart", "ats": "darwinbox", "raw_jobs": 0, "saved_new": 0, "status": "no_jobs"}])
-    v = _by_company(classify_run(s, {}, set()))["Flipkart"]
-    assert v.bucket == COOKIE_NEEDED
+def test_darwinbox_zero_is_param_suspect():
+    # Darwinbox answers without cookies, so a 0 is a direct route to verify.
+    s = _summary([{"company": "NSE", "ats": "darwinbox", "raw_jobs": 0, "saved_new": 0, "status": "no_jobs"}])
+    v = _by_company(classify_run(s, {}, set()))["NSE"]
+    assert v.bucket == PARAM_SUSPECT
 
 
 def test_other_ats_zero_is_needs_crack():

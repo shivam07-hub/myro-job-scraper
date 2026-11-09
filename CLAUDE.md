@@ -277,7 +277,7 @@ direct provider before putting it in the recurring scrape.
 
 **Auto-propose (propose-only, never applies).** `--propose` runs `heal/propose.py`: it statically finds *generic-duplicate masking* (a company listed in both its real ATS section and a generic CUSTOM/industry section, so `portal_reader` emits a phantom `ats=custom/other` portal that returns 0 and tanks the company) and emits the deletion diff. This is the bug that silently broke HSBC/Mphasis/Persistent on 2026-06-04; fixed 2026-06-07 and guarded by `test_heal_propose.py`. `--probe-crack` adds the Firecrawl-cloud discovery adapter (`heal/probe.probe_company_firecrawl`): map → rank candidate listing/API URLs → propose a `KNOWN_PORTALS.md` row stub for a human to promote.
 
-**Buckets** (map 1:1 to the old handoff A–E): `REGRESSION` (had a baseline, now 0/dropped — cheapest win) · `PARAM_SUSPECT` (direct route, 0, never confirmed good) · `COOKIE_NEEDED` (Darwinbox) · `NEEDS_CRACK` (JS-opaque / `ats=other`) · `BLOCKED_EXPECTED` (known CF-blocked Workday) · `LOW_COUNT`.
+**Buckets** (map 1:1 to the old handoff A–E): `REGRESSION` (had a baseline, now 0/dropped — cheapest win) · `PARAM_SUSPECT` (direct route, 0, never confirmed good) · `NEEDS_CRACK` (JS-opaque / `ats=other`) · `BLOCKED_EXPECTED` (known CF-blocked Workday) · `LOW_COUNT`.
 
 **Regression detection** diffs this run's scrape count against `baseline_ledger.json` (last-known-good, synced from `scrape_diagnostics` after each load). Forward-only: a bad run never lowers a baseline — that drop *is* the signal.
 
@@ -461,7 +461,7 @@ Full spec: `/Users/incognito/True_Yodha/docs/REPORT_INACTIVE_FEATURE.md`
 **`blocked=true`** = Cloudflare blocks all POSTs. Scraper skips API, goes straight to Firecrawl.
 Confirmed blocked: Engie, GE Aerospace, Bank of America, Ford, Medtronic, Inspire Brands, Hitachi Vantara, Intuit, AMD, ANZ Bank, Keysight, Deutsche Bank, Standard Chartered Bank, Eli Lilly.
 
-**Darwinbox CF Turnstile** (Swiggy, Flipkart, Myntra, OYO, IIFL Finance): provider built, needs `DARWINBOX_CF_BM` + `DARWINBOX_SESSION` env vars. Get from browser devtools → Network → `alljobs` POST → Copy as cURL. Cookies expire in 30 min, IP-bound.
+**Darwinbox** (`ats=darwinbox`): the `alljobs` API answers without cookies (re-verified 2026-11-09, 40/40 calls across NSE, IIFL, ClearTax, Credila). Cloudflare blocks the odd request at random, so the provider retries; a tenant that stays blocked goes to Firecrawl. The old `DARWINBOX_CF_BM` / `DARWINBOX_SESSION` cookie path is gone.
 
 ---
 

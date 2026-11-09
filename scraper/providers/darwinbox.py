@@ -1,22 +1,26 @@
-from __future__ import annotations
-
 """Darwinbox ATS provider.
 
-API endpoint: POST https://{tenant}.darwinbox.in/ms/candidateapi/job/alljobs?companyId=main
-Field map: data[].id, data[].title, data[].jd (HTML-escaped), data[].locations, data[].country
-Total count: top-level job_counts field.
+API: ``POST https://{tenant}.darwinbox.in/ms/candidateapi/job/alljobs?companyId=main``
+with ``{"companyId": "main", "page": N, "sort_option": "new", "limit": 50}``.
+Each page carries what the job page shows: ``data[].id``, ``title``, ``jd``
+(HTML-escaped; empty when the company wrote none), ``tool_tip_locations``,
+``country``, ``department_name_only``, ``experience_from``/``experience_to`` and
+``posted_on`` (Unix seconds, midnight IST). ``job_counts`` is the total.
 
-CF Turnstile requirement:
-  Darwinbox is behind Cloudflare Bot Management. Direct requests 403 without a valid
-  __cf_bm cookie. The cookie is IP+UA bound and expires in 30 minutes.
-
-  To enable: set DARWINBOX_CF_BM and DARWINBOX_SESSION env vars (from browser devtools).
-  Fallback: if cookies absent or 403, provider returns API_BLOCKED -> Firecrawl fallback.
+The API answers without cookies (40/40 calls across four tenants, 2026-11-09).
+The Cloudflare in front of it blocks the odd request at random, so a blocked or
+failed page is retried; a tenant that stays blocked goes to the Firecrawl
+fallback.
 """
+
+from __future__ import annotations
 
 import html as html_lib
 import logging
-import os
+import re
+import time
+from datetime import datetime, timedelta, timezone
+from urllib.parse import urlparse
 
 import requests
 
@@ -26,15 +30,120 @@ from schema import Portal
 from utils import strip_html
 
 _log = logging.getLogger("mirror")
+_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
+    ),
+    "Accept": "application/json, text/plain, */*",
+    "Content-Type": "application/json",
+}
 _PAGE_SIZE = 50
+_MAX_PAGES = 100
+_RETRY_STATUS = {403, 429, 500, 502, 503, 504}
+_BLOCK_STATUS = {403, 429}
+_ATTEMPTS = 3
+_RETRY_PAUSE_S = 1.0
+_IST = timezone(timedelta(hours=5, minutes=30))
+_COUNTRY = "India"
 
 
-def _cf_cookies() -> dict[str, str] | None:
-    cf_bm = os.environ.get("DARWINBOX_CF_BM", "").strip()
-    session = os.environ.get("DARWINBOX_SESSION", "").strip()
-    if cf_bm and session:
-        return {"__cf_bm": cf_bm, "session": session}
-    return None
+class _Blocked(Exception):
+    pass
+
+
+class _TenantError(Exception):
+    """The API answered with status "error", e.g. "Invalid subdomain"."""
+
+
+class _LayoutChanged(Exception):
+    pass
+
+
+def _message(data: object, status: int) -> str:
+    if isinstance(data, dict):
+        inner = data.get("data")
+        if isinstance(inner, dict) and inner.get("message"):
+            return str(inner["message"])
+        if data.get("message"):
+            return str(data["message"])
+    return f"HTTP {status}"
+
+
+def _post(api_url: str, payload: dict, headers: dict[str, str]) -> dict:
+    response = None
+    for attempt in range(_ATTEMPTS):
+        if attempt:
+            time.sleep(_RETRY_PAUSE_S * attempt)
+        response = requests.post(api_url, json=payload, headers=headers, timeout=REQUEST_TIMEOUT)
+        if response.status_code not in _RETRY_STATUS:
+            break
+    if response.status_code in _BLOCK_STATUS:
+        raise _Blocked(f"HTTP {response.status_code}")
+    try:
+        data = response.json()
+    except ValueError as exc:
+        response.raise_for_status()
+        raise _LayoutChanged("alljobs response is not JSON") from exc
+    if not isinstance(data, dict) or data.get("status") != "success":
+        raise _TenantError(_message(data, response.status_code))
+    return data
+
+
+def _clean(text: str) -> str:
+    # Darwinbox writes "Mumbai, Maharashtra\r, India".
+    return re.sub(r"\s+,", ",", re.sub(r"\s+", " ", text)).strip(" ,")
+
+
+def _places(job: dict) -> list[str]:
+    places = [_clean(p) for p in job.get("tool_tip_locations") or [] if isinstance(p, str)]
+    places = [p for p in places if p]
+    if not places:
+        single = _clean(str(job.get("locations") or ""))
+        if single and single.casefold() != "multiple locations":
+            places = [single]
+    return list(dict.fromkeys(places))
+
+
+def _posted(value: object) -> str:
+    if isinstance(value, str) and value.strip().isdigit():
+        value = int(value.strip())
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or value <= 0:
+        return ""
+    if value > 10**11:  # milliseconds
+        value = value / 1000
+    return datetime.fromtimestamp(value, _IST).date().isoformat()
+
+
+def _years(value: object) -> object:
+    return "" if value is None else value
+
+
+def _in_india(job: dict) -> bool:
+    country = str(job.get("country") or "").strip()
+    return not country or country.casefold() == _COUNTRY.casefold()
+
+
+def job_record(job: dict, origin: str, api_url: str, industry: str) -> dict:
+    jid = str(job.get("id") or job.get("_id") or "")
+    places = _places(job)
+    return {
+        "job_id": jid,
+        "title": _clean(str(job.get("title") or job.get("designation_name") or "")),
+        "job_url": f"{origin}/ms/candidatev2/main/careers/jobDetails/{jid}",
+        "source_api_url": api_url,
+        "business_unit": job.get("department_name_only") or job.get("department_name") or "",
+        # Empty when the company wrote no description; the writer then stores
+        # its "No JD provided" note and skips matching for the role.
+        "raw_jd_text": strip_html(html_lib.unescape(str(job.get("jd") or ""))).strip(),
+        "location_city": " | ".join(places) or _COUNTRY,
+        "locations": places,
+        "min_years_experience": _years(job.get("experience_from")),
+        "max_years_experience": _years(job.get("experience_to")),
+        "date_posted": _posted(job.get("posted_on")),
+        "source_platform": "Darwinbox",
+        "industry": industry,
+    }
 
 
 class DarwinboxProvider:
@@ -47,95 +156,66 @@ class DarwinboxProvider:
         max_jobs: int | None = None,
         validate_mode: bool = False,
     ) -> ProviderResult:
-        cookies = _cf_cookies()
-        if not cookies:
-            _log.warning(f"    [Darwinbox] {portal['company']}: no CF cookies — set DARWINBOX_CF_BM + DARWINBOX_SESSION")
-            return ProviderResult.fallback(
-                policy=FALLBACK_FIRECRAWL_EXTRACT,
-                reason="darwinbox_no_cf_cookies",
-            )
+        careers_url = (portal.get("careers_url") or portal.get("endpoint") or "").strip()
+        parts = urlparse(careers_url)
+        if parts.scheme not in ("http", "https") or not parts.netloc:
+            return ProviderResult.error(ScrapeReason.CONFIG_ERROR, "bad_darwinbox_careers_url")
+        origin = f"{parts.scheme}://{parts.netloc}"
+        api_url = f"{origin}/ms/candidateapi/job/alljobs?companyId=main"
+        headers = {**_HEADERS, "Origin": origin, "Referer": careers_url}
+        industry = portal.get("industry", "")
 
-        jobs = _scrape_darwinbox(portal, cookies, max_jobs=max_jobs)
-        if jobs is None:
-            _log.warning(f"    [Darwinbox] {portal['company']}: CF blocked — cookies expired?")
-            return ProviderResult.fallback(
-                policy=FALLBACK_FIRECRAWL_EXTRACT,
-                reason="darwinbox_cf_blocked",
-            )
+        jobs: list[dict] = []
+        seen: set[str] = set()
+
+        def failed(page: int, reason: ScrapeReason, note: str) -> ProviderResult:
+            if page == 1:
+                return ProviderResult.error(reason, note)
+            return ProviderResult.partial(jobs, f"darwinbox_page_{page}: {note}")
+
+        for page in range(1, _MAX_PAGES + 1):
+            payload = {"companyId": "main", "page": page, "sort_option": "new", "limit": _PAGE_SIZE}
+            try:
+                data = _post(api_url, payload, headers)
+            except _Blocked as exc:
+                if page == 1:
+                    _log.warning(f"    [Darwinbox] {portal['company']}: blocked after {_ATTEMPTS} tries ({exc})")
+                    return ProviderResult.fallback(
+                        policy=FALLBACK_FIRECRAWL_EXTRACT,
+                        reason="darwinbox_cf_blocked",
+                    )
+                return failed(page, ScrapeReason.API_BLOCKED, str(exc))
+            except _TenantError as exc:
+                return failed(page, ScrapeReason.CONFIG_ERROR, f"darwinbox_error: {exc}")
+            except _LayoutChanged as exc:
+                return failed(page, ScrapeReason.PARSE_ERROR, str(exc))
+            except requests.Timeout as exc:
+                return failed(page, ScrapeReason.TIMEOUT, str(exc))
+            except requests.RequestException as exc:
+                return failed(page, ScrapeReason.API_BLOCKED, str(exc))
+
+            items = data.get("data")
+            if not isinstance(items, list):
+                return failed(page, ScrapeReason.PARSE_ERROR, "alljobs response has no data list")
+            for item in items:
+                jid = str(item.get("id") or item.get("_id") or "")
+                if not jid or jid in seen:
+                    continue
+                seen.add(jid)
+                if not _in_india(item):
+                    continue
+                record = job_record(item, origin, api_url, industry)
+                if not record["title"]:
+                    continue
+                jobs.append(record)
+                if max_jobs and len(jobs) >= max_jobs:
+                    return ProviderResult.success(jobs)
+
+            total = data.get("job_counts")
+            if len(items) < _PAGE_SIZE or (isinstance(total, int) and len(seen) >= total):
+                break
+        else:
+            return ProviderResult.partial(jobs, f"darwinbox_page_limit={_MAX_PAGES}")
+
+        _log.info(f"    {len(jobs)} jobs fetched via Darwinbox ({portal['company']})")
         return ProviderResult.success(jobs)
-
-
-def _scrape_darwinbox(
-    portal: Portal,
-    cookies: dict[str, str],
-    max_jobs: int | None = None,
-) -> list[dict] | None:
-    from urllib.parse import urlparse
-
-    careers_url = portal.get("careers_url", portal.get("endpoint", ""))
-    parsed = urlparse(careers_url)
-    api_url = f"{parsed.scheme}://{parsed.netloc}/ms/candidateapi/job/alljobs?companyId=main"
-
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-        "Accept": "application/json, text/plain, */*",
-        "Content-Type": "application/json",
-        "Origin": f"{parsed.scheme}://{parsed.netloc}",
-        "Referer": careers_url,
-    }
-
-    jobs: list[dict] = []
-    page = 1
-
-    while True:
-        payload = {"companyId": "main", "page": page, "sort_option": "new", "limit": _PAGE_SIZE}
-        try:
-            r = requests.post(api_url, json=payload, headers=headers, cookies=cookies, timeout=REQUEST_TIMEOUT)
-            if r.status_code in (403, 429):
-                return None  # CF blocked
-            r.raise_for_status()
-            data = r.json()
-        except Exception as e:
-            _log.error(f"    [ERROR] Darwinbox {portal['company']} page={page}: {e}")
-            return jobs or None
-
-        if data.get("status") != "success":
-            break
-
-        items = data.get("data", [])
-        if not items:
-            break
-
-        for j in items:
-            title = (j.get("title") or j.get("designation_name") or "").strip()
-            if not title:
-                continue
-
-            loc = j.get("locations") or j.get("officelocations_area") or j.get("country") or ""
-            raw_jd = strip_html(html_lib.unescape(j.get("jd") or ""))
-            jid = str(j.get("id") or j.get("_id") or "")
-            apply_url = f"{parsed.scheme}://{parsed.netloc}/ms/candidatev2/main/careers/jobDetails/{jid}"
-
-            jobs.append({
-                "job_id":          jid,
-                "title":           title,
-                "job_url":         apply_url,
-                "source_api_url":  api_url,
-                "business_unit":   j.get("department_name_only") or j.get("department_name"),
-                "raw_jd_text":     raw_jd,
-                "location_city":   loc,
-                "date_posted":     j.get("posted_on"),
-                "source_platform": "Darwinbox",
-                "industry":        portal.get("industry", ""),
-            })
-
-            if max_jobs and len(jobs) >= max_jobs:
-                return jobs
-
-        total = data.get("job_counts", 0)
-        if len(jobs) >= total or len(items) < _PAGE_SIZE:
-            break
-        page += 1
-
-    _log.info(f"    {len(jobs)} jobs fetched via Darwinbox ({portal['company']})")
-    return jobs
