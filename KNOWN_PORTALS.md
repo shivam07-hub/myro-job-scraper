@@ -559,11 +559,12 @@ Each entry: Company | Human Careers URL | ATS Platform | Scraping API / Endpoint
 ---
 
 ## AVATURE COMPANIES
-*Avature requires JavaScript rendering — no clean JSON API. Use Firecrawl.*
+*`ats=avature` reads the server-rendered SearchJobs and JobDetail HTML directly (`providers/avature.py`); Firecrawl only if the first listing page is unreachable. The Careers URL must carry the board's own country facet, and the board serves 9 cards a page whatever `jobRecordsPerPage` asks for.*
 
 | Company | Careers URL | India Jobs | Status |
 |---------|-------------|-----------|--------|
 | TotalEnergies | https://jobs.totalenergies.com/en_US/careers/SearchJobs/ | TalentBrew (Radancy) | ⬇️ deprioritised 2026-06-09 — TalentBrew board confirmed (not CF-blocked, returns job cards) but France/HQ-scoped: unfiltered + Firecrawl-discovered facet `707=[42257,42253]` both show 0 India / 10 France. India hiring not on this board. Revisit only if a real India location facet is found |
+| Macquarie Group | https://recruitment.macquarie.com/en_US/careers/SearchJobs/?10671=%5B871433%5D&10671_format=21337&listFilterMode=1&jobRecordsPerPage=9 | 70 (Gurugram, Hyderabad, Mumbai) | ✅ CRACKED 2026-11-15 — Avature; `10671=[871433]` is the India country facet (the macquarie.com India pages link it); JD from each JobDetail page; apply URL `ApplicationMethods?jobId=N` opens the CV upload without a login |
 
 ---
 

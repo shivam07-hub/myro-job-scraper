@@ -33,6 +33,7 @@ from providers.trakstar import TrakstarProvider
 from providers.phenom_ssr import PhenomSSRProvider
 from providers.siemens_externaljobs import SiemensExternalJobsProvider
 from providers.deloitte_usi import DeloitteUSIProvider
+from providers.avature import AvatureProvider
 from providers.yello import YelloProvider
 from providers.sap_jobs2web_html import SAPJobs2WebHTMLProvider
 from providers.tata_elxsi import TataElxsiProvider
@@ -104,6 +105,7 @@ _ATS_PROVIDERS: dict[str, Provider] = {
     "phenom_ssr": PhenomSSRProvider(),
     "siemens_externaljobs": SiemensExternalJobsProvider(),
     "deloitte_usi": DeloitteUSIProvider(),
+    "avature": AvatureProvider(),
     "yello": YelloProvider(),
     "sap_jobs2web_html": SAPJobs2WebHTMLProvider(),
     "tata_elxsi": TataElxsiProvider(),

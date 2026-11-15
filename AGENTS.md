@@ -217,7 +217,7 @@ Official per-company job-count tracking happens **only after final Supabase load
 - **SmartRecruiters** → direct GET `?country=in` (includes full JD in API response)
 - **Greenhouse** → direct GET, India filter in Python (includes full JD in API response)
 - **Custom/SAP/Oracle** → direct GET, fallback to Firecrawl extract if HTML response
-- **JS-heavy** (Eightfold, Avature, custom SPAs) → Firecrawl Docker fallback or a dedicated provider when cracked
+- **JS-heavy** (Eightfold, custom SPAs) → Firecrawl Docker fallback or a dedicated provider when cracked (Avature has one since 2026-11-15)
 - Firecrawl cloud is a last resort for portals that cannot be handled directly or through Docker
 
 ### LLM enrichment flow (Dump 4+)

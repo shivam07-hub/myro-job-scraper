@@ -135,6 +135,7 @@ def test_direct_endpoint_routes() -> None:
         "Credila (HDFC Credila)": "darwinbox",
         "Avendus Capital": "darwinbox",
         "Jindal Stainless": "darwinbox",
+        "Macquarie Group": "avature",
         "UBS": "ubs_brassring",
         "BDO India": "bdo_firecrawl",
         "Simon-Kucher & Partners": "cornerstone",
