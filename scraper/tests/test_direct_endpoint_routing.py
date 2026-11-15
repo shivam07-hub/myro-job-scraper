@@ -124,6 +124,7 @@ def test_direct_endpoint_routes() -> None:
         "Kotak Mahindra Bank": "oracle",
         "NPCI": "zoho_recruit",
         "Juspay": "juspay_astro",
+        "CDSL": "cdsl_careers",
         "Waaree Group": "waaree_static",
         "Whatfix": "trakstar",
         "Sanas": "rippling",

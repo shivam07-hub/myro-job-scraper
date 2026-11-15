@@ -37,6 +37,7 @@ from providers.yello import YelloProvider
 from providers.sap_jobs2web_html import SAPJobs2WebHTMLProvider
 from providers.tata_elxsi import TataElxsiProvider
 from providers.vector_consulting import VectorConsultingProvider
+from providers.cdsl_careers import CdslCareersProvider
 from providers.waaree_static import WaareeStaticProvider
 from providers.pepsico_jobs_api import PepsiCoJobsAPIProvider
 from providers.publicis_sapient import PublicisSapientProvider
@@ -108,6 +109,7 @@ _ATS_PROVIDERS: dict[str, Provider] = {
     "sap_jobs2web_html": SAPJobs2WebHTMLProvider(),
     "tata_elxsi": TataElxsiProvider(),
     "vector_consulting": VectorConsultingProvider(),
+    "cdsl_careers": CdslCareersProvider(),
     "waaree_static": WaareeStaticProvider(),
     "pepsico_jobs_api": PepsiCoJobsAPIProvider(),
     "publicis_sapient": PublicisSapientProvider(),
