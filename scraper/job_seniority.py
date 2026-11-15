@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import math
 import re
-from typing import Any
+from typing import Any, Callable
 
 
 _LEVEL_RANK = {
@@ -33,10 +33,14 @@ _TITLE_LEVELS: tuple[tuple[str, tuple[str, ...]], ...] = (
 )
 
 _YEAR_UNIT = r"(?:year\(s\)|years?|yrs?)"
-# Accepts "5+ years", "3-5 yrs", "5 to 10yrs" and "6 years to 10 years".
+# A year count may be a decimal ("1.5"). The lookbehinds stop a match starting
+# inside a number, which is how "1.5" used to be read as 5.
+_YEAR_COUNT = r"(?<!\d)(?<!\d\.)\d{1,2}(?:\.\d{1,2})?"
+# Accepts "5+ years", "3-5 yrs", "5 to 10yrs", "6 years to 10 years" and
+# "1.5-2.5 years".
 _YEARS_RANGE = (
-    r"(?P<minimum>\d{1,2})\s*"
-    r"(?:(?:" + _YEAR_UNIT + r"\s*)?(?:[-–—]\s*|to\s+)(?P<maximum>\d{1,2})|\+)?\s*"
+    rf"(?P<minimum>{_YEAR_COUNT})\s*"
+    r"(?:(?:" + _YEAR_UNIT + rf"\s*)?(?:[-–—]\s*|to\s+)(?P<maximum>{_YEAR_COUNT})|\+)?\s*"
     + _YEAR_UNIT
 )
 _EXPERIENCE_PATTERNS = (
@@ -160,8 +164,8 @@ def _experience_bounds(description: str) -> tuple[int | None, int | None]:
     maximums: list[int] = []
     for pattern in _EXPERIENCE_PATTERNS:
         for match in pattern.finditer(description):
-            minimum = _coerce_year(match.group("minimum"))
-            maximum = _coerce_year(match.group("maximum"))
+            minimum = _description_year(match.group("minimum"), math.floor)
+            maximum = _description_year(match.group("maximum"), math.ceil)
             if minimum is not None:
                 minimums.append(minimum)
             if maximum is not None:
@@ -170,6 +174,17 @@ def _experience_bounds(description: str) -> tuple[int | None, int | None]:
         max(minimums) if minimums else None,
         max(maximums) if maximums else None,
     )
+
+
+def _description_year(value: str | None, to_whole: Callable[[float], int]) -> int | None:
+    """Turn a JD year count into whole years for the integer columns.
+
+    The minimum is floored and the maximum ceiled, so the stored window always
+    holds the one the JD asks for: "1.5-2.5 years" is stored as 1-3.
+    """
+    if value is None:
+        return None
+    return _coerce_year(to_whole(float(value)))
 
 
 def _highest_year(*years: int | None) -> int | None:
