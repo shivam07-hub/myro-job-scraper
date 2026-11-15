@@ -46,7 +46,7 @@ REGRESSION_DROP_RATIO = 0.5  # this_count < baseline*ratio counts as a regressio
 
 # ATS families. Anything not JS-opaque is a single direct
 # route whose 0 is most likely a per-company param/casing/id bug (param-suspect).
-JS_OPAQUE_ATS = {"other", "firecrawl_js", "avature", "eightfold"}
+JS_OPAQUE_ATS = {"other", "firecrawl_js", "eightfold"}
 
 
 @dataclass

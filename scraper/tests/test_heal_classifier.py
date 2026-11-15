@@ -67,6 +67,14 @@ def test_darwinbox_zero_is_param_suspect():
     assert v.bucket == PARAM_SUSPECT
 
 
+def test_avature_zero_is_param_suspect():
+    # Avature boards are read straight from their HTML, so a 0 points at the
+    # country facet in the row, not at a missing crack.
+    s = _summary([{"company": "Macquarie Group", "ats": "avature", "raw_jobs": 0, "saved_new": 0, "status": "no_jobs"}])
+    v = _by_company(classify_run(s, {}, set()))["Macquarie Group"]
+    assert v.bucket == PARAM_SUSPECT
+
+
 def test_other_ats_zero_is_needs_crack():
     s = _summary([{"company": "Uber", "ats": "other", "raw_jobs": 0, "saved_new": 0, "status": "no_jobs"}])
     v = _by_company(classify_run(s, {}, set()))["Uber"]

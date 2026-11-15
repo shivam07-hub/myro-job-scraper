@@ -420,7 +420,8 @@ Full spec: `/Users/incognito/True_Yodha/docs/REPORT_INACTIVE_FEATURE.md`
 | Skima Careers | GET HTML `?page=N` → per-job `/{uuid}` detail page | Nykaa |
 | Aditya Birla (custom) | GET `/api/v3/jobs` + per-job `/api/v3/job/{jcode}` — Bearer token | |
 | Generic JSON | Configurable field mapping per company — auto-saved to `generic_registry.json` | Atlassian + others |
-| JS-heavy (Eightfold, Avature, SPAs) | `scrape_extract()` via Firecrawl (Docker first, cloud last resort) | Goldman Sachs, Eightfold tenants |
+| Avature | GET `/careers/SearchJobs/?{country facet}&jobOffset=N` HTML (9 a page) + per-job `JobDetail?jobId=N` | Macquarie Group |
+| JS-heavy (Eightfold, SPAs) | `scrape_extract()` via Firecrawl (Docker first, cloud last resort) | Goldman Sachs, Eightfold tenants |
 
 ---
 

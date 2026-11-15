@@ -656,7 +656,7 @@ def _avature(rows) -> list[Portal]:
             'company':     company,
             'ats':         'avature',
             'endpoint':    r.get('Careers URL', '').strip(),
-            'js_required': True,
+            'js_required': False,
             'status':      status,
             'industry':    _industry(company),
         })
