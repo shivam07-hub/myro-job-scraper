@@ -58,6 +58,7 @@ def test_direct_endpoint_routes() -> None:
         "Zuora": "greenhouse",
         "Cloudflare": "greenhouse",
         "Point72": "greenhouse",
+        "Optiver": "greenhouse",
         "Figma": "greenhouse",
         "GitLab": "greenhouse",
         "Druva": "greenhouse",

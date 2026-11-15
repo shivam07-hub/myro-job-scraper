@@ -206,6 +206,7 @@ Each entry: Company | Human Careers URL | ATS Platform | Scraping API / Endpoint
 | Tekion | https://boards.greenhouse.io/tekion | tekion | 0 | ↪️ moved 2026-08-13 — Greenhouse board now 404; use the active Ashby row below |
 | WorldQuant | https://boards.greenhouse.io/worldquant | worldquant | 6 | ✅ DISCOVERED 2026-06-13 via college Phase 0 → resolve_ats; direct Greenhouse API, 6 India jobs; board name confirmed "WorldQuant"; full JDs in `content` |
 | Da Vinci Derivatives | https://boards.greenhouse.io/davinciderivatives | davinciderivatives | 1 | ✅ DISCOVERED 2026-06-13 via resolve_ats; Greenhouse board confirmed "Da Vinci"; 1 India job; full JD in `content` |
+| Optiver | https://www.optiver.com/join-us/jobs/?location=mumbai | optiverus | 3 | ✅ CRACKED 2026-11-15 — `optiverus` is Optiver's one global Greenhouse board (152 jobs, every office); its 3 Mumbai jobs match the site's own Mumbai filter; full JD in `content`; apply URL is the optiver.com job page (`?gh_jid=`) |
 | Verve | https://boards.greenhouse.io/verve | verve | 3 | ⚠️ DISCOVERED 2026-06-13 — Greenhouse board "Verve" (3 India); seed labeled "Verve Consulting" but board identity ambiguous (may be Verve Group ad-tech); verify owner before trusting |
 | Atomicwork | https://www.atomicwork.com/company/careers | atomicwork | 0 | ↪️ moved 2026-10-04 — Greenhouse board deleted; use the OTHER PLATFORMS row (Scrapling fallback) |
 | 6sense | https://boards.greenhouse.io/6sense | 6sense | 17 | ✅ HARVESTED 2026-06-13 — Greenhouse API, 17 India jobs; full JDs in `content` |
