@@ -125,7 +125,6 @@ def test_direct_endpoint_routes() -> None:
         "NPCI": "zoho_recruit",
         "Juspay": "juspay_astro",
         "Waaree Group": "waaree_static",
-        "CDSL": "cdsl_careers",
         "Whatfix": "trakstar",
         "Sanas": "rippling",
         "Premji Invest": "zoho_recruit",
@@ -152,6 +151,7 @@ def test_direct_endpoint_routes() -> None:
         "Elevation Capital": "workable",
         "Yubi": "yubi_careers",
         "Mastercard": "phenom_ssr",
+        "CDSL": "cdsl_careers",
     }
     for company, ats in expected.items():
         portal = _portal(company)
