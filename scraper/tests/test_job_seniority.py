@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from job_seniority import normalize_job_seniority
 from writer import to_canonical
 
@@ -102,7 +104,6 @@ def test_canonical_writer_publishes_normalized_source_fields() -> None:
 
 # Real JD phrasings from the 2026-09-09 publication that the parser missed:
 # the label comes first, then a separator, then the years.
-import pytest
 
 
 @pytest.mark.parametrize(
@@ -182,3 +183,45 @@ def test_normalize_job_seniority_drops_a_maximum_below_the_minimum() -> None:
     assert normalized.seniority_level == "senior"
     assert normalized.min_years_experience == 5
     assert normalized.max_years_experience is None
+
+
+# A decimal ask is stored in whole-year columns as the widest window that holds
+# it: the minimum is floored and the maximum ceiled, so no one the JD accepts is
+# filtered out (Shivam, 2026-11-15). Before this, the parser started reading
+# after the decimal point, so "1.5" was stored as 5 years.
+@pytest.mark.parametrize(
+    ("description", "level", "minimum", "maximum"),
+    [
+        ("CA with 1.5-2.5 years of experience", "entry", 1, 3),
+        ("2.5-4 years of experience", "mid", 2, 4),
+        ("1.5 years of experience", "entry", 1, None),
+        ("3-5 years of experience", "mid", 3, 5),
+        ("Experience: 2.5+ years", "mid", 2, None),
+        ("Minimum 4.5 years of experience in audit", "mid", 4, None),
+    ],
+)
+def test_normalize_job_seniority_reads_decimal_years(description, level, minimum, maximum) -> None:
+    normalized = normalize_job_seniority({
+        "job_title": "Delivery Operations Specialist",
+        "job_description": description,
+    })
+
+    assert normalized.seniority_level == level
+    assert normalized.min_years_experience == minimum
+    assert normalized.max_years_experience == maximum
+
+
+def test_normalize_job_seniority_reads_decimal_ranges_across_qualifications() -> None:
+    # Macquarie, "Executive - GT Regulatory Capital Reporting": the CA and MBA
+    # routes each give a decimal range; it was published as senior with 5+.
+    normalized = normalize_job_seniority({
+        "job_title": "Executive - GT Regulatory Capital Reporting",
+        "job_description": (
+            "Qualified CA with 1.5-2.5 years of experience or "
+            "MBA with 2.5-4 years of experience in regulatory reporting."
+        ),
+    })
+
+    assert normalized.seniority_level == "mid"
+    assert normalized.min_years_experience == 2
+    assert normalized.max_years_experience == 4
