@@ -422,6 +422,7 @@ def _custom(rows) -> list[Portal]:
         "NETGEAR": "ashby",
         "Pebl": "ashby",
         "SentiLink": "ashby",
+        "CDSL": "cdsl_careers",
         "Waaree Group": "waaree_static",
         "TVS Next": "keka",
         "S&P Global": "jibe",

@@ -151,6 +151,7 @@ def test_direct_endpoint_routes() -> None:
         "Elevation Capital": "workable",
         "Yubi": "yubi_careers",
         "Mastercard": "phenom_ssr",
+        "CDSL": "cdsl_careers",
     }
     for company, ats in expected.items():
         portal = _portal(company)
